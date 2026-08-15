@@ -1,0 +1,14 @@
+{
+  "$schema": "https://railway.com/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS"
+  },
+  "deploy": {
+    "//": "migrate e seed sao idempotentes: rodar a cada deploy e seguro",
+    "startCommand": "npm run migrate && npm run seed && node src/server.js",
+    "healthcheckPath": "/login",
+    "healthcheckTimeout": 120,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 5
+  }
+}
