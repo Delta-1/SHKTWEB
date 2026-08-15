@@ -4,10 +4,9 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "//": "Migracoes e carga inicial rodam ANTES do servidor subir, como",
-    "//2": "pre-deploy: log proprio, e o app so inicia se o banco estiver ok.",
-    "//3": "Ambos sao idempotentes, entao repetir a cada deploy e seguro.",
-    "preDeployCommand": ["node src/db/migrate.js && node src/db/seed.js"],
+    "preDeployCommand": [
+      "node scripts/preparar-banco.js"
+    ],
     "startCommand": "node src/server.js",
     "healthcheckPath": "/login",
     "healthcheckTimeout": 180,
