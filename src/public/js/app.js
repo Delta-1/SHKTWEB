@@ -174,4 +174,33 @@
       window.print();
     }
   });
+
+  // ------------------------------------------------- instalar como aplicativo
+  // Só faz sentido em HTTPS (ou localhost). Guarda em cache apenas os arquivos
+  // estáticos — nunca dados do ERP. Ver src/public/sw.js.
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('/estatico/sw.js', { scope: '/' }).catch(function () {
+        /* sem service worker o sistema funciona igual, só não instala */
+      });
+    });
+  }
+
+  // Botão "Instalar aplicativo" na tela de login, quando o navegador oferecer
+  var convite = null;
+  window.addEventListener('beforeinstallprompt', function (ev) {
+    ev.preventDefault();
+    convite = ev;
+    var botao = document.querySelector('[data-instalar]');
+    if (botao) botao.classList.remove('oculto');
+  });
+
+  document.addEventListener('click', function (ev) {
+    if (!ev.target.closest('[data-instalar]') || !convite) return;
+    ev.preventDefault();
+    convite.prompt();
+    convite = null;
+    var botao = document.querySelector('[data-instalar]');
+    if (botao) botao.classList.add('oculto');
+  });
 })();
