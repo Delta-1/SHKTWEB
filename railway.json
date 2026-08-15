@@ -4,10 +4,13 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "//": "migrate e seed sao idempotentes: rodar a cada deploy e seguro",
-    "startCommand": "npm run migrate && npm run seed && node src/server.js",
+    "//": "Migracoes e carga inicial rodam ANTES do servidor subir, como",
+    "//2": "pre-deploy: log proprio, e o app so inicia se o banco estiver ok.",
+    "//3": "Ambos sao idempotentes, entao repetir a cada deploy e seguro.",
+    "preDeployCommand": ["node src/db/migrate.js && node src/db/seed.js"],
+    "startCommand": "node src/server.js",
     "healthcheckPath": "/login",
-    "healthcheckTimeout": 120,
+    "healthcheckTimeout": 180,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 5
   }
