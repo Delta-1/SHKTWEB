@@ -5,7 +5,7 @@ import { Router } from 'express';
 import { exigir, gerarHash } from '../lib/auth.js';
 import { muitos, um, transacao, query } from '../db/index.js';
 import { registrar, ACOES, diferenca } from '../lib/auditoria.js';
-import { MODULOS, ACOES as ACOES_PERM, TODAS_PERMISSOES, permissaoValida } from '../lib/permissoes.js';
+import { MODULOS, ACOES as ACOES_PERM, permissaoValida } from '../lib/permissoes.js';
 import { ErroNegocio, ErroNaoEncontrado } from '../lib/erros.js';
 import * as validar from '../lib/validar.js';
 

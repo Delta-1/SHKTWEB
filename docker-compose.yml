@@ -1,0 +1,76 @@
+# ERP SHKT - ambiente completo (banco + aplicação).
+#
+#   docker compose up -d          sobe tudo
+#   docker compose logs -f app    acompanha o sistema
+#   docker compose exec app npm run setup   cria as tabelas e a carga inicial
+#
+# Em produção, troque SESSION_SECRET e ADMIN_SENHA antes do primeiro acesso.
+
+services:
+  banco:
+    image: postgres:16-alpine
+    container_name: shkt-banco
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-shkt}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-shkt}
+      POSTGRES_DB: ${DB_NAME:-shkt_erp}
+      TZ: America/Sao_Paulo
+    volumes:
+      - banco_dados:/var/lib/postgresql/data
+      - ./backups:/backups
+    ports:
+      # Exposto apenas na máquina local; remova em produção se não precisar
+      - '127.0.0.1:5432:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER:-shkt} -d ${DB_NAME:-shkt_erp}']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    container_name: shkt-erp
+    restart: unless-stopped
+    depends_on:
+      banco:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgres://${DB_USER:-shkt}:${DB_PASSWORD:-shkt}@banco:5432/${DB_NAME:-shkt_erp}
+      SESSION_SECRET: ${SESSION_SECRET:-troque-este-segredo-em-producao}
+      SESSION_SECURE: ${SESSION_SECURE:-false}
+      SESSION_HOURS: ${SESSION_HOURS:-12}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@shkt.com.br}
+      ADMIN_SENHA: ${ADMIN_SENHA:-shkt@2026}
+      EMPRESA_NOME: ${EMPRESA_NOME:-SHKT INDÚSTRIA IMPORTAÇÃO & EXPORTAÇÃO LTDA}
+      EMPRESA_CNPJ: ${EMPRESA_CNPJ:-}
+      TZ: America/Sao_Paulo
+    volumes:
+      - uploads:/app/uploads
+    ports:
+      - '${PORTA:-3000}:3000'
+    command: sh -c "npm run migrate && npm run seed && node src/server.js"
+
+  # Backup diário automático às 02:00 (seção 30 do documento de requisitos)
+  backup:
+    image: postgres:16-alpine
+    container_name: shkt-backup
+    restart: unless-stopped
+    depends_on:
+      banco:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${DB_PASSWORD:-shkt}
+      DB_USER: ${DB_USER:-shkt}
+      DB_NAME: ${DB_NAME:-shkt_erp}
+      RETENCAO_DIAS: ${RETENCAO_DIAS:-30}
+    volumes:
+      - ./backups:/backups
+      - ./scripts/backup.sh:/backup.sh:ro
+    entrypoint: ['sh', '-c', 'while true; do sh /backup.sh; sleep 86400; done']
+
+volumes:
+  banco_dados:
+  uploads:

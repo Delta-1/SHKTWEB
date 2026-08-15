@@ -4,7 +4,7 @@ import { carregar } from '../lib/referencias.js';
 import * as financeiro from '../services/financeiro.js';
 import * as validar from '../lib/validar.js';
 import { ErroNaoEncontrado } from '../lib/erros.js';
-import { um, muitos } from '../db/index.js';
+import { um } from '../db/index.js';
 import { hojeISO } from '../lib/formato.js';
 
 const router = Router();

@@ -1,10 +1,9 @@
 import { Router } from 'express';
 import { exigir } from '../lib/auth.js';
-import { muitos, um } from '../db/index.js';
+import { muitos, um, transacao } from '../db/index.js';
 import { carregar } from '../lib/referencias.js';
 import { hojeISO } from '../lib/formato.js';
 import { registrar, ACOES } from '../lib/auditoria.js';
-import { transacao } from '../db/index.js';
 
 const router = Router();
 
