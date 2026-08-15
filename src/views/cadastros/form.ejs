@@ -1,0 +1,137 @@
+<%- include('../partials/topo') %>
+
+<%
+  // Agrupa os campos em fieldsets, preservando a ordem de declaracao
+  const grupos = [];
+  for (const campo of def.campos) {
+    const nome = campo.grupo || null;
+    let g = grupos.find(x => x.nome === nome);
+    if (!g) { g = { nome, campos: [] }; grupos.push(g); }
+    g.campos.push(campo);
+  }
+  const somenteLeitura = !pode(def.permissao + (novo ? '.criar' : '.editar'));
+%>
+
+<form method="post" action="<%= novo ? base + '/novo' : base + '/' + registro.id %>" class="cartao">
+  <div class="cartao-topo">
+    <a href="<%= base %>" class="btn pequeno">← Voltar</a>
+    <h2><%= novo ? 'Novo ' + def.singular.toLowerCase() : def.singular %></h2>
+    <% if (!novo && registro.codigo) { %><span class="sub mono"><%= registro.codigo %></span><% } %>
+    <span style="flex:1"></span>
+    <% if (!novo && typeof registro.ativo !== 'undefined') { %>
+      <span class="pill <%= registro.ativo ? 'ok' : 'neutro' %>">
+        <%= registro.ativo ? 'Ativo' : 'Inativo' %>
+      </span>
+    <% } %>
+  </div>
+
+  <div class="cartao-corpo">
+    <% for (const grupo of grupos) { %>
+      <fieldset>
+        <% if (grupo.nome) { %><legend><%= grupo.nome %></legend><% } %>
+        <div class="campos">
+          <% for (const c of grupo.campos) { %>
+            <%
+              const valor = registro[c.nome];
+              const id = 'campo_' + c.nome;
+              const larg = 'c' + (c.col || 6);
+              const desabilitado = somenteLeitura || c.somenteLeitura;
+            %>
+            <div class="campo <%= larg %>">
+              <% if (c.tipo === 'checkbox') { %>
+                <label class="marcar" for="<%= id %>">
+                  <input type="checkbox" id="<%= id %>" name="<%= c.nome %>" value="1"
+                         <%= valor ? 'checked' : '' %> <%= desabilitado ? 'disabled' : '' %>>
+                  <span><%= c.rotulo %></span>
+                </label>
+                <% if (c.ajuda) { %><span class="ajuda"><%= c.ajuda %></span><% } %>
+
+              <% } else { %>
+                <label for="<%= id %>">
+                  <%= c.rotulo %>
+                  <% if (c.obrigatorio) { %><span class="obrigatorio">*</span><% } %>
+                </label>
+
+                <% if (c.tipo === 'select') { %>
+                  <select id="<%= id %>" name="<%= c.nome %>" <%= c.obrigatorio ? 'required' : '' %>
+                          <%= desabilitado ? 'disabled' : '' %>>
+                    <option value=""><%= c.obrigatorio ? 'Selecione...' : '—' %></option>
+                    <% const lista = c.origem ? (opcoes[c.nome] || []) : (c.opcoes || []); %>
+                    <% for (const o of lista) { %>
+                      <option value="<%= o.valor %>" <%= String(valor ?? '') === String(o.valor) ? 'selected' : '' %>>
+                        <%= o.texto %>
+                      </option>
+                    <% } %>
+                  </select>
+
+                <% } else if (c.tipo === 'textarea') { %>
+                  <textarea id="<%= id %>" name="<%= c.nome %>" rows="<%= c.linhas || 3 %>"
+                            <%= desabilitado ? 'disabled' : '' %>><%= valor || '' %></textarea>
+
+                <% } else if (['decimal','dinheiro'].includes(c.tipo)) { %>
+                  <input type="text" inputmode="decimal" class="numerico"
+                         data-casas="<%= c.tipo === 'dinheiro' ? 2 : (c.escala ?? 3) %>"
+                         id="<%= id %>" name="<%= c.nome %>"
+                         value="<%= valor !== null && valor !== undefined && valor !== '' ? f.formatar(valor, c.tipo === 'dinheiro' ? 2 : (c.escala ?? 3)) : '' %>"
+                         <%= c.obrigatorio ? 'required' : '' %> <%= desabilitado ? 'disabled' : '' %>>
+
+                <% } else if (c.tipo === 'numero') { %>
+                  <input type="number" step="1" id="<%= id %>" name="<%= c.nome %>"
+                         value="<%= valor ?? '' %>" <%= c.obrigatorio ? 'required' : '' %>
+                         <%= desabilitado ? 'disabled' : '' %>>
+
+                <% } else if (c.tipo === 'data') { %>
+                  <input type="date" id="<%= id %>" name="<%= c.nome %>"
+                         value="<%= f.dataInput(valor) %>" <%= c.obrigatorio ? 'required' : '' %>
+                         <%= desabilitado ? 'disabled' : '' %>>
+
+                <% } else { %>
+                  <input type="<%= c.tipo === 'email' ? 'email' : 'text' %>"
+                         id="<%= id %>" name="<%= c.nome %>" value="<%= valor ?? '' %>"
+                         <%= c.obrigatorio ? 'required' : '' %> <%= desabilitado ? 'disabled' : '' %>
+                         <%= c.placeholder ? 'placeholder=' + JSON.stringify(c.placeholder) : '' %>>
+                <% } %>
+
+                <% if (c.ajuda) { %><span class="ajuda"><%= c.ajuda %></span><% } %>
+              <% } %>
+            </div>
+          <% } %>
+        </div>
+      </fieldset>
+    <% } %>
+
+    <% if (!novo && (registro.criado_em || registro.atualizado_em)) { %>
+      <p class="txt-min txt-fraco mb-0">
+        <% if (registro.criado_em) { %>Criado em <%= f.dataHora(registro.criado_em) %>.<% } %>
+        <% if (registro.atualizado_em) { %> Última alteração em <%= f.dataHora(registro.atualizado_em) %>.<% } %>
+      </p>
+    <% } %>
+  </div>
+
+  <div class="rodape-form">
+    <a href="<%= base %>" class="btn">Cancelar</a>
+    <span class="espaco"></span>
+
+    <% if (!novo && typeof registro.ativo !== 'undefined' && pode(def.permissao + '.cancelar')) { %>
+      <button type="submit" form="form-situacao"
+              class="btn <%= registro.ativo ? 'contorno-perigo' : '' %>"
+              data-confirmar="<%= registro.ativo
+                  ? 'Inativar este registro? Ele deixa de aparecer nas novas operações, mas o histórico é preservado.'
+                  : 'Reativar este registro?' %>">
+        <%= registro.ativo ? 'Inativar' : 'Reativar' %>
+      </button>
+    <% } %>
+
+    <% if (!somenteLeitura) { %>
+      <button type="submit" class="btn primario">
+        <%= novo ? 'Cadastrar' : 'Salvar alterações' %>
+      </button>
+    <% } %>
+  </div>
+</form>
+
+<% if (!novo && typeof registro.ativo !== 'undefined' && pode(def.permissao + '.cancelar')) { %>
+  <form id="form-situacao" method="post" action="<%= base %>/<%= registro.id %>/situacao" class="oculto"></form>
+<% } %>
+
+<%- include('../partials/fim') %>

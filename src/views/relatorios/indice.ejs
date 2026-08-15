@@ -1,0 +1,20 @@
+<%- include('../partials/topo') %>
+
+<div class="cartao">
+  <div class="cartao-topo">
+    <h2>Relatórios</h2>
+    <span class="sub">Todos permitem filtro por período e impressão em PDF pelo navegador.</span>
+  </div>
+  <div class="cartao-corpo">
+    <div class="grade grade-2">
+      <% for (const r of relatorios) { %>
+        <a class="indicador" href="<%= r.url %>?de=<%= de %>&ate=<%= ate %>">
+          <div class="rotulo"><%= r.nome %></div>
+          <div class="apoio mt-1"><%= r.descricao %></div>
+        </a>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/fim') %>

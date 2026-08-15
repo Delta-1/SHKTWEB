@@ -1,0 +1,151 @@
+<%- include('../partials/topo') %>
+
+<% const acao = novo ? '/certificados/novo' : `/certificados/${certificado.id}/editar`; %>
+
+<% if (novo && !fumigacoes.length) { %>
+  <div class="aviso atencao" style="max-width:900px">
+    <span class="ic">!</span>
+    <div>
+      <strong>Nenhuma fumigação com saldo disponível</strong>
+      Um certificado só pode ser emitido a partir de uma fumigação <em>validada</em> que ainda
+      tenha saldo. Informe o Comunicado de Fumigação e valide o pedido antes.
+      <div class="mt-1"><a href="/fumigacao" class="btn pequeno">Ver fumigações</a></div>
+    </div>
+  </div>
+<% } else { %>
+
+<form method="post" action="<%= acao %>" class="cartao" style="max-width:1000px">
+  <div class="cartao-topo">
+    <a href="<%= novo ? '/certificados' : '/certificados/' + certificado.id %>" class="btn pequeno">← Voltar</a>
+    <h2><%= novo ? 'Novo certificado de fumigação' : 'Editar certificado ' + certificado.numero %></h2>
+  </div>
+
+  <div class="cartao-corpo">
+    <fieldset>
+      <legend>Origem</legend>
+      <div class="campos">
+        <div class="campo c8">
+          <label for="fumigacao_id">Fumigação <span class="obrigatorio">*</span></label>
+          <select id="fumigacao_id" name="fumigacao_id" required data-foco>
+            <option value="">Selecione a fumigação validada...</option>
+            <% for (const x of fumigacoes) { %>
+              <option value="<%= x.id %>" data-custo="<%= x.custo_tonelada || '' %>"
+                      data-saldo="<%= x.saldo_kg %>" data-moeda="<%= x.moeda_id || '' %>"
+                      <%= String(certificado.fumigacao_id) === String(x.id) ? 'selected' : '' %>>
+                <%= x.numero %> · <%= x.produto %> · saldo <%= f.formatar(Number(x.saldo_kg) / 1000, 3) %> t
+                <%= x.numero_comunicado ? '· com. ' + x.numero_comunicado : '' %>
+              </option>
+            <% } %>
+          </select>
+          <span class="ajuda">Somente fumigações validadas e com saldo aparecem aqui.</span>
+        </div>
+        <div class="campo c4">
+          <label for="numero_certificado">Nº do certificado da fumigadora</label>
+          <input type="text" id="numero_certificado" name="numero_certificado" maxlength="60"
+                 value="<%= certificado.numero_certificado || '' %>">
+          <span class="ajuda">Obrigatório para validar.</span>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Quantidade e custo</legend>
+      <div class="campos">
+        <div class="campo c3">
+          <label for="quantidade">Quantidade <span class="obrigatorio">*</span></label>
+          <input type="text" inputmode="decimal" class="numerico" data-casas="3"
+                 id="quantidade" name="quantidade" required
+                 value="<%= certificado.quantidade_origem ? f.formatar(certificado.quantidade_origem, 3) : '' %>">
+          <span class="ajuda" data-eco-kg></span>
+        </div>
+        <div class="campo c3">
+          <label for="unidade_id">Unidade <span class="obrigatorio">*</span></label>
+          <select id="unidade_id" name="unidade_id" required>
+            <% for (const u of ref.unidades) { %>
+              <option value="<%= u.id %>" data-fator="<%= u.fator_kg %>"
+                      <%= String(certificado.unidade_id) === String(u.id) ? 'selected'
+                          : (!certificado.unidade_id && u.codigo === 'TON' ? 'selected' : '') %>>
+                <%= u.descricao %>
+              </option>
+            <% } %>
+          </select>
+        </div>
+        <div class="campo c2">
+          <label for="custo_tonelada">Custo / tonelada</label>
+          <input type="text" inputmode="decimal" class="numerico" data-casas="2"
+                 id="custo_tonelada" name="custo_tonelada"
+                 value="<%= certificado.custo_tonelada ? f.formatar(certificado.custo_tonelada, 2) : '' %>">
+        </div>
+        <div class="campo c2">
+          <label for="moeda_id">Moeda <span class="obrigatorio">*</span></label>
+          <select id="moeda_id" name="moeda_id" required>
+            <% for (const m of ref.moedas) { %>
+              <option value="<%= m.id %>"
+                      <%= String(certificado.moeda_id) === String(m.id) ? 'selected'
+                          : (!certificado.moeda_id && m.codigo === 'BRL' ? 'selected' : '') %>>
+                <%= m.codigo %>
+              </option>
+            <% } %>
+          </select>
+        </div>
+        <div class="campo c2">
+          <label for="valor_total">Valor total</label>
+          <input type="text" id="valor_total" data-total-tonelada readonly class="numerico">
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Datas e destino</legend>
+      <div class="campos">
+        <div class="campo c3">
+          <label for="data">Data do certificado <span class="obrigatorio">*</span></label>
+          <input type="date" id="data" name="data" required value="<%= f.dataInput(certificado.data) %>">
+        </div>
+        <div class="campo c3">
+          <label for="vencimento">Vencimento do pagamento</label>
+          <input type="date" id="vencimento" name="vencimento" value="<%= f.dataInput(certificado.vencimento) %>">
+          <span class="ajuda">Padrão: <%= diasVencimento %> dias após a data.</span>
+        </div>
+        <div class="campo c3">
+          <label for="cliente_id">Cliente / operação</label>
+          <select id="cliente_id" name="cliente_id">
+            <option value="">—</option>
+            <% for (const c of ref.clientes) { %>
+              <option value="<%= c.id %>" <%= String(certificado.cliente_id) === String(c.id) ? 'selected' : '' %>>
+                <%= c.nome %>
+              </option>
+            <% } %>
+          </select>
+        </div>
+        <div class="campo c3">
+          <label for="destino">Destino</label>
+          <input type="text" id="destino" name="destino" value="<%= certificado.destino || '' %>"
+                 placeholder="Ex.: Lima / Peru">
+        </div>
+        <div class="campo c12">
+          <label for="observacoes">Observações</label>
+          <textarea id="observacoes" name="observacoes" rows="2"><%= certificado.observacoes || '' %></textarea>
+        </div>
+      </div>
+    </fieldset>
+
+    <div class="aviso info mb-0">
+      <span class="ic">i</span>
+      <div>
+        O certificado é criado como <strong>rascunho</strong>. Ao <strong>validar</strong>, o sistema
+        consome o saldo fumigado e gera automaticamente o título em Contas a Pagar da fumigadora.
+      </div>
+    </div>
+  </div>
+
+  <div class="rodape-form">
+    <a href="<%= novo ? '/certificados' : '/certificados/' + certificado.id %>" class="btn">Cancelar</a>
+    <span class="espaco"></span>
+    <button type="submit" class="btn primario"><%= novo ? 'Criar certificado' : 'Salvar alterações' %></button>
+  </div>
+</form>
+
+<% } %>
+
+<%- include('../partials/fim') %>

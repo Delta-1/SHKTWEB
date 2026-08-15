@@ -1,0 +1,98 @@
+<%
+  const x = fumigacao;
+  const tipoDocumento = 'Pedido de Fumigação';
+  const numeroDocumento = x.numero;
+%>
+<%- include('_topo', { tipoDocumento, numeroDocumento }) %>
+
+<% if (x.status === 'CANCELADA') { %>
+  <p class="txt-centro"><span class="doc-carimbo">CANCELADA</span></p>
+<% } %>
+
+<section class="doc-secao">
+  <h3>Empresa fumigadora</h3>
+  <div class="doc-grade">
+    <div class="campo-doc largo"><div class="rot">Razão social</div><div class="val"><%= x.fumigadora %></div></div>
+    <div class="campo-doc"><div class="rot">Comunicado de fumigação</div>
+      <div class="val mono"><%= x.numero_comunicado || '—' %></div></div>
+    <div class="campo-doc"><div class="rot">Situação</div>
+      <div class="val"><%= f.rotuloStatus(x.status) %></div></div>
+  </div>
+</section>
+
+<section class="doc-secao">
+  <h3>Mercadoria a fumigar</h3>
+  <div class="doc-grade">
+    <div class="campo-doc largo"><div class="rot">Produto</div>
+      <div class="val"><%= x.produto %><%= x.produto_codigo ? ' (' + x.produto_codigo + ')' : '' %></div></div>
+    <div class="campo-doc"><div class="rot">Local</div><div class="val"><%= x.local %></div></div>
+    <div class="campo-doc"><div class="rot">Lote</div><div class="val"><%= x.lote || '—' %></div></div>
+    <div class="campo-doc total"><div class="rot">Quantidade (kg)</div>
+      <div class="val"><%= f.formatar(x.quantidade_kg, 3) %></div></div>
+    <div class="campo-doc total"><div class="rot">Quantidade (toneladas)</div>
+      <div class="val"><%= f.toneladas(x.quantidade_kg) %></div></div>
+    <div class="campo-doc"><div class="rot">Custo por tonelada</div>
+      <div class="val"><%= x.custo_tonelada ? (x.moeda_simbolo || '') + ' ' + f.formatar(x.custo_tonelada, 2) : '—' %></div></div>
+    <div class="campo-doc"><div class="rot">Responsável</div><div class="val"><%= x.responsavel || '—' %></div></div>
+  </div>
+</section>
+
+<section class="doc-secao">
+  <h3>Execução</h3>
+  <div class="doc-grade">
+    <div class="campo-doc"><div class="rot">Início</div>
+      <div class="val"><%= f.dataHora(x.data_hora_inicio) || '—' %></div></div>
+    <div class="campo-doc"><div class="rot">Término / exaustão</div>
+      <div class="val"><%= f.dataHora(x.data_hora_termino) || '—' %></div></div>
+    <div class="campo-doc"><div class="rot">Validada em</div>
+      <div class="val"><%= f.dataHora(x.validada_em) || '—' %></div></div>
+    <div class="campo-doc"><div class="rot">Validada por</div>
+      <div class="val"><%= x.validada_por_nome || '—' %></div></div>
+  </div>
+</section>
+
+<section class="doc-secao">
+  <h3>Conta-corrente de fumigação</h3>
+  <div class="doc-grade">
+    <div class="campo-doc total"><div class="rot">Fumigado</div>
+      <div class="val"><%= f.toneladas(x.quantidade_kg) %></div></div>
+    <div class="campo-doc total"><div class="rot">Já certificado</div>
+      <div class="val"><%= f.toneladas(x.quantidade_certificada_kg) %></div></div>
+    <div class="campo-doc total"><div class="rot">Saldo disponível</div>
+      <div class="val"><%= x.status === 'VALIDADA' ? f.toneladas(x.saldo_kg) : '—' %></div></div>
+  </div>
+
+  <% if (x.certificados && x.certificados.filter(c => c.status !== 'CANCELADO').length) { %>
+    <table class="tabela" style="margin-top:10px">
+      <thead><tr><th>Certificado</th><th>Nº fumigadora</th><th>Data</th><th class="num">Quantidade</th></tr></thead>
+      <tbody>
+        <% for (const c of x.certificados.filter(c => c.status !== 'CANCELADO')) { %>
+          <tr>
+            <td class="doc"><%= c.numero %></td>
+            <td class="doc"><%= c.numero_certificado || '—' %></td>
+            <td><%= f.data(c.data) %></td>
+            <td class="num"><%= f.toneladas(c.quantidade_kg) %></td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  <% } %>
+</section>
+
+<section class="doc-secao">
+  <h3>Observações</h3>
+  <div class="doc-observacao"><%= x.observacoes || '' %></div>
+</section>
+
+<div class="assinaturas">
+  <div class="linha-assinatura">
+    <div class="traco"></div>
+    <span><%= empresa.nomeCurto || 'SHKT' %> — responsável</span>
+  </div>
+  <div class="linha-assinatura">
+    <div class="traco"></div>
+    <span><%= x.fumigadora %> — responsável técnico</span>
+  </div>
+</div>
+
+<%- include('_fim', { tipoDocumento, numeroDocumento }) %>

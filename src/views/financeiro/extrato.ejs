@@ -1,0 +1,75 @@
+<%- include('../partials/topo') %>
+
+<div class="grade grade-3 mb-2">
+  <div class="indicador destaque">
+    <div class="rotulo">Saldo atual</div>
+    <div class="valor"><%= conta.moeda_simbolo %> <%= f.formatar(conta.saldo_atual, 2) %></div>
+    <div class="apoio"><%= conta.nome %></div>
+  </div>
+  <div class="indicador">
+    <div class="rotulo">Entradas no filtro</div>
+    <div class="valor txt-ok">
+      <%= f.formatar(extrato.filter(m => m.tipo === 'ENTRADA').reduce((s, m) => s + Number(m.valor), 0), 2) %>
+    </div>
+  </div>
+  <div class="indicador">
+    <div class="rotulo">Saídas no filtro</div>
+    <div class="valor txt-erro">
+      <%= f.formatar(extrato.filter(m => m.tipo === 'SAIDA').reduce((s, m) => s + Number(m.valor), 0), 2) %>
+    </div>
+  </div>
+</div>
+
+<div class="cartao">
+  <div class="cartao-topo">
+    <a href="/financeiro/contas" class="btn pequeno">← Contas</a>
+    <h2>Extrato — <%= conta.nome %></h2>
+    <span style="flex:1"></span>
+    <button type="button" class="btn pequeno" data-imprimir>Imprimir</button>
+  </div>
+
+  <form method="get" class="filtros">
+    <div class="campo"><label for="de">De</label>
+      <input type="date" id="de" name="de" value="<%= filtros.de || '' %>"></div>
+    <div class="campo"><label for="ate">Até</label>
+      <input type="date" id="ate" name="ate" value="<%= filtros.ate || '' %>"></div>
+    <span class="espaco"></span>
+    <button type="submit" class="btn">Filtrar</button>
+    <a href="/financeiro/contas/<%= conta.id %>" class="btn">Limpar</a>
+  </form>
+
+  <% if (!extrato.length) { %>
+    <div class="vazio"><p class="txt-min">Nenhuma movimentação no período.</p></div>
+  <% } else { %>
+    <div class="tabela-area">
+      <table class="tabela responsiva">
+        <thead>
+          <tr><th>Data</th><th>Histórico</th><th>Origem</th>
+            <th class="num">Entrada</th><th class="num">Saída</th><th>Usuário</th></tr>
+        </thead>
+        <tbody>
+          <% for (const m of extrato) { %>
+            <tr>
+              <td data-rot="Data" class="nowrap"><%= f.data(m.data) %></td>
+              <td data-rot="Histórico"><%= m.historico %></td>
+              <td data-rot="Origem" class="txt-min txt-fraco">
+                <% if (m.origem_tipo === 'CONTA_PAGAR') { %>
+                  <a href="/financeiro/pagar/<%= m.origem_id %>">contas a pagar</a>
+                <% } else if (m.origem_tipo === 'CONTA_RECEBER') { %>
+                  <a href="/financeiro/receber/<%= m.origem_id %>">contas a receber</a>
+                <% } else { %><%= m.origem_tipo || '—' %><% } %>
+              </td>
+              <td data-rot="Entrada" class="num txt-ok">
+                <%= m.tipo === 'ENTRADA' ? f.formatar(m.valor, 2) : '' %></td>
+              <td data-rot="Saída" class="num txt-erro">
+                <%= m.tipo === 'SAIDA' ? f.formatar(m.valor, 2) : '' %></td>
+              <td data-rot="Usuário" class="txt-min txt-fraco"><%= m.usuario || '' %></td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>
+
+<%- include('../partials/fim') %>

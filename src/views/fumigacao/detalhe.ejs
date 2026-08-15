@@ -1,0 +1,236 @@
+<%- include('../partials/topo') %>
+
+<%
+  const x = fumigacao;
+  const editavel = ['RASCUNHO', 'EM_ANDAMENTO', 'AGUARDANDO_COMUNICADO'].includes(x.status);
+  const podeValidar = editavel && pode('fumigacao.aprovar');
+  const saldo = Number(x.saldo_kg);
+  const usadoPct = Number(x.quantidade_kg) ? (Number(x.quantidade_certificada_kg) / Number(x.quantidade_kg)) * 100 : 0;
+%>
+
+<div class="cartao">
+  <div class="cartao-topo">
+    <a href="/fumigacao" class="btn pequeno">← Lista</a>
+    <h2>Fumigação <span class="mono"><%= x.numero %></span></h2>
+    <span class="pill <%= f.classeStatus(x.status) %>"><%= f.rotuloStatus(x.status) %></span>
+    <span style="flex:1"></span>
+    <a href="/fumigacao/<%= x.id %>/documento" class="btn pequeno" target="_blank">Imprimir</a>
+    <% if (editavel && pode('fumigacao.editar')) { %>
+      <a href="/fumigacao/<%= x.id %>/editar" class="btn pequeno">Editar</a>
+    <% } %>
+    <% if (x.status === 'VALIDADA' && saldo > 0 && pode('certificados.criar')) { %>
+      <a href="/certificados/novo?fumigacao=<%= x.id %>" class="btn primario pequeno">Emitir certificado</a>
+    <% } %>
+  </div>
+
+  <div class="cartao-corpo">
+    <div class="ficha">
+      <div class="item">
+        <div class="rot">Comunicado de fumigação</div>
+        <div class="val mono">
+          <% if (x.numero_comunicado) { %><%= x.numero_comunicado %>
+          <% } else { %><span class="pill atencao">não informado</span><% } %>
+        </div>
+      </div>
+      <div class="item"><div class="rot">Empresa fumigadora</div><div class="val"><%= x.fumigadora %></div></div>
+      <div class="item"><div class="rot">Produto</div><div class="val"><%= x.produto %></div></div>
+      <div class="item">
+        <div class="rot">Local / lote</div>
+        <div class="val"><%= x.local %><%= x.lote ? ' · ' + x.lote : '' %></div>
+      </div>
+      <div class="item"><div class="rot">Início</div><div class="val"><%= f.dataHora(x.data_hora_inicio) || '—' %></div></div>
+      <div class="item"><div class="rot">Término (exaustão)</div><div class="val"><%= f.dataHora(x.data_hora_termino) || '—' %></div></div>
+      <div class="item"><div class="rot">Responsável</div><div class="val"><%= x.responsavel || '—' %></div></div>
+      <div class="item">
+        <div class="rot">Custo por tonelada</div>
+        <div class="val"><%= x.custo_tonelada ? (x.moeda_simbolo || '') + ' ' + f.formatar(x.custo_tonelada, 2) : '—' %></div>
+      </div>
+    </div>
+
+    <% if (x.observacoes) { %>
+      <p class="txt-min txt-fraco mt-2 mb-0"><strong>Observações:</strong> <%= x.observacoes %></p>
+    <% } %>
+
+    <% if (x.status === 'CANCELADA') { %>
+      <div class="aviso erro mt-2 mb-0">
+        <span class="ic">✕</span>
+        <div>
+          <strong>Fumigação cancelada em <%= f.dataHora(x.cancelada_em) %></strong>
+          <%= x.motivo_cancelamento %>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<!-- ------------------------------------------------ conta-corrente de saldo -->
+<div class="grade grade-3 mb-2">
+  <div class="indicador">
+    <div class="rotulo">Fumigado</div>
+    <div class="valor"><%= f.toneladas(x.quantidade_kg) %></div>
+    <div class="apoio"><%= f.kg(x.quantidade_kg) %></div>
+  </div>
+  <div class="indicador">
+    <div class="rotulo">Já certificado</div>
+    <div class="valor"><%= f.toneladas(x.quantidade_certificada_kg) %></div>
+    <div class="apoio">
+      <div class="barra"><div class="parte <%= usadoPct >= 100 ? 'cheio' : '' %>" style="width:<%= Math.min(100, usadoPct) %>%"></div></div>
+    </div>
+  </div>
+  <div class="indicador <%= x.status === 'VALIDADA' && saldo > 0 ? 'destaque' : '' %>">
+    <div class="rotulo">Saldo fumigado disponível</div>
+    <div class="valor"><%= x.status === 'VALIDADA' ? f.toneladas(saldo) : '—' %></div>
+    <div class="apoio">
+      <%= x.status === 'VALIDADA' ? 'pode ser certificado' : 'disponível somente após validação' %>
+    </div>
+  </div>
+</div>
+
+<!-- --------------------------------------------------------------- validar -->
+<% if (podeValidar) { %>
+  <form method="post" action="/fumigacao/<%= x.id %>/validar" class="cartao">
+    <div class="cartao-topo">
+      <h2>Validar fumigação</h2>
+      <span class="sub">Gera o saldo fumigado que permite emitir certificados.</span>
+    </div>
+    <div class="cartao-corpo">
+      <% if (!x.numero_comunicado) { %>
+        <div class="aviso atencao">
+          <span class="ic">!</span>
+          <div>
+            <strong>Comunicado de Fumigação obrigatório</strong>
+            Sem o número do comunicado emitido pela fumigadora, esta fumigação não pode ser
+            validada e nenhum certificado poderá ser emitido a partir dela.
+          </div>
+        </div>
+      <% } %>
+
+      <div class="campos">
+        <div class="campo c4">
+          <label for="numero_comunicado">Nº do Comunicado <span class="obrigatorio">*</span></label>
+          <input type="text" id="numero_comunicado" name="numero_comunicado" required maxlength="60"
+                 value="<%= x.numero_comunicado || '' %>" <%= x.numero_comunicado ? '' : 'data-foco' %>>
+        </div>
+        <div class="campo c4">
+          <label for="inicio">Início</label>
+          <input type="datetime-local" id="inicio" name="inicio" value="<%= f.dataHoraInput(x.data_hora_inicio) %>">
+        </div>
+        <div class="campo c4">
+          <label for="termino">Término / exaustão <span class="obrigatorio">*</span></label>
+          <input type="datetime-local" id="termino" name="termino" required
+                 value="<%= f.dataHoraInput(x.data_hora_termino) %>">
+        </div>
+      </div>
+    </div>
+    <div class="rodape-form">
+      <span class="espaco"></span>
+      <button type="submit" class="btn primario"
+              data-confirmar="Validar a fumigação <%= x.numero %> com <%= f.toneladas(x.quantidade_kg) %>? Depois disso ela não poderá mais ser editada.">
+        Validar fumigação
+      </button>
+    </div>
+  </form>
+<% } %>
+
+<div class="grade grade-2">
+  <!-- ------------------------------------------------------- certificados -->
+  <div class="cartao">
+    <div class="cartao-topo">
+      <h2>Certificados emitidos</h2>
+      <span class="sub"><%= x.certificados.length %></span>
+    </div>
+    <% if (!x.certificados.length) { %>
+      <div class="vazio"><p class="txt-min">Nenhum certificado emitido a partir desta fumigação.</p></div>
+    <% } else { %>
+      <div class="tabela-area">
+        <table class="tabela">
+          <thead>
+            <tr><th>Nº</th><th>Certificado</th><th class="num">Qtd.</th><th class="num">Valor</th><th>Financeiro</th><th>Situação</th></tr>
+          </thead>
+          <tbody>
+            <% for (const c of x.certificados) { %>
+              <tr class="<%= c.status === 'CANCELADO' ? 'linha-cancelada' : '' %>">
+                <td class="doc"><a href="/certificados/<%= c.id %>"><%= c.numero %></a></td>
+                <td class="doc txt-min"><%= c.numero_certificado || '—' %></td>
+                <td class="num"><%= f.toneladas(c.quantidade_kg) %></td>
+                <td class="num"><%= f.formatar(c.valor_total, 2) %></td>
+                <td class="doc txt-min">
+                  <% if (c.conta_pagar_numero) { %>
+                    <a href="/financeiro/pagar/<%= c.conta_pagar_id %>"><%= c.conta_pagar_numero %></a>
+                    <span class="pill <%= f.classeStatus(c.conta_pagar_status) %>"><%= f.rotuloStatus(c.conta_pagar_status) %></span>
+                  <% } else { %>—<% } %>
+                </td>
+                <td><span class="pill <%= f.classeStatus(c.status) %>"><%= f.rotuloStatus(c.status) %></span></td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+
+  <!-- --------------------------------------------------- conta-corrente -->
+  <div class="cartao">
+    <div class="cartao-topo">
+      <h2>Conta-corrente de fumigação</h2>
+      <span class="sub">entradas e saídas do saldo</span>
+    </div>
+    <% if (!x.movimentos.length) { %>
+      <div class="vazio"><p class="txt-min">Nenhum movimento. O saldo é criado ao validar a fumigação.</p></div>
+    <% } else { %>
+      <div class="tabela-area">
+        <table class="tabela">
+          <thead>
+            <tr><th>Data</th><th>Histórico</th><th class="num">Qtd.</th><th class="num">Saldo</th></tr>
+          </thead>
+          <tbody>
+            <% for (const m of x.movimentos) { %>
+              <tr>
+                <td class="nowrap txt-min"><%= f.dataHora(m.data_hora) %></td>
+                <td><%= m.historico %>
+                  <div class="txt-min txt-fraco"><%= m.usuario || '' %></div>
+                </td>
+                <td class="num <%= Number(m.quantidade_kg) > 0 ? 'txt-ok' : 'txt-erro' %>">
+                  <%= Number(m.quantidade_kg) > 0 ? '+' : '−' %><%= f.formatar(Math.abs(Number(m.quantidade_kg)) / 1000, 3) %> t
+                </td>
+                <td class="num txt-forte"><%= f.formatar(Number(m.saldo_apos_kg) / 1000, 3) %> t</td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<!-- -------------------------------------------------------------- cancelar -->
+<% if (x.status !== 'CANCELADA' && pode('fumigacao.cancelar')) { %>
+  <div class="barra-acoes mt-2">
+    <span class="espaco"></span>
+    <button type="button" class="btn contorno-perigo" data-modal="#modal-cancelar">Cancelar fumigação</button>
+  </div>
+
+  <dialog class="modal" id="modal-cancelar">
+    <form method="post" action="/fumigacao/<%= x.id %>/cancelar">
+      <div class="modal-topo"><h2>Cancelar fumigação <%= x.numero %></h2></div>
+      <div class="modal-corpo">
+        <p class="txt-min">
+          O registro é preservado com o motivo do cancelamento.
+          <% if (Number(x.quantidade_certificada_kg) > 0) { %>
+            <strong class="txt-erro">Esta fumigação possui certificados — cancele-os primeiro.</strong>
+          <% } %>
+        </p>
+        <div class="campo">
+          <label for="motivo-cancelar">Motivo <span class="obrigatorio">*</span></label>
+          <textarea id="motivo-cancelar" name="motivo" rows="3" required minlength="5"></textarea>
+        </div>
+      </div>
+      <div class="modal-rodape">
+        <button type="button" class="btn" data-fechar-modal>Voltar</button>
+        <button type="submit" class="btn perigo">Confirmar cancelamento</button>
+      </div>
+    </form>
+  </dialog>
+<% } %>
+
+<%- include('../partials/fim') %>

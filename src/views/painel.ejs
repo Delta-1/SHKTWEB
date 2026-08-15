@@ -1,0 +1,210 @@
+<%- include('partials/topo') %>
+
+<form method="get" class="cartao" data-filtro-auto>
+  <div class="filtros" style="border-bottom:none">
+    <div class="campo">
+      <label for="de">Período de</label>
+      <input type="date" id="de" name="de" value="<%= de %>">
+    </div>
+    <div class="campo">
+      <label for="ate">até</label>
+      <input type="date" id="ate" name="ate" value="<%= ate %>">
+    </div>
+    <span class="espaco"></span>
+    <button type="submit" class="btn">Atualizar</button>
+  </div>
+</form>
+
+<!-- ------------------------------------------------------------ Estoque -->
+<h2 class="mb-1" style="font-size:0.8rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--tinta-3)">
+  Estoque
+</h2>
+<div class="grade grade-4 mb-2">
+  <a class="indicador destaque" href="/estoque">
+    <div class="rotulo">Estoque físico</div>
+    <div class="valor"><%= f.toneladas(estoque.fisico_kg) %></div>
+    <div class="apoio"><%= f.kg(estoque.fisico_kg) %></div>
+  </a>
+  <a class="indicador" href="/estoque">
+    <div class="rotulo">Disponível</div>
+    <div class="valor"><%= f.toneladas(estoque.disponivel_kg) %></div>
+    <div class="apoio">físico − reservado</div>
+  </a>
+  <a class="indicador" href="/carregamentos?status=PROGRAMADO">
+    <div class="rotulo">Comprometido</div>
+    <div class="valor"><%= f.toneladas(estoque.reservado_kg) %></div>
+    <div class="apoio">reservado em carregamentos</div>
+  </a>
+  <a class="indicador <%= Number(fumigado.saldo_kg) > 0 ? 'destaque' : '' %>" href="/fumigacao?comSaldo=1">
+    <div class="rotulo">Saldo fumigado disponível</div>
+    <div class="valor"><%= f.toneladas(fumigado.saldo_kg) %></div>
+    <div class="apoio"><%= fumigado.lotes %> fumigação(ões) validada(s)</div>
+  </a>
+</div>
+
+<!-- --------------------------------------------------------- Financeiro -->
+<h2 class="mb-1" style="font-size:0.8rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--tinta-3)">
+  Financeiro
+</h2>
+<div class="grade grade-4 mb-2">
+  <a class="indicador <%= Number(financeiro.pagar_vencido) > 0 ? 'alerta' : '' %>" href="/financeiro/pagar">
+    <div class="rotulo">A pagar em aberto</div>
+    <div class="valor">R$ <%= f.formatar(financeiro.pagar, 2) %></div>
+    <div class="apoio <%= Number(financeiro.pagar_vencido) > 0 ? 'txt-erro' : '' %>">
+      <% if (Number(financeiro.pagar_vencido) > 0) { %>
+        R$ <%= f.formatar(financeiro.pagar_vencido, 2) %> vencido
+      <% } else { %>nenhum título vencido<% } %>
+    </div>
+  </a>
+  <a class="indicador" href="/financeiro/receber">
+    <div class="rotulo">A receber em aberto</div>
+    <div class="valor">R$ <%= f.formatar(financeiro.receber, 2) %></div>
+    <div class="apoio <%= Number(financeiro.receber_vencido) > 0 ? 'txt-atencao' : '' %>">
+      <% if (Number(financeiro.receber_vencido) > 0) { %>
+        R$ <%= f.formatar(financeiro.receber_vencido, 2) %> em atraso
+      <% } else { %>em dia<% } %>
+    </div>
+  </a>
+  <a class="indicador" href="/financeiro/contas">
+    <div class="rotulo">Saldo em caixa e bancos</div>
+    <div class="valor">
+      R$ <%= f.formatar(saldosContas.reduce((s, c) => s + Number(c.saldo_atual), 0), 2) %>
+    </div>
+    <div class="apoio"><%= saldosContas.length %> conta(s)</div>
+  </a>
+  <%
+    const receitas = Number(resultado.receitas);
+    const despesas = Number(resultado.despesas);
+    const saldoPeriodo = receitas - despesas;
+  %>
+  <a class="indicador <%= saldoPeriodo < 0 ? 'atencao' : 'destaque' %>" href="/relatorios/dre?de=<%= de %>&ate=<%= ate %>">
+    <div class="rotulo">Resultado do período</div>
+    <div class="valor"><%= saldoPeriodo < 0 ? '−' : '' %>R$ <%= f.formatar(Math.abs(saldoPeriodo), 2) %></div>
+    <div class="apoio">receitas − despesas lançadas</div>
+  </a>
+</div>
+
+<!-- --------------------------------------------------------- Exportação -->
+<h2 class="mb-1" style="font-size:0.8rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--tinta-3)">
+  Operação no período
+</h2>
+<div class="grade grade-3 mb-2">
+  <a class="indicador" href="/carregamentos?status=EXPEDIDO&de=<%= de %>&ate=<%= ate %>">
+    <div class="rotulo">Quantidade expedida</div>
+    <div class="valor"><%= f.toneladas(exportacao.kg) %></div>
+    <div class="apoio"><%= exportacao.operacoes %> carregamento(s)</div>
+  </a>
+  <a class="indicador" href="/certificados?de=<%= de %>&ate=<%= ate %>">
+    <div class="rotulo">Custo de fumigação</div>
+    <div class="valor">R$ <%= f.formatar(custoFumigacao.valor, 2) %></div>
+    <div class="apoio"><%= f.toneladas(custoFumigacao.kg) %> certificadas</div>
+  </a>
+  <div class="indicador">
+    <div class="rotulo">Total já fumigado</div>
+    <div class="valor"><%= f.toneladas(fumigado.total_kg) %></div>
+    <div class="apoio">
+      <% const usado = Number(fumigado.total_kg) - Number(fumigado.saldo_kg); %>
+      <%= f.toneladas(usado) %> já certificadas
+      <div class="barra">
+        <div class="parte" style="width:<%= Number(fumigado.total_kg) ? Math.min(100, (usado / Number(fumigado.total_kg)) * 100) : 0 %>%"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ------------------------------------------------------------ Alertas -->
+<%
+  const painelAlertas = [
+    { chave: 'vencidos', titulo: 'Títulos vencidos', itens: vencidos, tipo: 'erro' },
+    { chave: 'comunicado', titulo: 'Fumigações sem Comunicado', itens: semComunicado, tipo: 'atencao' },
+    { chave: 'certificados', titulo: 'Certificados pendentes de validação', itens: certificadosRascunho, tipo: 'atencao' },
+    { chave: 'estoque', titulo: 'Estoque abaixo do mínimo', itens: estoqueBaixo, tipo: 'atencao' },
+    { chave: 'carregamentos', titulo: 'Carregamentos em aberto', itens: carregamentosAbertos, tipo: 'info' },
+  ].filter(a => a.itens.length);
+%>
+
+<% if (painelAlertas.length) { %>
+  <h2 class="mb-1" style="font-size:0.8rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--tinta-3)">
+    O que precisa de atenção
+  </h2>
+  <div class="grade grade-2">
+    <% for (const alerta of painelAlertas) { %>
+      <div class="cartao">
+        <div class="cartao-topo">
+          <span class="pill <%= alerta.tipo %>"><%= alerta.itens.length %></span>
+          <h2><%= alerta.titulo %></h2>
+        </div>
+        <div class="tabela-area">
+          <table class="tabela">
+            <tbody>
+              <% if (alerta.chave === 'vencidos') { %>
+                <% for (const t of alerta.itens) { %>
+                  <tr>
+                    <td class="doc">
+                      <a href="/financeiro/<%= t.tipo === 'CP' ? 'pagar' : 'receber' %>/<%= t.id %>"><%= t.numero %></a>
+                    </td>
+                    <td><%= t.descricao %><div class="txt-min txt-fraco"><%= t.parceiro || '' %></div></td>
+                    <td class="num txt-erro nowrap"><%= t.dias_atraso %> dia(s)</td>
+                    <td class="num txt-forte"><%= t.moeda_simbolo %> <%= f.formatar(t.saldo, 2) %></td>
+                  </tr>
+                <% } %>
+
+              <% } else if (alerta.chave === 'comunicado') { %>
+                <% for (const x of alerta.itens) { %>
+                  <tr>
+                    <td class="doc"><a href="/fumigacao/<%= x.id %>"><%= x.numero %></a></td>
+                    <td><%= x.produto %></td>
+                    <td class="num"><%= f.toneladas(x.quantidade_kg) %></td>
+                    <td class="acoes">
+                      <a href="/fumigacao/<%= x.id %>" class="btn pequeno">Informar</a>
+                    </td>
+                  </tr>
+                <% } %>
+
+              <% } else if (alerta.chave === 'certificados') { %>
+                <% for (const c of alerta.itens) { %>
+                  <tr>
+                    <td class="doc"><a href="/certificados/<%= c.id %>"><%= c.numero %></a></td>
+                    <td class="txt-min txt-fraco">fumig. <%= c.fumigacao_numero %></td>
+                    <td class="num"><%= f.toneladas(c.quantidade_kg) %></td>
+                    <td class="num"><%= c.moeda_simbolo %> <%= f.formatar(c.valor_total, 2) %></td>
+                  </tr>
+                <% } %>
+
+              <% } else if (alerta.chave === 'estoque') { %>
+                <% for (const e of alerta.itens) { %>
+                  <tr>
+                    <td><%= e.produto_descricao %><div class="txt-min txt-fraco"><%= e.local_nome %></div></td>
+                    <td class="num txt-atencao"><%= f.toneladas(e.disponivel_kg) %></td>
+                    <td class="num txt-min txt-fraco">mín. <%= f.toneladas(e.estoque_minimo_kg) %></td>
+                  </tr>
+                <% } %>
+
+              <% } else { %>
+                <% for (const c of alerta.itens) { %>
+                  <tr>
+                    <td class="doc"><a href="/carregamentos/<%= c.id %>"><%= c.numero %></a></td>
+                    <td><%= c.cliente || c.produto %>
+                      <div class="txt-min txt-fraco"><%= c.destino || '' %></div></td>
+                    <td class="num"><%= f.toneladas(c.quantidade_kg) %></td>
+                    <td><span class="pill <%= f.classeStatus(c.status) %>"><%= f.rotuloStatus(c.status) %></span></td>
+                  </tr>
+                <% } %>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    <% } %>
+  </div>
+<% } else { %>
+  <div class="cartao">
+    <div class="cartao-corpo txt-centro txt-fraco" style="padding:28px">
+      <div style="font-size:1.6rem">✓</div>
+      Nenhuma pendência: sem títulos vencidos, sem fumigação sem comunicado
+      e sem certificado aguardando validação.
+    </div>
+  </div>
+<% } %>
+
+<%- include('partials/fim') %>

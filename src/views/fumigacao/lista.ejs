@@ -1,0 +1,124 @@
+<%- include('../partials/topo') %>
+
+<div class="grade grade-3 mb-2">
+  <div class="indicador destaque">
+    <div class="rotulo">Saldo fumigado disponível</div>
+    <div class="valor"><%= f.toneladas(totais.saldo_kg) %></div>
+    <div class="apoio">pronto para emissão de certificado</div>
+  </div>
+  <div class="indicador">
+    <div class="rotulo">Total fumigado validado</div>
+    <div class="valor"><%= f.toneladas(totais.total_kg) %></div>
+    <div class="apoio"><%= totais.quantidade %> fumigação(ões)</div>
+  </div>
+  <div class="indicador <%= alertaFumigacao ? 'atencao' : '' %>">
+    <div class="rotulo">Sem comunicado</div>
+    <div class="valor"><%= alertaFumigacao %></div>
+    <div class="apoio">não podem ser validadas até informar</div>
+  </div>
+</div>
+
+<div class="cartao">
+  <div class="cartao-topo">
+    <h2>Pedidos de fumigação</h2>
+    <span style="flex:1"></span>
+    <% if (pode('fumigacao.criar')) { %>
+      <a href="/fumigacao/novo" class="btn primario pequeno">+ Nova fumigação</a>
+    <% } %>
+  </div>
+
+  <form method="get" class="filtros">
+    <div class="campo largo">
+      <label for="busca">Buscar</label>
+      <input type="search" id="busca" name="busca" value="<%= filtros.busca || '' %>"
+             placeholder="Nº do pedido ou comunicado">
+    </div>
+    <div class="campo">
+      <label for="status">Situação</label>
+      <select id="status" name="status">
+        <option value="">Todas</option>
+        <% for (const s of ['RASCUNHO','EM_ANDAMENTO','AGUARDANDO_COMUNICADO','VALIDADA','CANCELADA']) { %>
+          <option value="<%= s %>" <%= filtros.status === s ? 'selected' : '' %>><%= f.rotuloStatus(s) %></option>
+        <% } %>
+      </select>
+    </div>
+    <div class="campo">
+      <label for="produto">Produto</label>
+      <select id="produto" name="produto">
+        <option value="">Todos</option>
+        <% for (const p of ref.produtos) { %>
+          <option value="<%= p.id %>" <%= String(filtros.produtoId) === String(p.id) ? 'selected' : '' %>><%= p.descricao %></option>
+        <% } %>
+      </select>
+    </div>
+    <div class="campo">
+      <label for="comSaldo">Saldo</label>
+      <select id="comSaldo" name="comSaldo">
+        <option value="">Todas</option>
+        <option value="1" <%= filtros.comSaldo ? 'selected' : '' %>>Só com saldo</option>
+      </select>
+    </div>
+    <span class="espaco"></span>
+    <button type="submit" class="btn">Filtrar</button>
+    <a href="/fumigacao" class="btn">Limpar</a>
+  </form>
+
+  <% if (!lista.length) { %>
+    <div class="vazio">
+      <span class="icone">☁</span>
+      <p>Nenhuma fumigação encontrada.</p>
+      <% if (pode('fumigacao.criar')) { %>
+        <a href="/fumigacao/novo" class="btn primario">Criar pedido de fumigação</a>
+      <% } %>
+    </div>
+  <% } else { %>
+    <div class="tabela-area">
+      <table class="tabela responsiva">
+        <thead>
+          <tr>
+            <th>Nº pedido</th>
+            <th>Comunicado</th>
+            <th>Fumigadora</th>
+            <th>Produto / local</th>
+            <th class="num">Fumigado</th>
+            <th class="num">Certificado</th>
+            <th class="num">Saldo</th>
+            <th>Situação</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (const x of lista) { %>
+            <tr class="<%= x.status === 'CANCELADA' ? 'linha-cancelada' : '' %>">
+              <td data-rot="Nº pedido" class="doc"><a href="/fumigacao/<%= x.id %>"><%= x.numero %></a>
+                <div class="txt-min txt-fraco"><%= f.data(x.data_hora_inicio) %></div>
+              </td>
+              <td data-rot="Comunicado" class="doc">
+                <% if (x.numero_comunicado) { %>
+                  <%= x.numero_comunicado %>
+                <% } else { %>
+                  <span class="pill atencao">pendente</span>
+                <% } %>
+              </td>
+              <td data-rot="Fumigadora"><%= x.fumigadora %></td>
+              <td data-rot="Produto"><%= x.produto %>
+                <div class="txt-min txt-fraco"><%= x.local %><%= x.lote ? ' · lote ' + x.lote : '' %></div>
+              </td>
+              <td data-rot="Fumigado" class="num"><%= f.toneladas(x.quantidade_kg) %></td>
+              <td data-rot="Certificado" class="num txt-fraco"><%= f.toneladas(x.quantidade_certificada_kg) %></td>
+              <td data-rot="Saldo" class="num txt-forte <%= x.status === 'VALIDADA' && Number(x.saldo_kg) > 0 ? 'txt-ok' : '' %>">
+                <%= x.status === 'VALIDADA' ? f.toneladas(x.saldo_kg) : '—' %>
+              </td>
+              <td data-rot="Situação">
+                <span class="pill <%= f.classeStatus(x.status) %>"><%= f.rotuloStatus(x.status) %></span>
+              </td>
+              <td class="acoes"><a href="/fumigacao/<%= x.id %>" class="btn pequeno">Abrir</a></td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>
+
+<%- include('../partials/fim') %>

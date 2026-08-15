@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= titulo %> · SHKT</title>
+  <link rel="icon" href="/estatico/img/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/estatico/css/app.css">
+  <style>
+    /* Layout de papel: o documento aparece centralizado na tela e ocupa a
+       folha inteira na impressão. */
+    body { background: #eef0f3; }
+    .folha {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 20px auto;
+      padding: 16mm 14mm;
+      background: #fff;
+      box-shadow: 0 4px 20px rgba(16,24,40,.15);
+    }
+    .doc-cabecalho {
+      display: flex; align-items: flex-start; gap: 14px;
+      border-bottom: 2px solid var(--verde-800); padding-bottom: 10px; margin-bottom: 6px;
+    }
+    .doc-cabecalho .marca { width: 56px; height: 56px; flex: none; }
+    .doc-cabecalho .empresa { flex: 1; }
+    .doc-cabecalho .empresa strong { font-size: 1.05rem; display: block; color: var(--verde-900); }
+    .doc-cabecalho .empresa span { font-size: 0.72rem; color: var(--tinta-3); display: block; }
+    .doc-cabecalho .identificacao { text-align: right; }
+    .doc-cabecalho .identificacao .tipo {
+      font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--tinta-3);
+      font-weight: 700;
+    }
+    .doc-cabecalho .identificacao .numero {
+      font-size: 1.5rem; font-weight: 700; font-family: var(--mono); color: var(--verde-800);
+    }
+    .doc-cabecalho .identificacao .data { font-size: 0.75rem; color: var(--tinta-3); }
+
+    .doc-secao { margin-top: 14px; }
+    .doc-secao > h3 {
+      font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--tinta-3); border-bottom: 1px solid var(--linha-forte);
+      padding-bottom: 3px; margin-bottom: 8px;
+    }
+    .doc-grade { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px 16px; }
+    .doc-grade .campo-doc { min-width: 0; }
+    .doc-grade .campo-doc .rot {
+      font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--tinta-3);
+    }
+    .doc-grade .campo-doc .val { font-size: 0.85rem; font-weight: 500; word-break: break-word; }
+    .doc-grade .campo-doc.largo { grid-column: span 2; }
+    .doc-grade .campo-doc.total .val { font-size: 1.05rem; font-weight: 700; }
+
+    .assinaturas { display: flex; gap: 40px; margin-top: 36px; }
+    .assinaturas .linha-assinatura { flex: 1; text-align: center; }
+    .assinaturas .linha-assinatura .traco {
+      border-top: 1px solid var(--tinta-2); margin-bottom: 4px; padding-top: 4px;
+    }
+    .assinaturas .linha-assinatura span { font-size: 0.72rem; color: var(--tinta-3); }
+
+    .doc-rodape {
+      margin-top: 26px; padding-top: 8px; border-top: 1px solid var(--linha);
+      font-size: 0.65rem; color: var(--tinta-3); display: flex; justify-content: space-between;
+    }
+    .doc-observacao {
+      border: 1px solid var(--linha-forte); border-radius: 4px; padding: 8px 10px;
+      font-size: 0.8rem; min-height: 40px;
+    }
+    .barra-impressao {
+      max-width: 210mm; margin: 16px auto -8px; display: flex; gap: 8px; justify-content: flex-end;
+    }
+    .doc-carimbo {
+      display: inline-block; border: 2px solid var(--vermelho-600); color: var(--vermelho-600);
+      padding: 2px 10px; border-radius: 4px; font-weight: 700; transform: rotate(-3deg);
+      font-size: 0.8rem; letter-spacing: 0.08em;
+    }
+
+    @media print {
+      body { background: #fff; }
+      .folha { width: auto; min-height: 0; margin: 0; padding: 0; box-shadow: none; }
+      .barra-impressao { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="barra-impressao">
+  <a href="javascript:history.back()" class="btn">← Voltar</a>
+  <button type="button" class="btn primario" data-imprimir>Imprimir / salvar PDF</button>
+</div>
+
+<div class="folha">
+  <header class="doc-cabecalho">
+    <img src="/estatico/img/logo.svg" alt="SHKT" class="marca">
+    <div class="empresa">
+      <strong><%= empresa.nome %></strong>
+      <% if (empresa.cnpj) { %><span>CNPJ: <%= empresa.cnpj %></span><% } %>
+      <% if (empresa.endereco) { %><span><%= empresa.endereco %><%= empresa.cidade ? ' — ' + empresa.cidade : '' %></span><% } %>
+      <% if (empresa.telefone || empresa.email) { %>
+        <span><%= [empresa.telefone, empresa.email].filter(Boolean).join(' · ') %></span>
+      <% } %>
+    </div>
+    <div class="identificacao">
+      <div class="tipo"><%= tipoDocumento %></div>
+      <div class="numero"><%= numeroDocumento %></div>
+      <div class="data">Emitido em <%= f.dataHora(new Date()) %></div>
+    </div>
+  </header>

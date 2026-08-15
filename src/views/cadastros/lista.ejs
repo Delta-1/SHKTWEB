@@ -1,0 +1,112 @@
+<%- include('../partials/topo') %>
+
+<%
+  const colunas = def.campos.filter(c => c.listar);
+  const rotuloDe = (registro, campo) => {
+    const v = registro[campo.nome];
+    if (v === null || v === undefined || v === '') return '';
+    if (campo.tipo === 'checkbox') return v ? 'Sim' : 'Não';
+    if (campo.tipo === 'data') return f.data(v);
+    if (campo.tipo === 'dinheiro') return f.formatar(v, 2);
+    if (campo.tipo === 'decimal') return f.formatar(v, campo.escala ?? 3);
+    if (campo.tipo === 'select' && campo.origem) {
+      const achou = (opcoes[campo.nome] || []).find(o => String(o.valor) === String(v));
+      return achou ? achou.texto : v;
+    }
+    if (campo.tipo === 'select') {
+      const achou = (campo.opcoes || []).find(o => o.valor === v);
+      return achou ? achou.texto : v;
+    }
+    return v;
+  };
+%>
+
+<div class="cartao">
+  <div class="cartao-topo">
+    <h2><%= def.titulo %></h2>
+    <% if (def.descricao) { %><span class="sub"><%= def.descricao %></span><% } %>
+    <span style="flex:1"></span>
+    <% if (pode(def.permissao + '.criar')) { %>
+      <a href="<%= base %>/novo" class="btn primario pequeno">+ Novo</a>
+    <% } %>
+  </div>
+
+  <form method="get" class="filtros">
+    <div class="campo largo">
+      <label for="busca">Buscar</label>
+      <input type="search" id="busca" name="busca" value="<%= busca %>"
+             placeholder="Nome, código, documento..." data-foco>
+    </div>
+    <% if (temAtivo) { %>
+      <div class="campo">
+        <label for="inativos">Situação</label>
+        <select id="inativos" name="inativos">
+          <option value="">Somente ativos</option>
+          <option value="1" <%= mostrandoInativos ? 'selected' : '' %>>Incluir inativos</option>
+        </select>
+      </div>
+    <% } %>
+    <span class="espaco"></span>
+    <button type="submit" class="btn">Filtrar</button>
+    <% if (busca || mostrandoInativos) { %>
+      <a href="<%= base %>" class="btn">Limpar</a>
+    <% } %>
+  </form>
+
+  <% if (!registros.length) { %>
+    <div class="vazio">
+      <span class="icone">◇</span>
+      <p>
+        <% if (busca) { %>
+          Nenhum registro encontrado para “<%= busca %>”.
+        <% } else { %>
+          Nenhum <%= def.singular.toLowerCase() %> cadastrado ainda.
+        <% } %>
+      </p>
+      <% if (pode(def.permissao + '.criar')) { %>
+        <a href="<%= base %>/novo" class="btn primario">Cadastrar <%= def.singular.toLowerCase() %></a>
+      <% } %>
+    </div>
+  <% } else { %>
+    <div class="tabela-area">
+      <table class="tabela responsiva">
+        <thead>
+          <tr>
+            <% for (const c of colunas) { %>
+              <th class="<%= ['decimal','dinheiro','numero'].includes(c.tipo) ? 'num' : '' %>"><%= c.rotulo %></th>
+            <% } %>
+            <% if (temAtivo) { %><th>Situação</th><% } %>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (const r of registros) { %>
+            <tr class="<%= temAtivo && !r.ativo ? 'linha-cancelada' : '' %>">
+              <% for (const c of colunas) { %>
+                <td data-rot="<%= c.rotulo %>"
+                    class="<%= ['decimal','dinheiro','numero'].includes(c.tipo) ? 'num' : '' %><%= c.nome === 'codigo' ? ' doc' : '' %>">
+                  <%= rotuloDe(r, c) %>
+                </td>
+              <% } %>
+              <% if (temAtivo) { %>
+                <td data-rot="Situação">
+                  <span class="pill <%= r.ativo ? 'ok' : 'neutro' %>"><%= r.ativo ? 'Ativo' : 'Inativo' %></span>
+                </td>
+              <% } %>
+              <td class="acoes">
+                <a href="<%= base %>/<%= r.id %>" class="btn pequeno">
+                  <%= pode(def.permissao + '.editar') ? 'Editar' : 'Ver' %>
+                </a>
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+    <div class="cartao-topo" style="border-bottom:none;border-top:1px solid var(--linha)">
+      <span class="sub"><%= registros.length %> registro(s)<%= registros.length === 500 ? ' — refine a busca para ver mais' : '' %></span>
+    </div>
+  <% } %>
+</div>
+
+<%- include('../partials/fim') %>

@@ -1,0 +1,118 @@
+<%- include('../partials/topo') %>
+
+<% const ehPagar = tipo === 'CP'; const t = titulo_registro; %>
+
+<form method="post" action="/financeiro/<%= segmento %>/novo" class="cartao" style="max-width:960px">
+  <div class="cartao-topo">
+    <a href="/financeiro/<%= segmento %>" class="btn pequeno">← Voltar</a>
+    <h2>Novo título — <%= ehPagar ? 'contas a pagar' : 'contas a receber' %></h2>
+  </div>
+
+  <div class="cartao-corpo">
+    <div class="aviso info">
+      <span class="ic">i</span>
+      <div>
+        Use esta tela apenas para lançamentos <strong>manuais</strong>. Títulos originados de
+        fumigação, compras, RH ou manutenção são gerados automaticamente pelos respectivos
+        módulos — e assim mantêm o vínculo com o documento de origem.
+      </div>
+    </div>
+
+    <div class="campos">
+      <div class="campo c8">
+        <label for="descricao">Descrição <span class="obrigatorio">*</span></label>
+        <input type="text" id="descricao" name="descricao" required maxlength="200" data-foco>
+      </div>
+      <div class="campo c4">
+        <label for="origem">Origem</label>
+        <select id="origem" name="origem">
+          <% const origens = ehPagar
+               ? [['MANUAL','Manual'],['COMPRA','Compra'],['FRETE','Frete'],['ADMINISTRATIVO','Administrativo'],
+                  ['IMPOSTO','Imposto'],['MANUTENCAO','Manutenção'],['ABASTECIMENTO','Abastecimento'],
+                  ['VIAGEM','Viagem'],['RH','RH']]
+               : [['MANUAL','Manual'],['VENDA','Venda'],['OUTROS','Outros créditos']]; %>
+          <% for (const [v, txt] of origens) { %><option value="<%= v %>"><%= txt %></option><% } %>
+        </select>
+      </div>
+
+      <div class="campo c6">
+        <label for="parceiro_id"><%= ehPagar ? 'Fornecedor / beneficiário' : 'Cliente' %></label>
+        <select id="parceiro_id" name="parceiro_id">
+          <option value="">—</option>
+          <% for (const p of (ehPagar ? ref.fornecedores : ref.clientes) || []) { %>
+            <option value="<%= p.id %>"><%= p.nome %></option>
+          <% } %>
+        </select>
+      </div>
+      <div class="campo c6">
+        <label for="<%= ehPagar ? 'beneficiario' : 'pagador' %>">
+          <%= ehPagar ? 'Beneficiário (sem cadastro)' : 'Pagador (sem cadastro)' %>
+        </label>
+        <input type="text" id="<%= ehPagar ? 'beneficiario' : 'pagador' %>"
+               name="<%= ehPagar ? 'beneficiario' : 'pagador' %>"
+               placeholder="Use quando não houver cadastro">
+      </div>
+
+      <div class="campo c4">
+        <label for="categoria_id">Categoria</label>
+        <select id="categoria_id" name="categoria_id">
+          <option value="">—</option>
+          <% for (const c of ref.categorias.filter(c => c.tipo === (ehPagar ? 'DESPESA' : 'RECEITA'))) { %>
+            <option value="<%= c.id %>"><%= c.nome %></option>
+          <% } %>
+        </select>
+        <span class="ajuda">Define onde o valor entra na DRE.</span>
+      </div>
+      <div class="campo c4">
+        <label for="centro_custo_id">Centro de custo</label>
+        <select id="centro_custo_id" name="centro_custo_id">
+          <option value="">—</option>
+          <% for (const c of ref.centrosCusto) { %><option value="<%= c.id %>"><%= c.nome %></option><% } %>
+        </select>
+      </div>
+      <div class="campo c4">
+        <label for="documento_fiscal">Documento fiscal</label>
+        <input type="text" id="documento_fiscal" name="documento_fiscal" placeholder="NF, recibo...">
+      </div>
+
+      <div class="campo c3">
+        <label for="emissao">Emissão</label>
+        <input type="date" id="emissao" name="emissao" value="<%= t.emissao %>">
+      </div>
+      <div class="campo c3">
+        <label for="vencimento">Vencimento <span class="obrigatorio">*</span></label>
+        <input type="date" id="vencimento" name="vencimento" required>
+      </div>
+      <div class="campo c3">
+        <label for="competencia">Competência</label>
+        <input type="date" id="competencia" name="competencia">
+      </div>
+      <div class="campo c2">
+        <label for="valor">Valor <span class="obrigatorio">*</span></label>
+        <input type="text" inputmode="decimal" class="numerico" data-casas="2"
+               id="valor" name="valor" required>
+      </div>
+      <div class="campo c1">
+        <label for="moeda_id">Moeda</label>
+        <select id="moeda_id" name="moeda_id" required>
+          <% for (const m of ref.moedas) { %>
+            <option value="<%= m.id %>" <%= m.codigo === 'BRL' ? 'selected' : '' %>><%= m.codigo %></option>
+          <% } %>
+        </select>
+      </div>
+
+      <div class="campo c12">
+        <label for="observacoes">Observações</label>
+        <textarea id="observacoes" name="observacoes" rows="2"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="rodape-form">
+    <a href="/financeiro/<%= segmento %>" class="btn">Cancelar</a>
+    <span class="espaco"></span>
+    <button type="submit" class="btn primario">Criar título</button>
+  </div>
+</form>
+
+<%- include('../partials/fim') %>

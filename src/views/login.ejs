@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b2018">
+  <title>Entrar · ERP SHKT</title>
+  <link rel="icon" href="/estatico/img/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/estatico/css/app.css">
+</head>
+<body class="login-tela">
+  <div class="login-caixa">
+    <div class="login-marca">
+      <img src="/estatico/img/logo.svg" alt="SHKT" class="logo" style="width:52px;height:52px">
+      <h1>ERP SHKT</h1>
+      <p>Indústria, Importação &amp; Exportação</p>
+    </div>
+
+    <% if (erro) { %>
+      <div class="aviso erro"><span class="ic">✕</span><div><%= erro %></div></div>
+    <% } %>
+    <% if (typeof aviso !== 'undefined' && aviso) { %>
+      <div class="aviso ok"><span class="ic">✓</span><div><%= aviso %></div></div>
+    <% } %>
+
+    <form method="post" action="/login">
+      <input type="hidden" name="destino" value="<%= destino || '' %>">
+      <div class="campos">
+        <div class="campo c12">
+          <label for="email">E-mail</label>
+          <input type="email" id="email" name="email" value="<%= email || '' %>"
+                 autocomplete="username" required data-foco>
+        </div>
+        <div class="campo c12">
+          <label for="senha">Senha</label>
+          <input type="password" id="senha" name="senha" autocomplete="current-password" required>
+        </div>
+        <div class="campo c12">
+          <button type="submit" class="btn primario bloco">Entrar</button>
+        </div>
+      </div>
+    </form>
+
+    <p class="txt-min txt-fraco txt-centro mt-2 mb-0">
+      Acesso restrito. Todas as ações são registradas.
+    </p>
+  </div>
+  <script src="/estatico/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<%- include('../partials/topo') %>
+
+<form method="post" action="/estoque/transferencia" class="cartao" style="max-width:820px">
+  <div class="cartao-topo">
+    <a href="/estoque" class="btn pequeno">← Voltar</a>
+    <h2>Transferência entre locais</h2>
+    <span class="sub">Saída e entrada gravadas juntas — a mercadoria nunca fica “no ar”.</span>
+  </div>
+
+  <div class="cartao-corpo">
+    <div class="campos">
+      <div class="campo c8">
+        <label for="produto_id">Produto <span class="obrigatorio">*</span></label>
+        <select id="produto_id" name="produto_id" required data-foco>
+          <option value="">Selecione...</option>
+          <% for (const p of ref.produtos) { %><option value="<%= p.id %>"><%= p.descricao %></option><% } %>
+        </select>
+      </div>
+      <div class="campo c4">
+        <label for="data">Data <span class="obrigatorio">*</span></label>
+        <input type="date" id="data" name="data" value="<%= hoje %>" required>
+      </div>
+
+      <div class="campo c6">
+        <label for="local_origem_id">De (origem) <span class="obrigatorio">*</span></label>
+        <select id="local_origem_id" name="local_origem_id" required>
+          <option value="">Selecione...</option>
+          <% for (const l of ref.locais) { %><option value="<%= l.id %>"><%= l.nome %></option><% } %>
+        </select>
+      </div>
+      <div class="campo c6">
+        <label for="local_destino_id">Para (destino) <span class="obrigatorio">*</span></label>
+        <select id="local_destino_id" name="local_destino_id" required>
+          <option value="">Selecione...</option>
+          <% for (const l of ref.locais) { %><option value="<%= l.id %>"><%= l.nome %></option><% } %>
+        </select>
+      </div>
+
+      <div class="campo c4">
+        <label for="quantidade">Quantidade <span class="obrigatorio">*</span></label>
+        <input type="text" inputmode="decimal" class="numerico" data-casas="3"
+               id="quantidade" name="quantidade" required>
+        <span class="ajuda" data-eco-kg></span>
+      </div>
+      <div class="campo c4">
+        <label for="unidade_id">Unidade <span class="obrigatorio">*</span></label>
+        <select id="unidade_id" name="unidade_id" required>
+          <% for (const u of ref.unidades) { %>
+            <option value="<%= u.id %>" data-fator="<%= u.fator_kg %>"
+                    <%= u.codigo === 'TON' ? 'selected' : '' %>><%= u.descricao %></option>
+          <% } %>
+        </select>
+      </div>
+      <div class="campo c4">
+        <label for="lote_id">Lote</label>
+        <select id="lote_id" name="lote_id">
+          <option value="">Sem lote</option>
+          <% for (const l of ref.lotes) { %><option value="<%= l.id %>"><%= l.codigo %></option><% } %>
+        </select>
+      </div>
+
+      <div class="campo c12">
+        <label for="observacoes">Observações</label>
+        <textarea id="observacoes" name="observacoes" rows="2"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="rodape-form">
+    <a href="/estoque" class="btn">Cancelar</a>
+    <span class="espaco"></span>
+    <button type="submit" class="btn primario">Transferir</button>
+  </div>
+</form>
+
+<%- include('../partials/fim') %>

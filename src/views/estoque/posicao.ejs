@@ -1,0 +1,139 @@
+<%- include('../partials/topo') %>
+
+<div class="grade grade-4 mb-2">
+  <div class="indicador destaque">
+    <div class="rotulo">Físico</div>
+    <div class="valor"><%= f.toneladas(totais.fisico_kg) %></div>
+    <div class="apoio"><%= f.kg(totais.fisico_kg) %></div>
+  </div>
+  <div class="indicador">
+    <div class="rotulo">Disponível</div>
+    <div class="valor"><%= f.toneladas(totais.disponivel_kg) %></div>
+    <div class="apoio">livre para novos carregamentos</div>
+  </div>
+  <div class="indicador">
+    <div class="rotulo">Reservado</div>
+    <div class="valor"><%= f.toneladas(totais.reservado_kg) %></div>
+    <div class="apoio">comprometido em carregamentos</div>
+  </div>
+  <div class="indicador">
+    <div class="rotulo">Saldo fumigado</div>
+    <div class="valor"><%= f.toneladas(totais.fumigado_saldo_kg) %></div>
+    <div class="apoio">validado e ainda não certificado</div>
+  </div>
+</div>
+
+<div class="cartao">
+  <div class="cartao-topo">
+    <h2>Posição de estoque</h2>
+    <span style="flex:1"></span>
+    <a href="/estoque/movimentos" class="btn pequeno">Movimentações</a>
+    <% if (pode('estoque.criar')) { %>
+      <a href="/estoque/transferencia" class="btn pequeno">Transferir</a>
+      <a href="/estoque/ajuste" class="btn primario pequeno">+ Ajuste</a>
+    <% } %>
+  </div>
+
+  <form method="get" class="filtros">
+    <div class="campo largo">
+      <label for="produto">Produto</label>
+      <select id="produto" name="produto">
+        <option value="">Todos</option>
+        <% for (const p of ref.produtos) { %>
+          <option value="<%= p.id %>" <%= String(filtros.produtoId) === String(p.id) ? 'selected' : '' %>>
+            <%= p.descricao %>
+          </option>
+        <% } %>
+      </select>
+    </div>
+    <div class="campo">
+      <label for="local">Local</label>
+      <select id="local" name="local">
+        <option value="">Todos</option>
+        <% for (const l of ref.locais) { %>
+          <option value="<%= l.id %>" <%= String(filtros.localId) === String(l.id) ? 'selected' : '' %>>
+            <%= l.nome %>
+          </option>
+        <% } %>
+      </select>
+    </div>
+    <div class="campo">
+      <label for="zerados">Zerados</label>
+      <select id="zerados" name="zerados">
+        <option value="">Ocultar</option>
+        <option value="1" <%= filtros.incluirZerados ? 'selected' : '' %>>Mostrar</option>
+      </select>
+    </div>
+    <span class="espaco"></span>
+    <button type="submit" class="btn">Filtrar</button>
+  </form>
+
+  <% if (!posicao.length) { %>
+    <div class="vazio">
+      <span class="icone">▤</span>
+      <p>Nenhum saldo de estoque para os filtros escolhidos.</p>
+      <% if (pode('estoque.criar')) { %>
+        <a href="/estoque/ajuste" class="btn primario">Registrar entrada inicial</a>
+      <% } %>
+    </div>
+  <% } else { %>
+    <div class="tabela-area">
+      <table class="tabela responsiva">
+        <thead>
+          <tr>
+            <th>Produto</th>
+            <th>Local</th>
+            <th>Lote</th>
+            <th class="num">Físico</th>
+            <th class="num">Reservado</th>
+            <th class="num">Disponível</th>
+            <th class="num">Fumigado</th>
+            <th class="num">Expedido</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (const p of posicao) { %>
+            <%
+              const abaixoMinimo = Number(p.estoque_minimo_kg) > 0
+                                && Number(p.disponivel_kg) < Number(p.estoque_minimo_kg);
+            %>
+            <tr class="<%= abaixoMinimo ? 'linha-alerta' : '' %>">
+              <td data-rot="Produto">
+                <a href="/estoque/movimentos?produto=<%= p.produto_id %>"><%= p.produto_descricao %></a>
+                <div class="txt-min txt-fraco mono"><%= p.produto_codigo %></div>
+              </td>
+              <td data-rot="Local"><%= p.local_nome %></td>
+              <td data-rot="Lote" class="mono txt-min"><%= p.lote_codigo || '—' %></td>
+              <td data-rot="Físico" class="num txt-forte"><%= f.toneladas(p.fisico_kg) %></td>
+              <td data-rot="Reservado" class="num <%= Number(p.reservado_kg) ? 'txt-atencao' : 'txt-fraco' %>">
+                <%= f.toneladas(p.reservado_kg) %>
+              </td>
+              <td data-rot="Disponível" class="num <%= abaixoMinimo ? 'txt-erro txt-forte' : '' %>">
+                <%= f.toneladas(p.disponivel_kg) %>
+                <% if (abaixoMinimo) { %>
+                  <div class="txt-min">mín. <%= f.toneladas(p.estoque_minimo_kg) %></div>
+                <% } %>
+              </td>
+              <td data-rot="Fumigado" class="num <%= Number(p.fumigado_saldo_kg) ? 'txt-ok' : 'txt-fraco' %>">
+                <%= f.toneladas(p.fumigado_saldo_kg) %>
+              </td>
+              <td data-rot="Expedido" class="num txt-fraco"><%= f.toneladas(p.expedido_kg) %></td>
+            </tr>
+          <% } %>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3">Total</td>
+            <td class="num"><%= f.toneladas(posicao.reduce((s, p) => s + Number(p.fisico_kg), 0)) %></td>
+            <td class="num"><%= f.toneladas(posicao.reduce((s, p) => s + Number(p.reservado_kg), 0)) %></td>
+            <td class="num"><%= f.toneladas(posicao.reduce((s, p) => s + Number(p.disponivel_kg), 0)) %></td>
+            <td class="num"><%= f.toneladas(posicao.reduce((s, p) => s + Number(p.fumigado_saldo_kg), 0)) %></td>
+            <td class="num"><%= f.toneladas(posicao.reduce((s, p) => s + Number(p.expedido_kg), 0)) %></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  <% } %>
+</div>
+
+<%- include('../partials/fim') %>

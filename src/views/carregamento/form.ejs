@@ -1,0 +1,234 @@
+<%- include('../partials/topo') %>
+
+<% const c = carregamento; const acao = novo ? '/carregamentos/novo' : `/carregamentos/${c.id}/editar`; %>
+
+<form method="post" action="<%= acao %>" class="cartao">
+  <div class="cartao-topo">
+    <a href="<%= novo ? '/carregamentos' : '/carregamentos/' + c.id %>" class="btn pequeno">← Voltar</a>
+    <h2><%= novo ? 'Nova ordem de carregamento' : 'Editar carregamento ' + c.numero %></h2>
+    <% if (!novo) { %>
+      <span class="pill <%= f.classeStatus(c.status) %>"><%= f.rotuloStatus(c.status) %></span>
+    <% } %>
+  </div>
+
+  <div class="cartao-corpo">
+    <fieldset>
+      <legend>Operação</legend>
+      <div class="campos">
+        <div class="campo c3">
+          <label for="tipo_operacao">Tipo <span class="obrigatorio">*</span></label>
+          <select id="tipo_operacao" name="tipo_operacao" required data-foco>
+            <% for (const [v, t] of [['EXPORTACAO','Exportação'],['VENDA_INTERNA','Venda interna'],
+                                     ['TRANSFERENCIA','Transferência'],['OUTRO','Outro']]) { %>
+              <option value="<%= v %>" <%= c.tipo_operacao === v ? 'selected' : '' %>><%= t %></option>
+            <% } %>
+          </select>
+        </div>
+        <div class="campo c3">
+          <label for="data">Data <span class="obrigatorio">*</span></label>
+          <input type="date" id="data" name="data" required value="<%= f.dataInput(c.data) %>">
+        </div>
+        <div class="campo c6">
+          <label for="cliente_id">Cliente</label>
+          <select id="cliente_id" name="cliente_id">
+            <option value="">—</option>
+            <% for (const x of ref.clientes) { %>
+              <option value="<%= x.id %>" <%= String(c.cliente_id) === String(x.id) ? 'selected' : '' %>><%= x.nome %></option>
+            <% } %>
+          </select>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Mercadoria</legend>
+      <div class="campos">
+        <div class="campo c4">
+          <label for="produto_id">Produto <span class="obrigatorio">*</span></label>
+          <select id="produto_id" name="produto_id" required>
+            <option value="">Selecione...</option>
+            <% for (const p of ref.produtos) { %>
+              <option value="<%= p.id %>" <%= String(c.produto_id) === String(p.id) ? 'selected' : '' %>>
+                <%= p.descricao %><%= p.exige_fumigacao ? ' (exige fumigação)' : '' %>
+              </option>
+            <% } %>
+          </select>
+        </div>
+        <div class="campo c3">
+          <label for="local_id">Sai de (local) <span class="obrigatorio">*</span></label>
+          <select id="local_id" name="local_id" required>
+            <option value="">Selecione...</option>
+            <% for (const l of ref.locais) { %>
+              <option value="<%= l.id %>" <%= String(c.local_id) === String(l.id) ? 'selected' : '' %>><%= l.nome %></option>
+            <% } %>
+          </select>
+        </div>
+        <div class="campo c2">
+          <label for="lote_id">Lote</label>
+          <select id="lote_id" name="lote_id">
+            <option value="">—</option>
+            <% for (const l of ref.lotes) { %>
+              <option value="<%= l.id %>" <%= String(c.lote_id) === String(l.id) ? 'selected' : '' %>><%= l.codigo %></option>
+            <% } %>
+          </select>
+        </div>
+        <div class="campo c2">
+          <label for="quantidade">Quantidade <span class="obrigatorio">*</span></label>
+          <input type="text" inputmode="decimal" class="numerico" data-casas="3"
+                 id="quantidade" name="quantidade" required
+                 value="<%= c.quantidade_origem ? f.formatar(c.quantidade_origem, 3) : '' %>">
+        </div>
+        <div class="campo c2">
+          <label for="unidade_id">Unidade <span class="obrigatorio">*</span></label>
+          <select id="unidade_id" name="unidade_id" required>
+            <% for (const u of ref.unidades) { %>
+              <option value="<%= u.id %>" data-fator="<%= u.fator_kg %>"
+                      <%= String(c.unidade_id) === String(u.id) ? 'selected'
+                          : (!c.unidade_id && u.codigo === 'TON' ? 'selected' : '') %>><%= u.descricao %></option>
+            <% } %>
+          </select>
+          <span class="ajuda" data-eco-kg></span>
+        </div>
+
+        <div class="campo c12">
+          <label for="certificado_id">Certificado de fumigação</label>
+          <select id="certificado_id" name="certificado_id">
+            <option value="">Sem certificado vinculado</option>
+            <% for (const ce of certificados) { %>
+              <option value="<%= ce.id %>" <%= String(c.certificado_id) === String(ce.id) ? 'selected' : '' %>>
+                <%= ce.numero_certificado || ce.numero %> · <%= ce.produto %> ·
+                <%= f.formatar(Number(ce.quantidade_kg) / 1000, 3) %> t ·
+                fumig. <%= ce.fumigacao_numero %>
+              </option>
+            <% } %>
+          </select>
+          <span class="ajuda">
+            Obrigatório para exportar produtos que exigem fumigação. A soma dos carregamentos
+            não pode ultrapassar a quantidade do certificado.
+          </span>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Transporte</legend>
+      <div class="campos">
+        <div class="campo c3">
+          <label for="veiculo_id">Veículo</label>
+          <select id="veiculo_id" name="veiculo_id">
+            <option value="">—</option>
+            <% for (const v of ref.veiculos) { %>
+              <option value="<%= v.id %>" <%= String(c.veiculo_id) === String(v.id) ? 'selected' : '' %>>
+                <%= v.placa %><%= v.marca_modelo ? ' — ' + v.marca_modelo : '' %>
+              </option>
+            <% } %>
+          </select>
+        </div>
+        <div class="campo c2">
+          <label for="placa">Placa</label>
+          <input type="text" id="placa" name="placa" value="<%= c.placa || '' %>" maxlength="10"
+                 style="text-transform:uppercase">
+        </div>
+        <div class="campo c2">
+          <label for="placa_reboque">Placa reboque</label>
+          <input type="text" id="placa_reboque" name="placa_reboque" value="<%= c.placa_reboque || '' %>"
+                 maxlength="10" style="text-transform:uppercase">
+        </div>
+        <div class="campo c3">
+          <label for="motorista_id">Motorista</label>
+          <select id="motorista_id" name="motorista_id">
+            <option value="">—</option>
+            <% for (const m of ref.motoristas) { %>
+              <option value="<%= m.id %>" <%= String(c.motorista_id) === String(m.id) ? 'selected' : '' %>><%= m.nome %></option>
+            <% } %>
+          </select>
+        </div>
+        <div class="campo c2">
+          <label for="transportadora_id">Transportadora</label>
+          <select id="transportadora_id" name="transportadora_id">
+            <option value="">—</option>
+            <% for (const t of ref.transportadoras) { %>
+              <option value="<%= t.id %>" <%= String(c.transportadora_id) === String(t.id) ? 'selected' : '' %>><%= t.nome %></option>
+            <% } %>
+          </select>
+        </div>
+
+        <div class="campo c3">
+          <label for="origem">Origem (texto)</label>
+          <input type="text" id="origem" name="origem" value="<%= c.origem || '' %>">
+        </div>
+        <div class="campo c3">
+          <label for="destino">Destino</label>
+          <input type="text" id="destino" name="destino" value="<%= c.destino || '' %>">
+        </div>
+        <div class="campo c3">
+          <label for="pais_destino_id">País de destino</label>
+          <select id="pais_destino_id" name="pais_destino_id">
+            <option value="">—</option>
+            <% for (const p of ref.paises) { %>
+              <option value="<%= p.id %>" <%= String(c.pais_destino_id) === String(p.id) ? 'selected' : '' %>><%= p.nome %></option>
+            <% } %>
+          </select>
+        </div>
+        <div class="campo c3">
+          <label for="incoterm_id">Incoterm</label>
+          <select id="incoterm_id" name="incoterm_id">
+            <option value="">—</option>
+            <% for (const i of ref.incoterms) { %>
+              <option value="<%= i.id %>" <%= String(c.incoterm_id) === String(i.id) ? 'selected' : '' %>>
+                <%= i.codigo %> — <%= i.descricao %>
+              </option>
+            <% } %>
+          </select>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Pesagem</legend>
+      <div class="campos">
+        <div class="campo c3">
+          <label for="peso_bruto">Peso bruto (kg)</label>
+          <input type="text" inputmode="decimal" class="numerico" data-casas="3"
+                 id="peso_bruto" name="peso_bruto"
+                 value="<%= c.peso_bruto_kg ? f.formatar(c.peso_bruto_kg, 3) : '' %>">
+        </div>
+        <div class="campo c3">
+          <label for="peso_tara">Tara (kg)</label>
+          <input type="text" inputmode="decimal" class="numerico" data-casas="3"
+                 id="peso_tara" name="peso_tara"
+                 value="<%= c.peso_tara_kg ? f.formatar(c.peso_tara_kg, 3) : '' %>">
+        </div>
+        <div class="campo c3">
+          <label for="peso_liquido">Peso líquido (kg)</label>
+          <input type="text" inputmode="decimal" class="numerico" data-casas="3"
+                 id="peso_liquido" name="peso_liquido"
+                 value="<%= c.peso_liquido_kg ? f.formatar(c.peso_liquido_kg, 3) : '' %>">
+          <span class="ajuda">Calculado como bruto − tara.</span>
+        </div>
+        <div class="campo c3">
+          <label for="data_hora_carga">Data/hora do carregamento</label>
+          <input type="datetime-local" id="data_hora_carga" name="data_hora_carga"
+                 value="<%= f.dataHoraInput(c.data_hora_carga) %>">
+        </div>
+
+        <div class="campo c4">
+          <label for="responsavel">Responsável</label>
+          <input type="text" id="responsavel" name="responsavel" value="<%= c.responsavel || '' %>">
+        </div>
+        <div class="campo c8">
+          <label for="observacoes">Observações</label>
+          <textarea id="observacoes" name="observacoes" rows="2"><%= c.observacoes || '' %></textarea>
+        </div>
+      </div>
+    </fieldset>
+  </div>
+
+  <div class="rodape-form">
+    <a href="<%= novo ? '/carregamentos' : '/carregamentos/' + c.id %>" class="btn">Cancelar</a>
+    <span class="espaco"></span>
+    <button type="submit" class="btn primario"><%= novo ? 'Criar ordem' : 'Salvar alterações' %></button>
+  </div>
+</form>
+
+<%- include('../partials/fim') %>

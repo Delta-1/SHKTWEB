@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="SHKT">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1d9257"/>
+      <stop offset="1" stop-color="#0a4a2c"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#g)"/>
+  <!-- espiga estilizada: graos em duas colunas -->
+  <g fill="#f5d372">
+    <rect x="24" y="14" width="7" height="7" rx="2"/>
+    <rect x="33" y="14" width="7" height="7" rx="2"/>
+    <rect x="24" y="23" width="7" height="7" rx="2"/>
+    <rect x="33" y="23" width="7" height="7" rx="2"/>
+    <rect x="24" y="32" width="7" height="7" rx="2"/>
+    <rect x="33" y="32" width="7" height="7" rx="2"/>
+  </g>
+  <!-- folha -->
+  <path d="M24 41c-6 0-11-4-12-9 7-1 12 2 14 6z" fill="#7fd0a0"/>
+  <path d="M40 41c6 0 11-4 12-9-7-1-12 2-14 6z" fill="#7fd0a0"/>
+  <text x="32" y="57" font-family="Segoe UI, Arial, sans-serif" font-size="10"
+        font-weight="700" fill="#ffffff" text-anchor="middle" letter-spacing="1.5">SHKT</text>
+</svg>

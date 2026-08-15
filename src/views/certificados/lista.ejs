@@ -1,0 +1,95 @@
+<%- include('../partials/topo') %>
+
+<div class="grade grade-3 mb-2">
+  <div class="indicador"><div class="rotulo">Certificados validados</div>
+    <div class="valor"><%= totais.quantidade %></div><div class="apoio">no filtro atual</div></div>
+  <div class="indicador"><div class="rotulo">Quantidade certificada</div>
+    <div class="valor"><%= f.toneladas(totais.kg) %></div><div class="apoio"><%= f.kg(totais.kg) %></div></div>
+  <div class="indicador destaque"><div class="rotulo">Custo de fumigação</div>
+    <div class="valor">R$ <%= f.formatar(totais.valor, 2) %></div>
+    <div class="apoio">gerado em contas a pagar</div></div>
+</div>
+
+<div class="cartao">
+  <div class="cartao-topo">
+    <h2>Certificados de fumigação</h2>
+    <span style="flex:1"></span>
+    <% if (pode('certificados.criar')) { %>
+      <a href="/certificados/novo" class="btn primario pequeno">+ Novo certificado</a>
+    <% } %>
+  </div>
+
+  <form method="get" class="filtros">
+    <div class="campo largo">
+      <label for="busca">Buscar</label>
+      <input type="search" id="busca" name="busca" value="<%= filtros.busca || '' %>"
+             placeholder="Nº certificado, fumigação ou comunicado">
+    </div>
+    <div class="campo">
+      <label for="status">Situação</label>
+      <select id="status" name="status">
+        <option value="">Todas</option>
+        <% for (const s of ['RASCUNHO','VALIDADO','CANCELADO']) { %>
+          <option value="<%= s %>" <%= filtros.status === s ? 'selected' : '' %>><%= f.rotuloStatus(s) %></option>
+        <% } %>
+      </select>
+    </div>
+    <div class="campo"><label for="de">De</label>
+      <input type="date" id="de" name="de" value="<%= filtros.de || '' %>"></div>
+    <div class="campo"><label for="ate">Até</label>
+      <input type="date" id="ate" name="ate" value="<%= filtros.ate || '' %>"></div>
+    <span class="espaco"></span>
+    <button type="submit" class="btn">Filtrar</button>
+    <a href="/certificados" class="btn">Limpar</a>
+  </form>
+
+  <% if (!lista.length) { %>
+    <div class="vazio">
+      <span class="icone">⛉</span>
+      <p>Nenhum certificado encontrado.</p>
+      <% if (pode('certificados.criar')) { %>
+        <a href="/certificados/novo" class="btn primario">Emitir certificado</a>
+      <% } %>
+    </div>
+  <% } else { %>
+    <div class="tabela-area">
+      <table class="tabela responsiva">
+        <thead>
+          <tr>
+            <th>Nº interno</th><th>Certificado</th><th>Fumigação</th><th>Fumigadora</th>
+            <th class="num">Quantidade</th><th class="num">Valor</th>
+            <th>Contas a pagar</th><th>Situação</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (const c of lista) { %>
+            <tr class="<%= c.status === 'CANCELADO' ? 'linha-cancelada' : '' %>">
+              <td data-rot="Nº interno" class="doc"><a href="/certificados/<%= c.id %>"><%= c.numero %></a>
+                <div class="txt-min txt-fraco"><%= f.data(c.data) %></div></td>
+              <td data-rot="Certificado" class="doc"><%= c.numero_certificado || '—' %></td>
+              <td data-rot="Fumigação" class="doc">
+                <a href="/fumigacao/<%= c.fumigacao_id %>"><%= c.fumigacao_numero %></a>
+                <div class="txt-min txt-fraco"><%= c.numero_comunicado || '' %></div>
+              </td>
+              <td data-rot="Fumigadora"><%= c.fumigadora %></td>
+              <td data-rot="Quantidade" class="num"><%= f.toneladas(c.quantidade_kg) %></td>
+              <td data-rot="Valor" class="num txt-forte"><%= c.moeda_simbolo %> <%= f.formatar(c.valor_total, 2) %></td>
+              <td data-rot="Contas a pagar" class="doc txt-min">
+                <% if (c.conta_pagar_numero) { %>
+                  <a href="/financeiro/pagar/<%= c.conta_pagar_id %>"><%= c.conta_pagar_numero %></a>
+                  <span class="pill <%= f.classeStatus(c.conta_pagar_status) %>"><%= f.rotuloStatus(c.conta_pagar_status) %></span>
+                <% } else { %>—<% } %>
+              </td>
+              <td data-rot="Situação">
+                <span class="pill <%= f.classeStatus(c.status) %>"><%= f.rotuloStatus(c.status) %></span>
+              </td>
+              <td class="acoes"><a href="/certificados/<%= c.id %>" class="btn pequeno">Abrir</a></td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>
+
+<%- include('../partials/fim') %>

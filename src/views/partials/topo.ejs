@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#06331f">
+  <title><%= titulo %> · ERP SHKT</title>
+  <link rel="icon" href="/estatico/img/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/estatico/css/app.css">
+</head>
+<body>
+<div class="app">
+
+  <aside class="lateral">
+    <div class="lateral-marca">
+      <img src="/estatico/img/logo.svg" alt="" class="logo">
+      <div>
+        <strong>SHKT</strong>
+        <span>ERP OPERACIONAL</span>
+      </div>
+    </div>
+    <%- include('menu') %>
+  </aside>
+
+  <div class="conteudo">
+    <header class="topo">
+      <button class="btn pequeno abrir-menu" data-abrir-menu aria-label="Abrir menu">☰</button>
+      <h1><%= titulo %></h1>
+      <div class="topo-acoes">
+        <%- acoesCabecalho || '' %>
+        <a href="/sair" class="usuario-chip" title="<%= usuario.email %> · <%= usuario.perfil_nome %>">
+          <span class="avatar"><%= usuario.nome.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase() %></span>
+          <span class="nao-imprimir"><%= usuario.nome.split(' ')[0] %></span>
+        </a>
+      </div>
+    </header>
+
+    <main class="pagina">
+      <% if (typeof mensagem !== 'undefined' && mensagem) { %>
+        <div class="aviso <%= mensagem.tipo || 'ok' %>">
+          <span class="ic"><%= mensagem.tipo === 'erro' ? '✕' : mensagem.tipo === 'atencao' ? '!' : '✓' %></span>
+          <div><%= mensagem.texto %></div>
+        </div>
+      <% } %>
+      <% if (typeof erro !== 'undefined' && erro) { %>
+        <div class="aviso erro">
+          <span class="ic">✕</span>
+          <div><strong>Operação não realizada</strong><%= erro %></div>
+        </div>
+      <% } %>

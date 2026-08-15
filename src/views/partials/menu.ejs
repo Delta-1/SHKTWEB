@@ -1,0 +1,69 @@
+<%
+  // Menu montado a partir das permissoes do usuario: o operador so enxerga
+  // o que ele pode usar. A barreira real continua sendo o back-end.
+  const grupos = [
+    {
+      nome: null,
+      itens: [{ url: '/', ic: '▣', texto: 'Painel', perm: 'dashboard.visualizar', exato: true }],
+    },
+    {
+      nome: 'Operação',
+      itens: [
+        { url: '/estoque', ic: '▤', texto: 'Estoque', perm: 'estoque.visualizar' },
+        { url: '/fumigacao', ic: '☁', texto: 'Fumigação', perm: 'fumigacao.visualizar',
+          marcador: typeof alertaFumigacao !== 'undefined' ? alertaFumigacao : 0 },
+        { url: '/certificados', ic: '⛉', texto: 'Certificados', perm: 'certificados.visualizar' },
+        { url: '/carregamentos', ic: '⇥', texto: 'Carregamentos', perm: 'carregamento.visualizar' },
+      ],
+    },
+    {
+      nome: 'Financeiro',
+      itens: [
+        { url: '/financeiro/pagar', ic: '↑', texto: 'Contas a pagar', perm: 'financeiro.visualizar',
+          marcador: typeof alertaVencidos !== 'undefined' ? alertaVencidos : 0 },
+        { url: '/financeiro/receber', ic: '↓', texto: 'Contas a receber', perm: 'financeiro.visualizar' },
+        { url: '/financeiro/contas', ic: '▦', texto: 'Caixa e bancos', perm: 'financeiro.visualizar' },
+      ],
+    },
+    {
+      nome: 'Cadastros',
+      itens: [
+        { url: '/cadastros/clientes', ic: '◉', texto: 'Clientes', perm: 'cadastros.visualizar' },
+        { url: '/cadastros/fornecedores', ic: '◎', texto: 'Fornecedores', perm: 'cadastros.visualizar' },
+        { url: '/cadastros/fumigadoras', ic: '◈', texto: 'Fumigadoras', perm: 'cadastros.visualizar' },
+        { url: '/cadastros/transportadoras', ic: '◇', texto: 'Transportadoras', perm: 'cadastros.visualizar' },
+        { url: '/cadastros/produtos', ic: '◧', texto: 'Produtos', perm: 'cadastros.visualizar' },
+        { url: '/cadastros/lotes', ic: '◨', texto: 'Lotes', perm: 'cadastros.visualizar' },
+        { url: '/cadastros/veiculos', ic: '⛟', texto: 'Veículos', perm: 'cadastros.visualizar' },
+        { url: '/cadastros/motoristas', ic: '☺', texto: 'Motoristas', perm: 'cadastros.visualizar' },
+        { url: '/cadastros/funcionarios', ic: '☻', texto: 'Funcionários', perm: 'cadastros.visualizar' },
+        { url: '/cadastros', ic: '⚙', texto: 'Tabelas de apoio', perm: 'cadastros.visualizar', exato: true },
+      ],
+    },
+    {
+      nome: 'Gestão',
+      itens: [
+        { url: '/relatorios', ic: '▥', texto: 'Relatórios', perm: 'relatorios.visualizar' },
+        { url: '/auditoria', ic: '☑', texto: 'Auditoria', perm: 'auditoria.visualizar' },
+        { url: '/admin', ic: '⚙', texto: 'Administração', perm: 'admin.visualizar' },
+      ],
+    },
+  ];
+
+  const ativo = (item) => item.exato ? caminho === item.url : caminho.startsWith(item.url);
+%>
+<nav class="menu">
+  <% for (const grupo of grupos) { %>
+    <% const visiveis = grupo.itens.filter(i => pode(i.perm)); %>
+    <% if (visiveis.length) { %>
+      <% if (grupo.nome) { %><div class="menu-grupo"><%= grupo.nome %></div><% } %>
+      <% for (const item of visiveis) { %>
+        <a href="<%= item.url %>" class="<%= ativo(item) ? 'ativo' : '' %>">
+          <span class="ic"><%= item.ic %></span>
+          <span><%= item.texto %></span>
+          <% if (item.marcador) { %><span class="marcador"><%= item.marcador %></span><% } %>
+        </a>
+      <% } %>
+    <% } %>
+  <% } %>
+</nav>

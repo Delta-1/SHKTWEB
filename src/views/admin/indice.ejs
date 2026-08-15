@@ -1,0 +1,113 @@
+<%- include('../partials/topo') %>
+
+<div class="grade grade-2">
+  <!-- ------------------------------------------------------------ usuários -->
+  <div class="cartao">
+    <div class="cartao-topo">
+      <h2>Usuários</h2>
+      <span style="flex:1"></span>
+      <% if (pode('admin.administrar')) { %>
+        <a href="/admin/usuarios/novo" class="btn primario pequeno">+ Novo</a>
+      <% } %>
+    </div>
+    <div class="tabela-area">
+      <table class="tabela">
+        <thead><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Último acesso</th><th></th></tr></thead>
+        <tbody>
+          <% for (const u of usuarios) { %>
+            <tr class="<%= u.ativo ? '' : 'linha-cancelada' %>">
+              <td><%= u.nome %>
+                <% if (!u.ativo) { %><span class="pill neutro">inativo</span><% } %>
+              </td>
+              <td class="txt-min"><%= u.email %></td>
+              <td class="txt-min"><%= u.perfil %></td>
+              <td class="txt-min txt-fraco"><%= u.ultimo_acesso ? f.dataHora(u.ultimo_acesso) : 'nunca' %></td>
+              <td class="acoes">
+                <% if (pode('admin.administrar')) { %>
+                  <a href="/admin/usuarios/<%= u.id %>" class="btn pequeno">Editar</a>
+                <% } %>
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- -------------------------------------------------------------- perfis -->
+  <div class="cartao">
+    <div class="cartao-topo">
+      <h2>Perfis de acesso</h2>
+      <span class="sub">definem o que cada usuário pode fazer</span>
+    </div>
+    <div class="tabela-area">
+      <table class="tabela">
+        <thead><tr><th>Perfil</th><th class="num">Usuários</th><th class="num">Permissões</th><th></th></tr></thead>
+        <tbody>
+          <% for (const p of perfis) { %>
+            <tr>
+              <td><%= p.nome %>
+                <div class="txt-min txt-fraco"><%= p.descricao || '' %></div>
+              </td>
+              <td class="num"><%= p.usuarios %></td>
+              <td class="num"><%= p.permissoes %></td>
+              <td class="acoes">
+                <% if (pode('admin.administrar')) { %>
+                  <a href="/admin/perfis/<%= p.id %>" class="btn pequeno">Permissões</a>
+                <% } %>
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <% if (pode('admin.administrar')) { %>
+      <form method="post" action="/admin/perfis" class="cartao-corpo" style="border-top:1px solid var(--linha)">
+        <div class="campos">
+          <div class="campo c3">
+            <label for="codigo">Código</label>
+            <input type="text" id="codigo" name="codigo" required maxlength="30" placeholder="COMPRAS">
+          </div>
+          <div class="campo c5">
+            <label for="nome">Nome do novo perfil</label>
+            <input type="text" id="nome" name="nome" required>
+          </div>
+          <div class="campo c4">
+            <label for="descricao">Descrição</label>
+            <input type="text" id="descricao" name="descricao">
+          </div>
+          <div class="campo c12"><button type="submit" class="btn">Criar perfil</button></div>
+        </div>
+      </form>
+    <% } %>
+  </div>
+</div>
+
+<!-- ----------------------------------------------------------- parâmetros -->
+<form method="post" action="/admin/parametros" class="cartao">
+  <div class="cartao-topo">
+    <h2>Dados da empresa e parâmetros</h2>
+    <span class="sub">usados no cabeçalho dos documentos impressos</span>
+  </div>
+  <div class="cartao-corpo">
+    <div class="campos">
+      <% for (const p of parametros) { %>
+        <div class="campo <%= p.chave.includes('nome') || p.chave.includes('endereco') ? 'c6' : 'c3' %>">
+          <label for="p_<%= p.chave %>"><%= p.descricao || p.chave %></label>
+          <input type="text" id="p_<%= p.chave %>" name="p_<%= p.chave %>" value="<%= p.valor || '' %>"
+                 <%= pode('admin.administrar') ? '' : 'disabled' %>>
+          <span class="ajuda mono"><%= p.chave %></span>
+        </div>
+      <% } %>
+    </div>
+  </div>
+  <% if (pode('admin.administrar')) { %>
+    <div class="rodape-form">
+      <span class="espaco"></span>
+      <button type="submit" class="btn primario">Salvar parâmetros</button>
+    </div>
+  <% } %>
+</form>
+
+<%- include('../partials/fim') %>

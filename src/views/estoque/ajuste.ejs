@@ -1,0 +1,99 @@
+<%- include('../partials/topo') %>
+
+<div class="aviso info" style="max-width:900px">
+  <span class="ic">i</span>
+  <div>
+    <strong>Ajuste manual de estoque</strong>
+    Use apenas para saldo de implantação, quebra técnica, sobra de balança ou correção
+    autorizada. Entradas de compra devem vir pelo Recebimento e saídas pela Ordem de
+    Carregamento — assim o estoque continua rastreável até o documento de origem.
+  </div>
+</div>
+
+<form method="post" action="/estoque/ajuste" class="cartao" style="max-width:900px">
+  <div class="cartao-topo">
+    <a href="/estoque" class="btn pequeno">← Voltar</a>
+    <h2>Ajuste de estoque</h2>
+  </div>
+
+  <div class="cartao-corpo">
+    <div class="campos">
+      <div class="campo c4">
+        <label for="tipo">Tipo de ajuste <span class="obrigatorio">*</span></label>
+        <select id="tipo" name="tipo" required data-foco>
+          <option value="AJUSTE_ENTRADA" <%= tipo === 'AJUSTE_ENTRADA' ? 'selected' : '' %>>Entrada (sobra)</option>
+          <option value="AJUSTE_SAIDA" <%= tipo === 'AJUSTE_SAIDA' ? 'selected' : '' %>>Saída (quebra/perda)</option>
+          <option value="SALDO_INICIAL">Saldo inicial de implantação</option>
+        </select>
+      </div>
+      <div class="campo c4">
+        <label for="data">Data <span class="obrigatorio">*</span></label>
+        <input type="date" id="data" name="data" value="<%= hoje %>" required>
+      </div>
+
+      <div class="campo c6">
+        <label for="produto_id">Produto <span class="obrigatorio">*</span></label>
+        <select id="produto_id" name="produto_id" required>
+          <option value="">Selecione...</option>
+          <% for (const p of ref.produtos) { %>
+            <option value="<%= p.id %>" data-unidade="<%= p.unidade_id %>"><%= p.descricao %></option>
+          <% } %>
+        </select>
+      </div>
+      <div class="campo c3">
+        <label for="local_id">Local <span class="obrigatorio">*</span></label>
+        <select id="local_id" name="local_id" required>
+          <option value="">Selecione...</option>
+          <% for (const l of ref.locais) { %><option value="<%= l.id %>"><%= l.nome %></option><% } %>
+        </select>
+      </div>
+      <div class="campo c3">
+        <label for="lote_id">Lote</label>
+        <select id="lote_id" name="lote_id">
+          <option value="">Sem lote</option>
+          <% for (const l of ref.lotes) { %>
+            <option value="<%= l.id %>" data-produto="<%= l.produto_id %>"><%= l.codigo %> — <%= l.produto %></option>
+          <% } %>
+        </select>
+      </div>
+
+      <div class="campo c4">
+        <label for="quantidade">Quantidade <span class="obrigatorio">*</span></label>
+        <input type="text" inputmode="decimal" class="numerico" data-casas="3"
+               id="quantidade" name="quantidade" required>
+        <span class="ajuda" data-eco-kg></span>
+      </div>
+      <div class="campo c3">
+        <label for="unidade_id">Unidade <span class="obrigatorio">*</span></label>
+        <select id="unidade_id" name="unidade_id" required>
+          <% for (const u of ref.unidades) { %>
+            <option value="<%= u.id %>" data-fator="<%= u.fator_kg %>"
+                    <%= u.codigo === 'TON' ? 'selected' : '' %>><%= u.descricao %></option>
+          <% } %>
+        </select>
+      </div>
+
+      <div class="campo c12">
+        <label for="motivo">Motivo do ajuste <span class="obrigatorio">*</span></label>
+        <input type="text" id="motivo" name="motivo" required minlength="5"
+               placeholder="Ex.: quebra técnica apurada na pesagem de 12/03">
+        <span class="ajuda">Fica registrado na auditoria e aparece no relatório de movimentações.</span>
+      </div>
+      <div class="campo c12">
+        <label for="observacoes">Observações</label>
+        <textarea id="observacoes" name="observacoes" rows="2"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="rodape-form">
+    <a href="/estoque" class="btn">Cancelar</a>
+    <span class="espaco"></span>
+    <button type="submit" class="btn primario"
+            data-confirmar="Confirmar o ajuste de estoque? A movimentação não poderá ser apagada, apenas estornada.">
+      Registrar ajuste
+    </button>
+  </div>
+</form>
+
+<%- include('../partials/fim') %>

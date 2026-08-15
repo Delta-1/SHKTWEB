@@ -1,0 +1,125 @@
+<%
+  const c = carregamento;
+  const tipoDocumento = 'Ordem de Carregamento';
+  const numeroDocumento = c.numero;
+  const TIPOS_DOC = {
+    DANFE: 'DANFE / NF-e', NFE: 'NF-e', MIC_DTA: 'MIC-DTA', CRT: 'CRT',
+    PACKING_LIST: 'Packing list', CONHECIMENTO: 'Conhecimento de transporte', OUTRO: 'Outro',
+  };
+%>
+<%- include('_topo', { tipoDocumento, numeroDocumento }) %>
+
+<% if (c.status === 'CANCELADO') { %>
+  <p class="txt-centro"><span class="doc-carimbo">CANCELADO</span></p>
+<% } %>
+
+<section class="doc-secao">
+  <h3>Operação</h3>
+  <div class="doc-grade">
+    <div class="campo-doc"><div class="rot">Tipo</div>
+      <div class="val"><%= c.tipo_operacao.replace('_', ' ') %></div></div>
+    <div class="campo-doc"><div class="rot">Data</div><div class="val"><%= f.data(c.data) %></div></div>
+    <div class="campo-doc"><div class="rot">Situação</div>
+      <div class="val"><%= f.rotuloStatus(c.status) %></div></div>
+    <div class="campo-doc"><div class="rot">Responsável</div>
+      <div class="val"><%= c.responsavel || '—' %></div></div>
+    <div class="campo-doc largo"><div class="rot">Cliente</div>
+      <div class="val"><%= c.cliente || '—' %></div></div>
+    <div class="campo-doc"><div class="rot">Origem</div>
+      <div class="val"><%= c.origem || c.local %></div></div>
+    <div class="campo-doc"><div class="rot">Destino</div>
+      <div class="val"><%= c.destino || '—' %><%= c.pais_destino ? ' / ' + c.pais_destino : '' %></div></div>
+  </div>
+</section>
+
+<section class="doc-secao">
+  <h3>Mercadoria</h3>
+  <div class="doc-grade">
+    <div class="campo-doc largo"><div class="rot">Produto</div>
+      <div class="val"><%= c.produto %><%= c.produto_codigo ? ' (' + c.produto_codigo + ')' : '' %></div></div>
+    <div class="campo-doc"><div class="rot">Lote</div><div class="val"><%= c.lote || '—' %></div></div>
+    <div class="campo-doc"><div class="rot">Incoterm</div><div class="val"><%= c.incoterm || '—' %></div></div>
+    <div class="campo-doc total"><div class="rot">Quantidade (kg)</div>
+      <div class="val"><%= f.formatar(c.quantidade_kg, 3) %></div></div>
+    <div class="campo-doc total"><div class="rot">Quantidade (t)</div>
+      <div class="val"><%= f.toneladas(c.quantidade_kg) %></div></div>
+    <div class="campo-doc"><div class="rot">Certificado de fumigação</div>
+      <div class="val mono"><%= c.certificado_externo || c.certificado_numero || '—' %></div></div>
+    <div class="campo-doc"><div class="rot">Comunicado</div>
+      <div class="val mono"><%= c.numero_comunicado || '—' %></div></div>
+  </div>
+</section>
+
+<section class="doc-secao">
+  <h3>Transporte</h3>
+  <div class="doc-grade">
+    <div class="campo-doc"><div class="rot">Placa</div>
+      <div class="val mono"><%= c.placa || c.veiculo_placa || '—' %></div></div>
+    <div class="campo-doc"><div class="rot">Placa reboque</div>
+      <div class="val mono"><%= c.placa_reboque || '—' %></div></div>
+    <div class="campo-doc"><div class="rot">Veículo</div>
+      <div class="val"><%= c.veiculo_modelo || '—' %></div></div>
+    <div class="campo-doc"><div class="rot">Transportadora</div>
+      <div class="val"><%= c.transportadora || '—' %></div></div>
+    <div class="campo-doc largo"><div class="rot">Motorista</div>
+      <div class="val"><%= c.motorista || '—' %></div></div>
+    <div class="campo-doc"><div class="rot">Documento do motorista</div>
+      <div class="val"><%= c.motorista_documento || '—' %></div></div>
+    <div class="campo-doc"><div class="rot">Data/hora do carregamento</div>
+      <div class="val"><%= f.dataHora(c.data_hora_carga) || '—' %></div></div>
+  </div>
+</section>
+
+<section class="doc-secao">
+  <h3>Pesagem</h3>
+  <div class="doc-grade">
+    <div class="campo-doc"><div class="rot">Peso bruto (kg)</div>
+      <div class="val"><%= c.peso_bruto_kg ? f.formatar(c.peso_bruto_kg, 3) : '____________' %></div></div>
+    <div class="campo-doc"><div class="rot">Tara (kg)</div>
+      <div class="val"><%= c.peso_tara_kg ? f.formatar(c.peso_tara_kg, 3) : '____________' %></div></div>
+    <div class="campo-doc total"><div class="rot">Peso líquido (kg)</div>
+      <div class="val"><%= c.peso_liquido_kg ? f.formatar(c.peso_liquido_kg, 3) : '____________' %></div></div>
+    <div class="campo-doc"><div class="rot">Expedido em</div>
+      <div class="val"><%= f.dataHora(c.expedido_em) || '—' %></div></div>
+  </div>
+</section>
+
+<% if (c.documentos && c.documentos.length) { %>
+  <section class="doc-secao">
+    <h3>Documentos da operação</h3>
+    <table class="tabela">
+      <thead><tr><th>Tipo</th><th>Número</th><th>Data</th></tr></thead>
+      <tbody>
+        <% for (const d of c.documentos) { %>
+          <tr>
+            <td><%= TIPOS_DOC[d.tipo] || d.tipo %></td>
+            <td class="doc"><%= d.numero || '—' %></td>
+            <td><%= f.data(d.data) %></td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </section>
+<% } %>
+
+<section class="doc-secao">
+  <h3>Observações</h3>
+  <div class="doc-observacao"><%= c.observacoes || '' %></div>
+</section>
+
+<div class="assinaturas">
+  <div class="linha-assinatura">
+    <div class="traco"></div>
+    <span>Conferente / balança</span>
+  </div>
+  <div class="linha-assinatura">
+    <div class="traco"></div>
+    <span>Motorista — <%= c.motorista || 'nome e assinatura' %></span>
+  </div>
+  <div class="linha-assinatura">
+    <div class="traco"></div>
+    <span><%= empresa.nomeCurto || 'SHKT' %> — autorização de saída</span>
+  </div>
+</div>
+
+<%- include('_fim', { tipoDocumento, numeroDocumento }) %>

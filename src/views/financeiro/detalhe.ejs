@@ -1,0 +1,227 @@
+<%- include('../partials/topo') %>
+
+<%
+  const t = registro;
+  const ehPagar = tipo === 'CP';
+  const liquidado = ehPagar ? t.valor_pago : t.valor_recebido;
+  const aberto = ['ABERTO', 'PARCIAL'].includes(t.status);
+  const vencido = aberto && new Date(t.vencimento) < new Date(f.hojeISO() + 'T12:00:00Z');
+%>
+
+<div class="cartao">
+  <div class="cartao-topo">
+    <a href="/financeiro/<%= segmento %>" class="btn pequeno">← Lista</a>
+    <h2><%= ehPagar ? 'Contas a pagar' : 'Contas a receber' %> <span class="mono"><%= t.numero %></span></h2>
+    <span class="pill <%= f.classeStatus(t.status) %>"><%= f.rotuloStatus(t.status) %></span>
+    <% if (vencido) { %>
+      <span class="pill erro">vencido há <%= f.diasVencidos(t.vencimento) %> dia(s)</span>
+    <% } %>
+  </div>
+
+  <div class="cartao-corpo">
+    <% if (origem) { %>
+      <!-- Navegacao do titulo ate o documento que o gerou -->
+      <div class="trilha mb-2">
+        <span class="elo">
+          <span class="rot">Origem</span>
+          <a href="/certificados/<%= origem.id %>" class="mono">
+            Certificado <%= origem.numero_certificado || origem.numero %>
+          </a>
+        </span>
+        <span class="seta">←</span>
+        <span class="elo">
+          <span class="rot">Fumigação</span>
+          <a href="/fumigacao/<%= origem.fumigacao_id %>" class="mono"><%= origem.fumigacao_numero %></a>
+        </span>
+        <span class="seta">←</span>
+        <span class="elo">
+          <span class="rot">Comunicado</span>
+          <span class="mono"><%= origem.numero_comunicado || '—' %></span>
+        </span>
+      </div>
+    <% } else if (t.origem !== 'MANUAL' && t.origem_numero) { %>
+      <p class="txt-min txt-fraco mb-2">
+        Gerado automaticamente por <strong><%= t.origem %></strong>
+        <span class="mono"><%= t.origem_numero %></span>.
+      </p>
+    <% } %>
+
+    <div class="ficha">
+      <div class="item"><div class="rot">Descrição</div><div class="val"><%= t.descricao %></div></div>
+      <div class="item"><div class="rot"><%= ehPagar ? 'Beneficiário' : 'Pagador' %></div>
+        <div class="val"><%= t.parceiro || t.beneficiario || t.pagador || t.funcionario || '—' %></div></div>
+      <div class="item"><div class="rot">Valor do título</div>
+        <div class="val grande"><%= t.moeda_simbolo %> <%= f.formatar(t.valor, 2) %></div></div>
+      <div class="item"><div class="rot"><%= ehPagar ? 'Pago' : 'Recebido' %></div>
+        <div class="val"><%= t.moeda_simbolo %> <%= f.formatar(liquidado, 2) %></div></div>
+      <div class="item"><div class="rot">Saldo em aberto</div>
+        <div class="val grande <%= Number(t.saldo) > 0 ? 'txt-atencao' : 'txt-ok' %>">
+          <%= t.moeda_simbolo %> <%= f.formatar(t.saldo, 2) %></div></div>
+      <div class="item"><div class="rot">Emissão</div><div class="val"><%= f.data(t.emissao) %></div></div>
+      <div class="item"><div class="rot">Vencimento</div>
+        <div class="val <%= vencido ? 'txt-erro txt-forte' : '' %>"><%= f.data(t.vencimento) %></div></div>
+      <div class="item"><div class="rot">Categoria</div><div class="val"><%= t.categoria || '—' %></div></div>
+      <div class="item"><div class="rot">Centro de custo</div><div class="val"><%= t.centro_custo || '—' %></div></div>
+      <div class="item"><div class="rot">Documento fiscal</div><div class="val"><%= t.documento_fiscal || '—' %></div></div>
+    </div>
+
+    <% if (t.observacoes) { %>
+      <p class="txt-min txt-fraco mt-2 mb-0"><strong>Observações:</strong> <%= t.observacoes %></p>
+    <% } %>
+
+    <% if (t.status === 'CANCELADO') { %>
+      <div class="aviso erro mt-2 mb-0">
+        <span class="ic">✕</span><div><%= t.motivo_cancelamento %></div>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<!-- ------------------------------------------------------------- baixas -->
+<div class="cartao">
+  <div class="cartao-topo">
+    <h2><%= ehPagar ? 'Pagamentos' : 'Recebimentos' %></h2>
+    <span class="sub"><%= t.baixas.length %> baixa(s)</span>
+  </div>
+
+  <% if (t.baixas.length) { %>
+    <div class="tabela-area">
+      <table class="tabela">
+        <thead>
+          <tr><th>Data</th><th class="num">Valor</th><th class="num">Juros</th><th class="num">Desconto</th>
+            <th>Conta</th><th>Forma</th><th>Usuário</th><th></th></tr>
+        </thead>
+        <tbody>
+          <% for (const b of t.baixas) { %>
+            <tr class="<%= b.estornada ? 'linha-cancelada' : '' %>">
+              <td class="nowrap"><%= f.data(b.data) %></td>
+              <td class="num txt-forte"><%= f.formatar(b.valor, 2) %></td>
+              <td class="num txt-min"><%= Number(b.juros) ? f.formatar(b.juros, 2) : '—' %></td>
+              <td class="num txt-min"><%= Number(b.desconto) ? f.formatar(b.desconto, 2) : '—' %></td>
+              <td><%= b.conta_bancaria %></td>
+              <td class="txt-min"><%= b.forma_pagamento || '—' %></td>
+              <td class="txt-min txt-fraco"><%= b.usuario || '' %></td>
+              <td class="acoes">
+                <% if (b.estornada) { %>
+                  <span class="pill erro">estornada</span>
+                <% } else if (pode('financeiro.cancelar')) { %>
+                  <button type="button" class="btn pequeno contorno-perigo"
+                          data-modal="#estorno-<%= b.id %>">Estornar</button>
+                <% } %>
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  <% } else { %>
+    <div class="vazio"><p class="txt-min">Nenhuma baixa registrada.</p></div>
+  <% } %>
+
+  <!-- ------------------------------------------------------ nova baixa -->
+  <% if (aberto && pode('financeiro.liquidar')) { %>
+    <form method="post" action="/financeiro/<%= segmento %>/<%= t.id %>/baixar"
+          class="cartao-corpo" style="border-top:1px solid var(--linha)">
+      <h3 class="mb-1"><%= ehPagar ? 'Registrar pagamento' : 'Registrar recebimento' %></h3>
+      <div class="campos">
+        <div class="campo c2">
+          <label for="valor">Valor <span class="obrigatorio">*</span></label>
+          <input type="text" inputmode="decimal" class="numerico" data-casas="2"
+                 id="valor" name="valor" required value="<%= f.formatar(t.saldo, 2) %>">
+          <span class="ajuda">Saldo: <%= f.formatar(t.saldo, 2) %></span>
+        </div>
+        <div class="campo c2">
+          <label for="data">Data <span class="obrigatorio">*</span></label>
+          <input type="date" id="data" name="data" required value="<%= hoje %>">
+        </div>
+        <div class="campo c3">
+          <label for="conta_bancaria_id">Conta <span class="obrigatorio">*</span></label>
+          <select id="conta_bancaria_id" name="conta_bancaria_id" required>
+            <option value="">Selecione...</option>
+            <% for (const c of ref.contasBancarias) { %>
+              <option value="<%= c.id %>"><%= c.nome %> (<%= c.moeda_simbolo %>)</option>
+            <% } %>
+          </select>
+        </div>
+        <div class="campo c2">
+          <label for="forma_pagamento_id">Forma</label>
+          <select id="forma_pagamento_id" name="forma_pagamento_id">
+            <option value="">—</option>
+            <% for (const fp of ref.formasPagamento) { %>
+              <option value="<%= fp.id %>"><%= fp.nome %></option>
+            <% } %>
+          </select>
+        </div>
+        <div class="campo c1">
+          <label for="juros">Juros</label>
+          <input type="text" inputmode="decimal" class="numerico" data-casas="2" id="juros" name="juros">
+        </div>
+        <div class="campo c1">
+          <label for="desconto">Desconto</label>
+          <input type="text" inputmode="decimal" class="numerico" data-casas="2" id="desconto" name="desconto">
+        </div>
+        <div class="campo c12">
+          <label for="obs-baixa">Observações</label>
+          <input type="text" id="obs-baixa" name="observacoes">
+        </div>
+        <div class="campo c12">
+          <button type="submit" class="btn primario">
+            <%= ehPagar ? 'Registrar pagamento' : 'Registrar recebimento' %>
+          </button>
+          <span class="ajuda">Baixas parciais são permitidas; o saldo continua em aberto.</span>
+        </div>
+      </div>
+    </form>
+  <% } %>
+</div>
+
+<!-- ------------------------------------------------------------ cancelar -->
+<% if (t.status !== 'CANCELADO' && Number(liquidado) === 0 && pode('financeiro.cancelar')) { %>
+  <div class="barra-acoes mt-2">
+    <span class="espaco"></span>
+    <button type="button" class="btn contorno-perigo" data-modal="#modal-cancelar">Cancelar título</button>
+  </div>
+
+  <dialog class="modal" id="modal-cancelar">
+    <form method="post" action="/financeiro/<%= segmento %>/<%= t.id %>/cancelar">
+      <div class="modal-topo"><h2>Cancelar título <%= t.numero %></h2></div>
+      <div class="modal-corpo">
+        <p class="txt-min">O título é preservado no histórico com o motivo do cancelamento.</p>
+        <div class="campo">
+          <label for="motivo-cancelar">Motivo <span class="obrigatorio">*</span></label>
+          <textarea id="motivo-cancelar" name="motivo" rows="3" required minlength="5"></textarea>
+        </div>
+      </div>
+      <div class="modal-rodape">
+        <button type="button" class="btn" data-fechar-modal>Voltar</button>
+        <button type="submit" class="btn perigo">Confirmar cancelamento</button>
+      </div>
+    </form>
+  </dialog>
+<% } %>
+
+<% for (const b of t.baixas.filter(x => !x.estornada)) { %>
+  <% if (pode('financeiro.cancelar')) { %>
+    <dialog class="modal" id="estorno-<%= b.id %>">
+      <form method="post" action="/financeiro/baixas/<%= b.id %>/estornar">
+        <div class="modal-topo"><h2>Estornar baixa</h2></div>
+        <div class="modal-corpo">
+          <p class="txt-min">
+            <%= f.data(b.data) %> · <%= t.moeda_simbolo %> <%= f.formatar(b.valor, 2) %> ·
+            <%= b.conta_bancaria %>. O valor volta para o saldo do título e para o caixa.
+          </p>
+          <div class="campo">
+            <label for="motivo-estorno-<%= b.id %>">Motivo <span class="obrigatorio">*</span></label>
+            <textarea id="motivo-estorno-<%= b.id %>" name="motivo" rows="3" required minlength="5"></textarea>
+          </div>
+        </div>
+        <div class="modal-rodape">
+          <button type="button" class="btn" data-fechar-modal>Voltar</button>
+          <button type="submit" class="btn perigo">Confirmar estorno</button>
+        </div>
+      </form>
+    </dialog>
+  <% } %>
+<% } %>
+
+<%- include('../partials/fim') %>

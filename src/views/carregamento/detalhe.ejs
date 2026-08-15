@@ -1,0 +1,282 @@
+<%- include('../partials/topo') %>
+
+<%
+  const c = carregamento;
+  const editavel = ['RASCUNHO', 'PROGRAMADO', 'EM_CARREGAMENTO'].includes(c.status);
+  const TIPOS_DOC = {
+    DANFE: 'DANFE / NF-e', NFE: 'NF-e', MIC_DTA: 'MIC-DTA', CRT: 'CRT',
+    PACKING_LIST: 'Packing list', CONHECIMENTO: 'Conhecimento de transporte', OUTRO: 'Outro',
+  };
+%>
+
+<div class="cartao">
+  <div class="cartao-topo">
+    <a href="/carregamentos" class="btn pequeno">← Lista</a>
+    <h2>Carregamento <span class="mono"><%= c.numero %></span></h2>
+    <span class="pill <%= f.classeStatus(c.status) %>"><%= f.rotuloStatus(c.status) %></span>
+    <span style="flex:1"></span>
+    <a href="/carregamentos/<%= c.id %>/documento" class="btn pequeno" target="_blank">Imprimir romaneio</a>
+    <% if (editavel && pode('carregamento.editar')) { %>
+      <a href="/carregamentos/<%= c.id %>/editar" class="btn pequeno">Editar</a>
+    <% } %>
+  </div>
+
+  <div class="cartao-corpo">
+    <% if (c.certificado_numero) { %>
+      <div class="trilha mb-2">
+        <span class="elo"><span class="rot">Fumigação</span>
+          <span class="mono"><%= c.fumigacao_numero %></span></span>
+        <span class="seta">→</span>
+        <span class="elo"><span class="rot">Comunicado</span>
+          <span class="mono"><%= c.numero_comunicado || '—' %></span></span>
+        <span class="seta">→</span>
+        <span class="elo"><span class="rot">Certificado</span>
+          <a href="/certificados/<%= c.certificado_id %>" class="mono"><%= c.certificado_externo || c.certificado_numero %></a></span>
+        <span class="seta">→</span>
+        <span class="elo"><span class="rot">Carregamento</span>
+          <span class="mono"><%= c.numero %></span></span>
+      </div>
+    <% } %>
+
+    <div class="ficha">
+      <div class="item"><div class="rot">Tipo</div><div class="val"><%= c.tipo_operacao.replace('_', ' ') %></div></div>
+      <div class="item"><div class="rot">Data</div><div class="val"><%= f.data(c.data) %></div></div>
+      <div class="item"><div class="rot">Cliente</div><div class="val"><%= c.cliente || '—' %></div></div>
+      <div class="item"><div class="rot">Produto</div><div class="val"><%= c.produto %></div></div>
+      <div class="item"><div class="rot">Sai de</div>
+        <div class="val"><%= c.local %><%= c.lote ? ' · lote ' + c.lote : '' %></div></div>
+      <div class="item"><div class="rot">Quantidade</div>
+        <div class="val grande"><%= f.toneladas(c.quantidade_kg) %></div>
+        <div class="txt-min txt-fraco"><%= f.kg(c.quantidade_kg) %></div></div>
+      <div class="item"><div class="rot">Destino</div>
+        <div class="val"><%= c.destino || '—' %>
+          <% if (c.pais_destino) { %><div class="txt-min txt-fraco"><%= c.pais_destino %></div><% } %></div></div>
+      <div class="item"><div class="rot">Incoterm</div><div class="val"><%= c.incoterm || '—' %></div></div>
+      <div class="item"><div class="rot">Veículo</div>
+        <div class="val mono"><%= c.placa || c.veiculo_placa || '—' %>
+          <%= c.placa_reboque ? ' / ' + c.placa_reboque : '' %></div></div>
+      <div class="item"><div class="rot">Motorista</div>
+        <div class="val"><%= c.motorista || '—' %>
+          <% if (c.motorista_documento) { %><div class="txt-min txt-fraco"><%= c.motorista_documento %></div><% } %></div></div>
+      <div class="item"><div class="rot">Transportadora</div><div class="val"><%= c.transportadora || '—' %></div></div>
+      <div class="item"><div class="rot">Pesagem</div>
+        <div class="val txt-min">
+          <% if (c.peso_bruto_kg || c.peso_tara_kg) { %>
+            bruto <%= f.formatar(c.peso_bruto_kg || 0, 0) %> kg<br>
+            tara <%= f.formatar(c.peso_tara_kg || 0, 0) %> kg<br>
+            <strong>líq. <%= f.formatar(c.peso_liquido_kg || 0, 0) %> kg</strong>
+          <% } else { %>—<% } %>
+        </div></div>
+    </div>
+
+    <% if (c.observacoes) { %>
+      <p class="txt-min txt-fraco mt-2 mb-0"><strong>Observações:</strong> <%= c.observacoes %></p>
+    <% } %>
+
+    <% if (c.status === 'EXPEDIDO') { %>
+      <div class="aviso ok mt-2 mb-0">
+        <span class="ic">✓</span>
+        <div><strong>Expedido em <%= f.dataHora(c.expedido_em) %></strong>
+          Baixa de <%= f.toneladas(c.quantidade_kg) %> registrada no estoque.</div>
+      </div>
+    <% } %>
+    <% if (c.status === 'CANCELADO') { %>
+      <div class="aviso erro mt-2 mb-0">
+        <span class="ic">✕</span>
+        <div><strong>Cancelado em <%= f.dataHora(c.cancelado_em) %></strong><%= c.motivo_cancelamento %></div>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<!-- ------------------------------------------------------- fluxo de status -->
+<% if (c.status === 'RASCUNHO' && pode('carregamento.aprovar')) { %>
+  <div class="cartao">
+    <div class="cartao-topo"><h2>Programar carregamento</h2></div>
+    <div class="cartao-corpo">
+      <p class="txt-min mb-2">
+        Reserva <strong><%= f.toneladas(c.quantidade_kg) %></strong> no estoque de
+        <strong><%= c.local %></strong>. O estoque físico só é baixado na confirmação da expedição.
+      </p>
+      <form method="post" action="/carregamentos/<%= c.id %>/programar">
+        <button type="submit" class="btn primario">Programar e reservar estoque</button>
+      </form>
+    </div>
+  </div>
+<% } %>
+
+<% if (['PROGRAMADO', 'EM_CARREGAMENTO'].includes(c.status) && pode('carregamento.aprovar')) { %>
+  <form method="post" action="/carregamentos/<%= c.id %>/expedir" class="cartao">
+    <div class="cartao-topo">
+      <h2>Confirmar expedição</h2>
+      <span class="sub">este é o evento que baixa o estoque</span>
+    </div>
+    <div class="cartao-corpo">
+      <p class="txt-min mb-2">
+        Ajuste a quantidade se a pesagem final for diferente da programada
+        (<%= f.toneladas(c.quantidade_kg) %>).
+      </p>
+      <div class="campos">
+        <div class="campo c2">
+          <label for="quantidade">Quantidade final</label>
+          <input type="text" inputmode="decimal" class="numerico" data-casas="3"
+                 id="quantidade" name="quantidade"
+                 value="<%= c.quantidade_origem ? f.formatar(c.quantidade_origem, 3) : '' %>">
+        </div>
+        <div class="campo c2">
+          <label for="unidade_id">Unidade</label>
+          <input type="hidden" name="unidade_id" value="<%= c.unidade_id %>">
+          <input type="text" value="<%= c.unidade || 'kg' %>" readonly>
+        </div>
+        <div class="campo c2">
+          <label for="peso_bruto">Peso bruto (kg)</label>
+          <input type="text" inputmode="decimal" class="numerico" data-casas="3"
+                 id="peso_bruto" name="peso_bruto"
+                 value="<%= c.peso_bruto_kg ? f.formatar(c.peso_bruto_kg, 3) : '' %>">
+        </div>
+        <div class="campo c2">
+          <label for="peso_tara">Tara (kg)</label>
+          <input type="text" inputmode="decimal" class="numerico" data-casas="3"
+                 id="peso_tara" name="peso_tara"
+                 value="<%= c.peso_tara_kg ? f.formatar(c.peso_tara_kg, 3) : '' %>">
+        </div>
+        <div class="campo c2">
+          <label for="peso_liquido">Peso líquido (kg)</label>
+          <input type="text" inputmode="decimal" class="numerico" data-casas="3"
+                 id="peso_liquido" name="peso_liquido"
+                 value="<%= c.peso_liquido_kg ? f.formatar(c.peso_liquido_kg, 3) : '' %>">
+        </div>
+        <div class="campo c2">
+          <label for="data">Data da saída</label>
+          <input type="date" id="data" name="data" value="<%= f.dataInput(c.data) %>">
+        </div>
+      </div>
+    </div>
+    <div class="rodape-form">
+      <span class="espaco"></span>
+      <button type="submit" class="btn primario"
+              data-confirmar="Confirmar a expedição do carregamento <%= c.numero %>? O estoque será baixado.">
+        Confirmar expedição e baixar estoque
+      </button>
+    </div>
+  </form>
+<% } %>
+
+<div class="grade grade-2">
+  <!-- ---------------------------------------------------------- documentos -->
+  <div class="cartao">
+    <div class="cartao-topo"><h2>Documentos da operação</h2></div>
+    <% if (c.documentos.length) { %>
+      <div class="tabela-area">
+        <table class="tabela">
+          <thead><tr><th>Tipo</th><th>Número</th><th>Data</th></tr></thead>
+          <tbody>
+            <% for (const d of c.documentos) { %>
+              <tr>
+                <td><%= TIPOS_DOC[d.tipo] || d.tipo %></td>
+                <td class="doc"><%= d.numero || '—' %></td>
+                <td><%= f.data(d.data) %></td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <div class="vazio"><p class="txt-min">Nenhum documento registrado.</p></div>
+    <% } %>
+
+    <% if (c.status !== 'CANCELADO' && pode('carregamento.editar')) { %>
+      <form method="post" action="/carregamentos/<%= c.id %>/documentos" class="cartao-corpo"
+            style="border-top:1px solid var(--linha)">
+        <div class="campos">
+          <div class="campo c4">
+            <label for="tipo">Tipo</label>
+            <select id="tipo" name="tipo" required>
+              <% for (const [v, t] of Object.entries(TIPOS_DOC)) { %>
+                <option value="<%= v %>"><%= t %></option>
+              <% } %>
+            </select>
+          </div>
+          <div class="campo c4">
+            <label for="numero">Número</label>
+            <input type="text" id="numero" name="numero" required>
+          </div>
+          <div class="campo c4">
+            <label for="data-doc">Data</label>
+            <input type="date" id="data-doc" name="data">
+          </div>
+          <div class="campo c12">
+            <button type="submit" class="btn">Adicionar documento</button>
+          </div>
+        </div>
+      </form>
+    <% } %>
+  </div>
+
+  <!-- ------------------------------------------------ movimentos de estoque -->
+  <div class="cartao">
+    <div class="cartao-topo">
+      <h2>Reflexo no estoque</h2>
+      <span class="sub">rastro da baixa</span>
+    </div>
+    <% if (c.movimentos.length) { %>
+      <div class="tabela-area">
+        <table class="tabela">
+          <thead><tr><th>Data</th><th>Tipo</th><th class="num">Quantidade</th><th class="num">Saldo após</th></tr></thead>
+          <tbody>
+            <% for (const m of c.movimentos) { %>
+              <tr>
+                <td class="nowrap txt-min"><%= f.dataHora(m.data_hora) %></td>
+                <td><span class="pill <%= m.tipo === 'ESTORNO' ? 'erro' : 'info' %>"><%= m.tipo %></span></td>
+                <td class="num <%= Number(m.quantidade_kg) > 0 ? 'txt-ok' : 'txt-erro' %>">
+                  <%= Number(m.quantidade_kg) > 0 ? '+' : '−' %><%= f.formatar(Math.abs(Number(m.quantidade_kg)) / 1000, 3) %> t
+                </td>
+                <td class="num"><%= f.formatar(Number(m.saldo_apos_kg) / 1000, 3) %> t</td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <div class="vazio">
+        <p class="txt-min">
+          Nenhum movimento ainda. O estoque só é baixado na confirmação da expedição.
+        </p>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<!-- --------------------------------------------------------------- cancelar -->
+<% if (c.status !== 'CANCELADO' && pode('carregamento.cancelar')) { %>
+  <div class="barra-acoes mt-2">
+    <span class="espaco"></span>
+    <button type="button" class="btn contorno-perigo" data-modal="#modal-cancelar">Cancelar carregamento</button>
+  </div>
+
+  <dialog class="modal" id="modal-cancelar">
+    <form method="post" action="/carregamentos/<%= c.id %>/cancelar">
+      <div class="modal-topo"><h2>Cancelar carregamento <%= c.numero %></h2></div>
+      <div class="modal-corpo">
+        <p class="txt-min">
+          <% if (c.status === 'EXPEDIDO') { %>
+            A mercadoria (<strong><%= f.toneladas(c.quantidade_kg) %></strong>) volta ao estoque
+            por estorno; o movimento original é preservado.
+          <% } else if (c.status !== 'RASCUNHO') { %>
+            A reserva de estoque será liberada.
+          <% } %>
+        </p>
+        <div class="campo">
+          <label for="motivo-cancelar">Motivo <span class="obrigatorio">*</span></label>
+          <textarea id="motivo-cancelar" name="motivo" rows="3" required minlength="5"></textarea>
+        </div>
+      </div>
+      <div class="modal-rodape">
+        <button type="button" class="btn" data-fechar-modal>Voltar</button>
+        <button type="submit" class="btn perigo">Confirmar cancelamento</button>
+      </div>
+    </form>
+  </dialog>
+<% } %>
+
+<%- include('../partials/fim') %>

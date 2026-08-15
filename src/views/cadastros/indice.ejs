@@ -1,0 +1,21 @@
+<%- include('../partials/topo') %>
+
+<div class="cartao">
+  <div class="cartao-topo">
+    <h2>Tabelas de apoio</h2>
+    <span class="sub">Listas usadas pelos demais módulos. Ajuste aqui e o sistema inteiro passa a usar.</span>
+  </div>
+  <div class="cartao-corpo">
+    <div class="grade grade-auto">
+      <% for (const item of apoio) { %>
+        <a class="indicador" href="/cadastros/<%= item.rota %>">
+          <div class="rotulo"><%= item.titulo %></div>
+          <div class="valor" style="font-size:1.15rem"><%= contagens[item.rota] ?? 0 %></div>
+          <div class="apoio"><%= item.descricao || 'registro(s) ativo(s)' %></div>
+        </a>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/fim') %>

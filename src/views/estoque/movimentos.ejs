@@ -1,0 +1,157 @@
+<%- include('../partials/topo') %>
+
+<%
+  const TIPOS = {
+    SALDO_INICIAL: 'Saldo inicial',
+    RECEBIMENTO: 'Recebimento',
+    AJUSTE_ENTRADA: 'Ajuste (entrada)',
+    AJUSTE_SAIDA: 'Ajuste (saída)',
+    TRANSFERENCIA_ENTRADA: 'Transferência (entrada)',
+    TRANSFERENCIA_SAIDA: 'Transferência (saída)',
+    CARREGAMENTO: 'Carregamento',
+    ESTORNO: 'Estorno',
+  };
+%>
+
+<div class="cartao">
+  <div class="cartao-topo">
+    <a href="/estoque" class="btn pequeno">← Posição</a>
+    <h2>Movimentações</h2>
+    <span style="flex:1"></span>
+    <% if (pode('estoque.criar')) { %>
+      <a href="/estoque/ajuste" class="btn primario pequeno">+ Ajuste</a>
+    <% } %>
+  </div>
+
+  <form method="get" class="filtros">
+    <div class="campo largo">
+      <label for="produto">Produto</label>
+      <select id="produto" name="produto">
+        <option value="">Todos</option>
+        <% for (const p of ref.produtos) { %>
+          <option value="<%= p.id %>" <%= String(filtros.produtoId) === String(p.id) ? 'selected' : '' %>><%= p.descricao %></option>
+        <% } %>
+      </select>
+    </div>
+    <div class="campo">
+      <label for="local">Local</label>
+      <select id="local" name="local">
+        <option value="">Todos</option>
+        <% for (const l of ref.locais) { %>
+          <option value="<%= l.id %>" <%= String(filtros.localId) === String(l.id) ? 'selected' : '' %>><%= l.nome %></option>
+        <% } %>
+      </select>
+    </div>
+    <div class="campo">
+      <label for="tipo">Tipo</label>
+      <select id="tipo" name="tipo">
+        <option value="">Todos</option>
+        <% for (const [valor, texto] of Object.entries(TIPOS)) { %>
+          <option value="<%= valor %>" <%= filtros.tipo === valor ? 'selected' : '' %>><%= texto %></option>
+        <% } %>
+      </select>
+    </div>
+    <div class="campo">
+      <label for="de">De</label>
+      <input type="date" id="de" name="de" value="<%= filtros.de || '' %>">
+    </div>
+    <div class="campo">
+      <label for="ate">Até</label>
+      <input type="date" id="ate" name="ate" value="<%= filtros.ate || '' %>">
+    </div>
+    <span class="espaco"></span>
+    <button type="submit" class="btn">Filtrar</button>
+    <a href="/estoque/movimentos" class="btn">Limpar</a>
+  </form>
+
+  <% if (!movimentos.length) { %>
+    <div class="vazio"><span class="icone">▤</span><p>Nenhuma movimentação encontrada.</p></div>
+  <% } else { %>
+    <div class="tabela-area">
+      <table class="tabela responsiva">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Tipo</th>
+            <th>Produto</th>
+            <th>Local / lote</th>
+            <th>Documento</th>
+            <th class="num">Quantidade</th>
+            <th class="num">Saldo após</th>
+            <th>Usuário</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (const m of movimentos) { %>
+            <% const entrada = Number(m.quantidade_kg) > 0; %>
+            <tr>
+              <td data-rot="Data" class="nowrap"><%= f.data(m.data_movimento) %>
+                <div class="txt-min txt-fraco"><%= f.dataHora(m.data_hora).slice(11) %></div>
+              </td>
+              <td data-rot="Tipo">
+                <span class="pill <%= m.tipo === 'ESTORNO' ? 'erro' : entrada ? 'ok' : 'info' %>">
+                  <%= TIPOS[m.tipo] || m.tipo %>
+                </span>
+              </td>
+              <td data-rot="Produto"><%= m.produto %></td>
+              <td data-rot="Local"><%= m.local %>
+                <% if (m.lote) { %><div class="txt-min txt-fraco mono"><%= m.lote %></div><% } %>
+              </td>
+              <td data-rot="Documento" class="doc">
+                <% if (m.documento_tipo === 'CARREGAMENTO' && m.documento_id) { %>
+                  <a href="/carregamentos/<%= m.documento_id %>"><%= m.documento_numero %></a>
+                <% } else { %>
+                  <%= m.documento_numero || '—' %>
+                <% } %>
+                <% if (m.motivo) { %><div class="txt-min txt-fraco"><%= m.motivo %></div><% } %>
+              </td>
+              <td data-rot="Quantidade" class="num txt-forte <%= entrada ? 'txt-ok' : 'txt-erro' %>">
+                <%= entrada ? '+' : '−' %><%= f.formatar(Math.abs(Number(m.quantidade_kg)) / 1000, 3) %> t
+              </td>
+              <td data-rot="Saldo após" class="num txt-fraco"><%= f.formatar(Number(m.saldo_apos_kg) / 1000, 3) %> t</td>
+              <td data-rot="Usuário" class="txt-min txt-fraco"><%= m.usuario || '—' %></td>
+              <td class="acoes">
+                <% if (pode('estoque.cancelar') && m.tipo !== 'ESTORNO' && !m.estorno_de_id) { %>
+                  <button type="button" class="btn pequeno contorno-perigo"
+                          data-modal="#estorno-<%= m.id %>">Estornar</button>
+                <% } %>
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>
+
+<% if (pode('estoque.cancelar')) { %>
+  <% for (const m of movimentos.filter(x => x.tipo !== 'ESTORNO' && !x.estorno_de_id)) { %>
+    <dialog class="modal" id="estorno-<%= m.id %>">
+      <form method="post" action="/estoque/movimentos/<%= m.id %>/estornar">
+        <div class="modal-topo"><h2>Estornar movimentação</h2></div>
+        <div class="modal-corpo">
+          <p class="txt-min txt-fraco">
+            <%= m.produto %> · <%= f.toneladas(Math.abs(Number(m.quantidade_kg))) %> ·
+            <%= f.data(m.data_movimento) %>
+          </p>
+          <p class="txt-min">
+            O lançamento original é preservado. Será criado um movimento inverso,
+            registrado na auditoria.
+          </p>
+          <div class="campo">
+            <label for="motivo-<%= m.id %>">Motivo do estorno <span class="obrigatorio">*</span></label>
+            <textarea id="motivo-<%= m.id %>" name="motivo" rows="3" required minlength="5"
+                      placeholder="Ex.: quantidade lançada em duplicidade"></textarea>
+          </div>
+        </div>
+        <div class="modal-rodape">
+          <button type="button" class="btn" data-fechar-modal>Voltar</button>
+          <button type="submit" class="btn perigo">Confirmar estorno</button>
+        </div>
+      </form>
+    </dialog>
+  <% } %>
+<% } %>
+
+<%- include('../partials/fim') %>

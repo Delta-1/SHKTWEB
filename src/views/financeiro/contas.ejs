@@ -1,0 +1,93 @@
+<%- include('../partials/topo') %>
+
+<div class="cartao">
+  <div class="cartao-topo">
+    <h2>Caixa e bancos</h2>
+    <span class="sub">saldo = saldo inicial + entradas − saídas</span>
+    <span style="flex:1"></span>
+    <a href="/cadastros/contas-bancarias" class="btn pequeno">Gerenciar contas</a>
+  </div>
+
+  <% if (!saldos.length) { %>
+    <div class="vazio">
+      <span class="icone">▦</span>
+      <p>Nenhuma conta cadastrada.</p>
+      <a href="/cadastros/contas-bancarias/novo" class="btn primario">Cadastrar conta</a>
+    </div>
+  <% } else { %>
+    <div class="tabela-area">
+      <table class="tabela responsiva">
+        <thead>
+          <tr><th>Conta</th><th>Tipo</th><th>Banco</th><th class="num">Saldo inicial</th>
+            <th class="num">Movimentação</th><th class="num">Saldo atual</th><th></th></tr>
+        </thead>
+        <tbody>
+          <% for (const c of saldos) { %>
+            <tr>
+              <td data-rot="Conta"><a href="/financeiro/contas/<%= c.id %>"><%= c.nome %></a>
+                <div class="txt-min txt-fraco mono"><%= c.codigo %></div></td>
+              <td data-rot="Tipo"><span class="pill neutro"><%= c.tipo %></span></td>
+              <td data-rot="Moeda" class="txt-min"><%= c.moeda %></td>
+              <td data-rot="Saldo inicial" class="num txt-fraco"><%= f.formatar(c.saldo_inicial, 2) %></td>
+              <td data-rot="Movimentação" class="num <%= Number(c.movimentacao) < 0 ? 'txt-erro' : 'txt-ok' %>">
+                <%= f.formatar(c.movimentacao, 2) %></td>
+              <td data-rot="Saldo atual" class="num txt-forte <%= Number(c.saldo_atual) < 0 ? 'txt-erro' : '' %>">
+                <%= c.moeda_simbolo %> <%= f.formatar(c.saldo_atual, 2) %></td>
+              <td class="acoes"><a href="/financeiro/contas/<%= c.id %>" class="btn pequeno">Extrato</a></td>
+            </tr>
+          <% } %>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="5">Total (somando moedas diferentes apenas como referência)</td>
+            <td class="num"><%= f.formatar(saldos.reduce((s, c) => s + Number(c.saldo_atual), 0), 2) %></td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  <% } %>
+</div>
+
+<% if (pode('financeiro.liquidar') && saldos.length > 1) { %>
+  <form method="post" action="/financeiro/transferencias" class="cartao" style="max-width:820px">
+    <div class="cartao-topo"><h2>Transferência entre contas</h2></div>
+    <div class="cartao-corpo">
+      <div class="campos">
+        <div class="campo c4">
+          <label for="conta_origem_id">De <span class="obrigatorio">*</span></label>
+          <select id="conta_origem_id" name="conta_origem_id" required>
+            <option value="">Selecione...</option>
+            <% for (const c of ref.contasBancarias) { %><option value="<%= c.id %>"><%= c.nome %></option><% } %>
+          </select>
+        </div>
+        <div class="campo c4">
+          <label for="conta_destino_id">Para <span class="obrigatorio">*</span></label>
+          <select id="conta_destino_id" name="conta_destino_id" required>
+            <option value="">Selecione...</option>
+            <% for (const c of ref.contasBancarias) { %><option value="<%= c.id %>"><%= c.nome %></option><% } %>
+          </select>
+        </div>
+        <div class="campo c2">
+          <label for="valor">Valor <span class="obrigatorio">*</span></label>
+          <input type="text" inputmode="decimal" class="numerico" data-casas="2"
+                 id="valor" name="valor" required>
+        </div>
+        <div class="campo c2">
+          <label for="data">Data</label>
+          <input type="date" id="data" name="data" value="<%= hoje %>">
+        </div>
+        <div class="campo c12">
+          <label for="observacoes">Observações</label>
+          <input type="text" id="observacoes" name="observacoes">
+        </div>
+      </div>
+    </div>
+    <div class="rodape-form">
+      <span class="espaco"></span>
+      <button type="submit" class="btn primario">Transferir</button>
+    </div>
+  </form>
+<% } %>
+
+<%- include('../partials/fim') %>

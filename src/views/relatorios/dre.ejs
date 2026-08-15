@@ -1,0 +1,117 @@
+<%- include('../partials/topo') %>
+
+<%
+  const soma = (chaves) => chaves.reduce((s, c) => s + valorGrupo(c), 0);
+  const total = ESTRUTURA_TOTAL();
+  function ESTRUTURA_TOTAL() {
+    return estrutura
+      .filter((l) => l.tipo === 'grupo')
+      .reduce((s, l) => s + valorGrupo(l.chave), 0);
+  }
+  const cor = (v) => (v < 0 ? 'txt-erro' : v > 0 ? 'txt-ok' : 'txt-fraco');
+%>
+
+<div class="cartao">
+  <div class="cartao-topo">
+    <a href="/relatorios" class="btn pequeno nao-imprimir">← Relatórios</a>
+    <h2>DRE gerencial</h2>
+    <span class="sub"><%= f.data(de) %> a <%= f.data(ate) %></span>
+    <span style="flex:1"></span>
+    <button type="button" class="btn pequeno nao-imprimir" data-imprimir>Imprimir / PDF</button>
+  </div>
+
+  <form method="get" class="filtros nao-imprimir">
+    <div class="campo"><label for="de">De</label>
+      <input type="date" id="de" name="de" value="<%= de %>"></div>
+    <div class="campo"><label for="ate">Até</label>
+      <input type="date" id="ate" name="ate" value="<%= ate %>"></div>
+    <div class="campo largo">
+      <label for="centro">Centro de custo</label>
+      <select id="centro" name="centro">
+        <option value="">Todos</option>
+        <% for (const c of ref.centrosCusto) { %>
+          <option value="<%= c.id %>" <%= String(centroCustoId) === String(c.id) ? 'selected' : '' %>>
+            <%= c.nome %>
+          </option>
+        <% } %>
+      </select>
+    </div>
+    <span class="espaco"></span>
+    <button type="submit" class="btn">Atualizar</button>
+  </form>
+
+  <div class="tabela-area">
+    <table class="tabela">
+      <thead>
+        <tr><th style="width:60%">Conta</th><th class="num">Valor</th><th class="num">% receita</th></tr>
+      </thead>
+      <tbody>
+        <% const receitaBruta = valorGrupo('RECEITA_BRUTA') || 1; %>
+        <% for (const linha of estrutura) { %>
+          <% if (linha.tipo === 'grupo') { %>
+            <% const v = valorGrupo(linha.chave); const grupo = porGrupo[linha.chave]; %>
+            <tr>
+              <td class="txt-forte"><%= linha.rotulo %></td>
+              <td class="num txt-forte <%= cor(v) %>"><%= f.formatar(v, 2) %></td>
+              <td class="num txt-min txt-fraco">
+                <%= f.formatar((Math.abs(v) / Math.abs(receitaBruta)) * 100, 1) %>%
+              </td>
+            </tr>
+            <% if (grupo) { %>
+              <% for (const c of grupo.categorias) { %>
+                <tr>
+                  <td class="txt-min txt-fraco" style="padding-left:28px"><%= c.nome %></td>
+                  <td class="num txt-min txt-fraco"><%= f.formatar(c.total, 2) %></td>
+                  <td></td>
+                </tr>
+              <% } %>
+            <% } %>
+
+          <% } else if (linha.tipo === 'subtotal') { %>
+            <% const v = soma(linha.ate); %>
+            <tr style="background:var(--papel-2)">
+              <td class="txt-forte"><%= linha.rotulo %></td>
+              <td class="num txt-forte <%= cor(v) %>" style="font-size:0.95rem">
+                <%= f.formatar(v, 2) %>
+              </td>
+              <td class="num txt-min txt-fraco">
+                <%= f.formatar((v / Math.abs(receitaBruta)) * 100, 1) %>%
+              </td>
+            </tr>
+
+          <% } else { %>
+            <tr style="background:var(--verde-050);border-top:2px solid var(--linha-forte)">
+              <td class="txt-forte" style="font-size:1rem"><%= linha.rotulo %></td>
+              <td class="num txt-forte <%= cor(total) %>" style="font-size:1.1rem">
+                <%= f.formatar(total, 2) %>
+              </td>
+              <td class="num txt-min txt-fraco">
+                <%= f.formatar((total / Math.abs(receitaBruta)) * 100, 1) %>%
+              </td>
+            </tr>
+          <% } %>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+  <% if (semCategoria.n > 0) { %>
+    <div class="cartao-corpo">
+      <div class="aviso atencao mb-0">
+        <span class="ic">!</span>
+        <div>
+          <strong><%= semCategoria.n %> título(s) sem categoria financeira</strong>
+          totalizando R$ <%= f.formatar(semCategoria.total, 2) %> não entram nesta DRE.
+          Classifique-os para que o resultado fique completo.
+        </div>
+      </div>
+    </div>
+  <% } %>
+</div>
+
+<p class="txt-min txt-fraco txt-centro">
+  <%= empresa.nome %> · DRE gerencial por regime de competência (data de emissão dos títulos) ·
+  emitido em <%= f.dataHora(new Date()) %>
+</p>
+
+<%- include('../partials/fim') %>

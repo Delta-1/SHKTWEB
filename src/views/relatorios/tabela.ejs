@@ -1,0 +1,103 @@
+<%- include('../partials/topo') %>
+
+<%
+  // Renderizador genérico de relatório tabular: recebe colunas + linhas e
+  // cuida de formatação, totais, impressão e exportação.
+  const valorDe = (linha, col) => {
+    const v = linha[col.chave];
+    if (v === null || v === undefined || v === '') return '';
+    switch (col.tipo) {
+      case 'toneladas': return f.formatar(Number(v) / 1000, 3);
+      case 'dinheiro':  return f.formatar(v, 2);
+      case 'data':      return f.data(v);
+      case 'dataHora':  return f.dataHora(v);
+      case 'status':    return f.rotuloStatus(v);
+      default:          return v;
+    }
+  };
+  const numerica = (col) => ['toneladas', 'dinheiro'].includes(col.tipo);
+  const somaDe = (chave) => linhas.reduce((s, l) => s + Number(l[chave] || 0), 0);
+  const rotaCsv = caminho.replace(/\/$/, '') + '/csv';
+%>
+
+<div class="cartao">
+  <div class="cartao-topo">
+    <a href="<%= voltar %>" class="btn pequeno nao-imprimir">← Relatórios</a>
+    <h2><%= titulo %></h2>
+    <% if (typeof subtitulo !== 'undefined' && subtitulo) { %>
+      <span class="sub"><%= subtitulo %></span>
+    <% } %>
+    <span style="flex:1"></span>
+    <button type="button" class="btn pequeno nao-imprimir" data-imprimir>Imprimir / PDF</button>
+    <% if (pode('relatorios.exportar')) { %>
+      <a href="<%= rotaCsv %>" class="btn pequeno nao-imprimir">Exportar planilha</a>
+    <% } %>
+  </div>
+
+  <% if (typeof periodo !== 'undefined' && periodo) { %>
+    <form method="get" class="filtros nao-imprimir">
+      <div class="campo"><label for="de">De</label>
+        <input type="date" id="de" name="de" value="<%= periodo.de %>"></div>
+      <div class="campo"><label for="ate">Até</label>
+        <input type="date" id="ate" name="ate" value="<%= periodo.ate %>"></div>
+      <span class="espaco"></span>
+      <button type="submit" class="btn">Atualizar</button>
+    </form>
+  <% } %>
+
+  <% if (!linhas.length) { %>
+    <div class="vazio"><p>Nenhum registro no período selecionado.</p></div>
+  <% } else { %>
+    <div class="tabela-area">
+      <table class="tabela">
+        <thead>
+          <tr>
+            <% for (const col of colunas) { %>
+              <th class="<%= numerica(col) ? 'num' : '' %>"><%= col.rotulo %></th>
+            <% } %>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (const linha of linhas) { %>
+            <tr>
+              <% for (const col of colunas) { %>
+                <td class="<%= numerica(col) ? 'num' : '' %><%= col.tipo === 'mono' ? ' doc' : '' %>">
+                  <% if (col.tipo === 'status') { %>
+                    <span class="pill <%= f.classeStatus(linha[col.chave]) %>"><%= valorDe(linha, col) %></span>
+                  <% } else { %>
+                    <%= valorDe(linha, col) %>
+                  <% } %>
+                </td>
+              <% } %>
+            </tr>
+          <% } %>
+        </tbody>
+        <% if (typeof totalizar !== 'undefined' && totalizar.length) { %>
+          <tfoot>
+            <tr>
+              <% let primeira = true; %>
+              <% for (const col of colunas) { %>
+                <% if (totalizar.includes(col.chave)) { %>
+                  <td class="num">
+                    <%= col.tipo === 'toneladas' ? f.formatar(somaDe(col.chave) / 1000, 3)
+                                                 : f.formatar(somaDe(col.chave), 2) %>
+                  </td>
+                <% } else if (primeira) { primeira = false; %>
+                  <td>Total (<%= linhas.length %> registros)</td>
+                <% } else { %>
+                  <td></td>
+                <% } %>
+              <% } %>
+            </tr>
+          </tfoot>
+        <% } %>
+      </table>
+    </div>
+  <% } %>
+</div>
+
+<p class="txt-min txt-fraco txt-centro">
+  <%= empresa.nome %> · emitido por <%= usuario.nome %> em <%= f.dataHora(new Date()) %>
+</p>
+
+<%- include('../partials/fim') %>

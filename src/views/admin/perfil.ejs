@@ -1,0 +1,71 @@
+<%- include('../partials/topo') %>
+
+<form method="post" action="/admin/perfis/<%= perfil.id %>" class="cartao">
+  <div class="cartao-topo">
+    <a href="/admin" class="btn pequeno">← Voltar</a>
+    <h2>Perfil: <%= perfil.nome %></h2>
+    <% if (perfil.sistema) { %><span class="pill neutro">perfil de sistema</span><% } %>
+  </div>
+
+  <div class="cartao-corpo">
+    <div class="campos mb-2">
+      <div class="campo c4">
+        <label for="nome">Nome <span class="obrigatorio">*</span></label>
+        <input type="text" id="nome" name="nome" required value="<%= perfil.nome %>">
+      </div>
+      <div class="campo c8">
+        <label for="descricao">Descrição</label>
+        <input type="text" id="descricao" name="descricao" value="<%= perfil.descricao || '' %>">
+      </div>
+    </div>
+
+    <div class="aviso info">
+      <span class="ic">i</span>
+      <div>
+        As permissões valem no servidor, não apenas na tela: um usuário sem
+        “Aprovar / Validar” não consegue validar um certificado nem digitando o endereço direto.
+      </div>
+    </div>
+
+    <div class="tabela-area">
+      <table class="tabela">
+        <thead>
+          <tr>
+            <th style="min-width:220px">Módulo</th>
+            <% for (const [chave, rotulo] of Object.entries(acoesPermissao)) { %>
+              <th class="txt-centro" style="font-size:0.65rem"><%= rotulo %></th>
+            <% } %>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (const m of modulos) { %>
+            <tr>
+              <td class="txt-forte"><%= m.nome %></td>
+              <% for (const acao of Object.keys(acoesPermissao)) { %>
+                <td class="txt-centro">
+                  <% if (m.acoes.includes(acao)) { %>
+                    <% const p = `${m.codigo}.${acao}`; %>
+                    <input type="checkbox" name="permissoes" value="<%= p %>"
+                           <%= permissoes.includes(p) ? 'checked' : '' %>
+                           style="width:17px;height:17px;accent-color:var(--verde-600)"
+                           aria-label="<%= m.nome %> — <%= acoesPermissao[acao] %>">
+                  <% } else { %>
+                    <span class="txt-fraco">—</span>
+                  <% } %>
+                </td>
+              <% } %>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="rodape-form">
+    <a href="/admin" class="btn">Cancelar</a>
+    <span class="espaco"></span>
+    <button type="submit" class="btn primario">Salvar permissões</button>
+  </div>
+</form>
+
+<%- include('../partials/fim') %>

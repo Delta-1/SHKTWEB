@@ -1,0 +1,162 @@
+<%- include('../partials/topo') %>
+
+<% const acao = novo ? '/fumigacao/novo' : `/fumigacao/${fumigacao.id}/editar`; %>
+
+<form method="post" action="<%= acao %>" class="cartao" style="max-width:1000px">
+  <div class="cartao-topo">
+    <a href="<%= novo ? '/fumigacao' : '/fumigacao/' + fumigacao.id %>" class="btn pequeno">← Voltar</a>
+    <h2><%= novo ? 'Novo pedido de fumigação' : 'Editar fumigação ' + fumigacao.numero %></h2>
+    <% if (!novo) { %>
+      <span class="pill <%= f.classeStatus(fumigacao.status) %>"><%= f.rotuloStatus(fumigacao.status) %></span>
+    <% } %>
+  </div>
+
+  <div class="cartao-corpo">
+    <fieldset>
+      <legend>Mercadoria</legend>
+      <div class="campos">
+        <div class="campo c5">
+          <label for="produto_id">Produto <span class="obrigatorio">*</span></label>
+          <select id="produto_id" name="produto_id" required data-foco>
+            <option value="">Selecione...</option>
+            <% for (const p of ref.produtos) { %>
+              <option value="<%= p.id %>" <%= String(fumigacao.produto_id) === String(p.id) ? 'selected' : '' %>>
+                <%= p.descricao %>
+              </option>
+            <% } %>
+          </select>
+        </div>
+        <div class="campo c4">
+          <label for="local_id">Local <span class="obrigatorio">*</span></label>
+          <select id="local_id" name="local_id" required>
+            <option value="">Selecione...</option>
+            <% for (const l of ref.locais) { %>
+              <option value="<%= l.id %>" <%= String(fumigacao.local_id) === String(l.id) ? 'selected' : '' %>>
+                <%= l.nome %>
+              </option>
+            <% } %>
+          </select>
+        </div>
+        <div class="campo c3">
+          <label for="lote_id">Lote</label>
+          <select id="lote_id" name="lote_id">
+            <option value="">Sem lote</option>
+            <% for (const l of ref.lotes) { %>
+              <option value="<%= l.id %>" <%= String(fumigacao.lote_id) === String(l.id) ? 'selected' : '' %>>
+                <%= l.codigo %>
+              </option>
+            <% } %>
+          </select>
+        </div>
+
+        <div class="campo c4">
+          <label for="quantidade">Quantidade <span class="obrigatorio">*</span></label>
+          <input type="text" inputmode="decimal" class="numerico" data-casas="3"
+                 id="quantidade" name="quantidade" required
+                 value="<%= fumigacao.quantidade_origem ? f.formatar(fumigacao.quantidade_origem, 3) : '' %>">
+          <span class="ajuda" data-eco-kg></span>
+        </div>
+        <div class="campo c3">
+          <label for="unidade_id">Unidade <span class="obrigatorio">*</span></label>
+          <select id="unidade_id" name="unidade_id" required>
+            <% for (const u of ref.unidades) { %>
+              <option value="<%= u.id %>" data-fator="<%= u.fator_kg %>"
+                      <%= String(fumigacao.unidade_id) === String(u.id) ? 'selected'
+                          : (!fumigacao.unidade_id && u.codigo === 'TON' ? 'selected' : '') %>>
+                <%= u.descricao %>
+              </option>
+            <% } %>
+          </select>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Execução</legend>
+      <div class="campos">
+        <div class="campo c5">
+          <label for="fumigadora_id">Empresa fumigadora <span class="obrigatorio">*</span></label>
+          <select id="fumigadora_id" name="fumigadora_id" required>
+            <option value="">Selecione...</option>
+            <% for (const x of ref.fumigadoras) { %>
+              <option value="<%= x.id %>" data-custo="<%= x.custo_tonelada || '' %>"
+                      <%= String(fumigacao.fumigadora_id) === String(x.id) ? 'selected' : '' %>>
+                <%= x.nome %>
+              </option>
+            <% } %>
+          </select>
+          <% if (!ref.fumigadoras.length) { %>
+            <span class="ajuda txt-erro">
+              Nenhuma empresa fumigadora cadastrada.
+              <a href="/cadastros/fumigadoras/novo">Cadastrar agora</a>.
+            </span>
+          <% } %>
+        </div>
+        <div class="campo c4">
+          <label for="numero_comunicado">Nº do Comunicado de Fumigação</label>
+          <input type="text" id="numero_comunicado" name="numero_comunicado"
+                 value="<%= fumigacao.numero_comunicado || '' %>" maxlength="60">
+          <span class="ajuda">Obrigatório para validar. Pode ser informado depois.</span>
+        </div>
+        <div class="campo c3">
+          <label for="responsavel">Responsável</label>
+          <input type="text" id="responsavel" name="responsavel" value="<%= fumigacao.responsavel || '' %>">
+        </div>
+
+        <div class="campo c4">
+          <label for="inicio">Início</label>
+          <input type="datetime-local" id="inicio" name="inicio"
+                 value="<%= f.dataHoraInput(fumigacao.data_hora_inicio) %>">
+        </div>
+        <div class="campo c4">
+          <label for="termino">Término (exaustão)</label>
+          <input type="datetime-local" id="termino" name="termino"
+                 value="<%= f.dataHoraInput(fumigacao.data_hora_termino) %>">
+          <span class="ajuda">Obrigatório para validar.</span>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Custo</legend>
+      <div class="campos">
+        <div class="campo c3">
+          <label for="custo_tonelada">Custo por tonelada</label>
+          <input type="text" inputmode="decimal" class="numerico" data-casas="2"
+                 id="custo_tonelada" name="custo_tonelada"
+                 value="<%= fumigacao.custo_tonelada ? f.formatar(fumigacao.custo_tonelada, 2) : '' %>">
+          <span class="ajuda">Sugerido do cadastro da fumigadora.</span>
+        </div>
+        <div class="campo c3">
+          <label for="moeda_id">Moeda <span class="obrigatorio">*</span></label>
+          <select id="moeda_id" name="moeda_id" required>
+            <% for (const m of ref.moedas) { %>
+              <option value="<%= m.id %>"
+                      <%= String(fumigacao.moeda_id) === String(m.id) ? 'selected'
+                          : (!fumigacao.moeda_id && m.codigo === 'BRL' ? 'selected' : '') %>>
+                <%= m.codigo %> — <%= m.nome %>
+              </option>
+            <% } %>
+          </select>
+        </div>
+        <div class="campo c3">
+          <label for="total_previsto">Custo previsto total</label>
+          <input type="text" id="total_previsto" data-total-tonelada readonly class="numerico">
+          <span class="ajuda">O valor definitivo vem do certificado.</span>
+        </div>
+        <div class="campo c12">
+          <label for="observacoes">Observações</label>
+          <textarea id="observacoes" name="observacoes" rows="2"><%= fumigacao.observacoes || '' %></textarea>
+        </div>
+      </div>
+    </fieldset>
+  </div>
+
+  <div class="rodape-form">
+    <a href="<%= novo ? '/fumigacao' : '/fumigacao/' + fumigacao.id %>" class="btn">Cancelar</a>
+    <span class="espaco"></span>
+    <button type="submit" class="btn primario"><%= novo ? 'Criar pedido' : 'Salvar alterações' %></button>
+  </div>
+</form>
+
+<%- include('../partials/fim') %>

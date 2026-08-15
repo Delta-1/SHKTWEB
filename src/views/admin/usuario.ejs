@@ -1,0 +1,91 @@
+<%- include('../partials/topo') %>
+
+<form method="post" action="<%= novo ? '/admin/usuarios/novo' : '/admin/usuarios/' + registro.id %>"
+      class="cartao" style="max-width:780px">
+  <div class="cartao-topo">
+    <a href="/admin" class="btn pequeno">← Voltar</a>
+    <h2><%= novo ? 'Novo usuário' : registro.nome %></h2>
+    <% if (!novo) { %>
+      <span class="pill <%= registro.ativo ? 'ok' : 'neutro' %>"><%= registro.ativo ? 'Ativo' : 'Inativo' %></span>
+    <% } %>
+  </div>
+
+  <div class="cartao-corpo">
+    <div class="campos">
+      <div class="campo c6">
+        <label for="nome">Nome <span class="obrigatorio">*</span></label>
+        <input type="text" id="nome" name="nome" required value="<%= registro.nome || '' %>" data-foco>
+      </div>
+      <div class="campo c6">
+        <label for="email">E-mail (login) <span class="obrigatorio">*</span></label>
+        <input type="email" id="email" name="email" required value="<%= registro.email || '' %>">
+      </div>
+      <div class="campo c4">
+        <label for="telefone">Telefone</label>
+        <input type="text" id="telefone" name="telefone" value="<%= registro.telefone || '' %>">
+      </div>
+      <div class="campo c5">
+        <label for="perfil_id">Perfil de acesso <span class="obrigatorio">*</span></label>
+        <select id="perfil_id" name="perfil_id" required>
+          <option value="">Selecione...</option>
+          <% for (const p of perfis) { %>
+            <option value="<%= p.id %>" <%= String(registro.perfil_id) === String(p.id) ? 'selected' : '' %>>
+              <%= p.nome %>
+            </option>
+          <% } %>
+        </select>
+        <span class="ajuda">Define exatamente o que este usuário pode ver e fazer.</span>
+      </div>
+      <div class="campo c3">
+        <label class="marcar" for="ativo">
+          <input type="checkbox" id="ativo" name="ativo" value="1" <%= registro.ativo ? 'checked' : '' %>>
+          <span>Usuário ativo</span>
+        </label>
+      </div>
+
+      <% if (novo) { %>
+        <div class="campo c6">
+          <label for="senha">Senha inicial <span class="obrigatorio">*</span></label>
+          <input type="text" id="senha" name="senha" required minlength="8">
+          <span class="ajuda">Mínimo 8 caracteres. Será obrigatório trocar no primeiro acesso.</span>
+        </div>
+      <% } %>
+    </div>
+
+    <% if (!novo) { %>
+      <p class="txt-min txt-fraco mt-2 mb-0">
+        Último acesso: <%= registro.ultimo_acesso ? f.dataHora(registro.ultimo_acesso) : 'nunca acessou' %>.
+        <%= registro.trocar_senha ? ' Precisa trocar a senha no próximo acesso.' : '' %>
+      </p>
+    <% } %>
+  </div>
+
+  <div class="rodape-form">
+    <a href="/admin" class="btn">Cancelar</a>
+    <span class="espaco"></span>
+    <button type="submit" class="btn primario"><%= novo ? 'Criar usuário' : 'Salvar alterações' %></button>
+  </div>
+</form>
+
+<% if (!novo) { %>
+  <form method="post" action="/admin/usuarios/<%= registro.id %>/senha"
+        class="cartao" style="max-width:780px">
+    <div class="cartao-topo"><h2>Redefinir senha</h2></div>
+    <div class="cartao-corpo">
+      <div class="campos">
+        <div class="campo c6">
+          <label for="senha">Nova senha <span class="obrigatorio">*</span></label>
+          <input type="text" id="senha" name="senha" required minlength="8">
+          <span class="ajuda">O usuário será obrigado a trocá-la no próximo acesso.</span>
+        </div>
+      </div>
+    </div>
+    <div class="rodape-form">
+      <span class="espaco"></span>
+      <button type="submit" class="btn"
+              data-confirmar="Redefinir a senha de <%= registro.nome %>?">Redefinir senha</button>
+    </div>
+  </form>
+<% } %>
+
+<%- include('../partials/fim') %>

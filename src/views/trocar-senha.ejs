@@ -1,0 +1,44 @@
+<%- include('partials/topo') %>
+
+<div style="max-width:520px">
+  <% if (obrigatoria) { %>
+    <div class="aviso atencao">
+      <span class="ic">!</span>
+      <div>
+        <strong>Primeiro acesso</strong>
+        Defina uma senha própria antes de continuar. A senha inicial é conhecida por quem instalou o sistema.
+      </div>
+    </div>
+  <% } %>
+
+  <form method="post" action="/trocar-senha" class="cartao">
+    <div class="cartao-topo"><h2>Trocar senha</h2></div>
+    <div class="cartao-corpo">
+      <div class="campos">
+        <div class="campo c12">
+          <label for="senha_atual">Senha atual <span class="obrigatorio">*</span></label>
+          <input type="password" id="senha_atual" name="senha_atual" required
+                 autocomplete="current-password" data-foco>
+        </div>
+        <div class="campo c12">
+          <label for="senha_nova">Nova senha <span class="obrigatorio">*</span></label>
+          <input type="password" id="senha_nova" name="senha_nova" required minlength="8"
+                 autocomplete="new-password">
+          <span class="ajuda">Mínimo de 8 caracteres.</span>
+        </div>
+        <div class="campo c12">
+          <label for="senha_confirmacao">Confirme a nova senha <span class="obrigatorio">*</span></label>
+          <input type="password" id="senha_confirmacao" name="senha_confirmacao" required
+                 autocomplete="new-password">
+        </div>
+      </div>
+    </div>
+    <div class="rodape-form">
+      <% if (!obrigatoria) { %><a href="/" class="btn">Cancelar</a><% } %>
+      <span class="espaco"></span>
+      <button type="submit" class="btn primario">Salvar nova senha</button>
+    </div>
+  </form>
+</div>
+
+<%- include('partials/fim') %>
