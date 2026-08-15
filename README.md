@@ -36,6 +36,10 @@ Manutenção, Impostos) estão descritas em [`docs/ROADMAP.md`](docs/ROADMAP.md)
 
 ## Instalação
 
+> **Onde isso roda?** Não é um site estático — tem banco de dados, então não
+> funciona no GitHub Pages. O guia passo a passo, do teste local até o domínio
+> próprio, está em **[docs/PUBLICAR.md](docs/PUBLICAR.md)**.
+
 ### Opção A — Docker (recomendada)
 
 Um comando sobe banco, aplicação e rotina de backup:

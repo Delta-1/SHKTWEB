@@ -1,0 +1,49 @@
+# Publicação em 1 clique no Render (render.com).
+#
+# Como usar:
+#   1. Crie uma conta em render.com e conecte o GitHub
+#   2. New → Blueprint → escolha o repositório Delta-1/SHKTWEB
+#   3. O Render lê este arquivo, cria o banco e o site, e devolve a URL
+#
+# O banco é criado junto e ligado à aplicação automaticamente.
+# As migrações e a carga inicial rodam sozinhas no primeiro start.
+
+databases:
+  - name: shkt-banco
+    databaseName: shkt_erp
+    user: shkt
+    plan: basic-256mb          # troque para free para testar sem custo
+
+services:
+  - type: web
+    name: shkt-erp
+    runtime: node
+    plan: starter              # troque para free para testar sem custo
+    region: oregon
+    buildCommand: npm ci
+    # migrate e seed são idempotentes: rodar a cada deploy é seguro
+    startCommand: npm run migrate && npm run seed && node src/server.js
+    healthCheckPath: /login
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: shkt-banco
+          property: connectionString
+      - key: SESSION_SECRET
+        generateValue: true    # o Render gera um segredo aleatório
+      - key: SESSION_SECURE
+        value: 'true'          # o Render já entrega HTTPS
+      - key: SESSION_HOURS
+        value: '12'
+      - key: TZ_APP
+        value: America/Sao_Paulo
+      - key: ADMIN_EMAIL
+        value: admin@shkt.com.br
+      - key: ADMIN_SENHA
+        sync: false            # o Render pede este valor na hora de criar
+      - key: EMPRESA_NOME
+        value: SHKT INDÚSTRIA IMPORTAÇÃO & EXPORTAÇÃO LTDA
+      - key: EMPRESA_NOME_CURTO
+        value: SHKT
