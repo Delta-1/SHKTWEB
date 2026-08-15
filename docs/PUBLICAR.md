@@ -31,13 +31,21 @@ repositório já traz o `railway.json`, então ele sabe o que fazer sozinho.
 
    | Variável | Valor |
    |---|---|
-   | `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` (referência ao banco criado) |
+   | `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` |
    | `NODE_ENV` | `production` |
    | `SESSION_SECRET` | qualquer texto longo e aleatório |
    | `SESSION_SECURE` | `true` |
    | `ADMIN_EMAIL` | `admin@shkt.com.br` |
    | `ADMIN_SENHA` | a senha do primeiro acesso |
    | `TZ_APP` | `America/Sao_Paulo` |
+
+   > **Atenção ao nome do banco.** Em `${{Postgres.DATABASE_URL}}`, a palavra
+   > `Postgres` tem que ser **o nome exato do serviço de banco** no seu projeto.
+   > Se ele aparecer como `shkt-banco`, use `${{shkt-banco.DATABASE_URL}}`.
+   > Errar aqui é o problema mais comum: a variável fica vazia e o sistema não
+   > sobe. O log mostrará exatamente isso — o app avisa quando falta a
+   > `DATABASE_URL`, e no start informa a que banco se conectou e quantos
+   > usuários encontrou.
 
 6. Aba **Settings → Networking → Generate Domain**.
 
