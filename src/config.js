@@ -11,13 +11,37 @@ const bool = (v, padrao = false) => {
   return ['1', 'true', 'sim', 'yes', 'on'].includes(String(v).toLowerCase());
 };
 
+const ambiente = process.env.NODE_ENV || 'development';
+
+/**
+ * Em producao, faltar DATABASE_URL e erro de configuracao - nao pode virar
+ * uma tentativa silenciosa de conectar no proprio container (127.0.0.1), que
+ * produz um "ECONNREFUSED" confuso no log da hospedagem. Melhor parar na hora
+ * dizendo exatamente o que falta.
+ */
+function urlDoBanco() {
+  const url = process.env.DATABASE_URL;
+  if (url) return url;
+
+  if (ambiente === 'production') {
+    throw new Error(
+      'DATABASE_URL não está configurada.\n' +
+        'Defina a variável de ambiente com o endereço do PostgreSQL.\n' +
+        'No Railway, use a referência ao serviço do banco, por exemplo:\n' +
+        '  DATABASE_URL = ${{Postgres.DATABASE_URL}}\n' +
+        'Veja docs/PUBLICAR.md.'
+    );
+  }
+
+  // Desenvolvimento: banco local padrao
+  return 'postgres://shkt:shkt@127.0.0.1:5432/shkt_erp';
+}
+
 export const config = {
-  env: process.env.NODE_ENV || 'development',
+  env: ambiente,
   porta: Number(process.env.PORT || 3000),
 
-  databaseUrl:
-    process.env.DATABASE_URL ||
-    'postgres://shkt:shkt@127.0.0.1:5432/shkt_erp',
+  databaseUrl: urlDoBanco(),
 
   // Em provedores gerenciados (Supabase, Render, Neon) e necessario SSL.
   dbSsl: bool(process.env.DATABASE_SSL, false),
