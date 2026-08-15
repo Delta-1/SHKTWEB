@@ -146,6 +146,31 @@ export function criarApp() {
   return app;
 }
 
+/**
+ * Conferencia de partida: mostra a que banco o sistema se conectou e o que
+ * encontrou nele. Em uma hospedagem, é isso que diferencia "no ar" de "no ar,
+ * apontando para o banco certo, com os dados carregados" - sem precisar abrir
+ * a tela para descobrir.
+ */
+async function conferirBanco() {
+  const { um } = await import('./db/index.js');
+  const r = await um(`
+    SELECT (SELECT COUNT(*)::INT FROM usuarios)  AS usuarios,
+           (SELECT COUNT(*)::INT FROM perfis)    AS perfis,
+           (SELECT COUNT(*)::INT FROM produtos)  AS produtos,
+           current_database()                    AS banco
+  `);
+
+  console.log(`  Banco "${r.banco}": ${r.usuarios} usuário(s), ${r.perfis} perfil(is), ${r.produtos} produto(s)`);
+
+  if (r.usuarios === 0) {
+    console.warn(
+      '  ATENÇÃO: nenhum usuário cadastrado — ninguém consegue entrar.\n' +
+        '  Rode a carga inicial: node src/db/seed.js'
+    );
+  }
+}
+
 const executadoDiretamente =
   process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname);
 
@@ -153,9 +178,16 @@ if (executadoDiretamente) {
   fs.mkdirSync(config.uploads.diretorio, { recursive: true });
 
   const app = criarApp();
-  app.listen(config.porta, '0.0.0.0', () => {
+  app.listen(config.porta, '0.0.0.0', async () => {
     console.log(`\n  ERP SHKT no ar em http://localhost:${config.porta}`);
-    console.log(`  Ambiente: ${config.env}\n`);
+    console.log(`  Ambiente: ${config.env}`);
+    try {
+      await conferirBanco();
+    } catch (e) {
+      // Não derruba o servidor: ele sobe e a tela mostra o erro de banco
+      console.error(`  Não foi possível consultar o banco: ${e.message}`);
+    }
+    console.log('');
   });
 }
 
