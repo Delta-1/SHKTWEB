@@ -1,0 +1,217 @@
+<%- include('../partials/topo') %>
+
+<% const r = recebimento; %>
+
+<div class="cartao">
+  <div class="cartao-topo">
+    <a href="/recebimentos" class="btn pequeno"><%- ic('voltar') %> Lista</a>
+    <h2>Recebimento <span class="mono"><%= r.numero %></span></h2>
+    <span class="pill <%= f.classeStatus(r.status) %>"><%= f.rotuloStatus(r.status) %></span>
+    <span style="flex:1"></span>
+    <a href="/recebimentos/<%= r.id %>/documento" class="btn pequeno" target="_blank"><%- ic('imprimir') %> Imprimir</a>
+    <% if (r.status === 'RASCUNHO' && pode('compras.editar')) { %>
+      <a href="/recebimentos/<%= r.id %>/editar" class="btn pequeno"><%- ic('editar') %> Editar</a>
+    <% } %>
+  </div>
+
+  <div class="cartao-corpo">
+    <div class="trilha mb-2">
+      <span class="elo">
+        <span class="rot">Pedido</span>
+        <% if (r.pedido_compra_id) { %>
+          <a href="/compras/<%= r.pedido_compra_id %>" class="mono"><%= r.pedido_numero %></a>
+        <% } else { %><span class="txt-fraco">entrada avulsa</span><% } %>
+      </span>
+      <span class="seta">→</span>
+      <span class="elo">
+        <span class="rot">Recebimento</span>
+        <span class="mono"><%= r.numero %></span>
+      </span>
+      <span class="seta">→</span>
+      <span class="elo">
+        <span class="rot">Estoque</span>
+        <% if (r.status === 'CONFIRMADO') { %>
+          <a href="/estoque/movimentos?documento=<%= r.numero %>">
+            <%= f.toneladas(r.quantidade_kg) %> em <%= r.local %>
+          </a>
+        <% } else { %><span class="txt-fraco">ainda não movimentado</span><% } %>
+      </span>
+    </div>
+
+    <div class="ficha">
+      <div class="item"><div class="rot">Fornecedor</div><div class="val"><%= r.fornecedor %></div></div>
+      <div class="item"><div class="rot">Local de estoque</div><div class="val"><%= r.local %></div></div>
+      <div class="item"><div class="rot">Data</div><div class="val"><%= f.data(r.data) %></div></div>
+      <div class="item"><div class="rot">Chegada</div>
+        <div class="val"><%= r.data_hora_chegada ? f.dataHora(r.data_hora_chegada) : '—' %></div></div>
+      <div class="item"><div class="rot">Nota fiscal</div>
+        <div class="val mono"><%= r.documento_fiscal || '—' %><%= r.documento_serie ? ' / ' + r.documento_serie : '' %></div></div>
+      <div class="item"><div class="rot">Quantidade total</div>
+        <div class="val grande"><%= f.toneladas(r.quantidade_kg) %></div>
+        <div class="txt-min txt-fraco"><%= f.kg(r.quantidade_kg) %></div></div>
+      <div class="item"><div class="rot">Veículo / motorista</div>
+        <div class="val"><%= r.veiculo_placa || r.placa || '—' %>
+          <% if (r.motorista) { %><div class="txt-min txt-fraco"><%= r.motorista %></div><% } %>
+        </div></div>
+      <div class="item"><div class="rot">Conferente</div><div class="val"><%= r.conferente || '—' %></div></div>
+    </div>
+
+    <% if (r.peso_bruto_kg || r.peso_tara_kg || r.peso_liquido_kg) { %>
+      <div class="ficha mt-2">
+        <div class="item"><div class="rot">Peso bruto</div><div class="val"><%= f.kg(r.peso_bruto_kg) %></div></div>
+        <div class="item"><div class="rot">Tara</div><div class="val"><%= f.kg(r.peso_tara_kg) %></div></div>
+        <div class="item"><div class="rot">Peso líquido</div>
+          <div class="val txt-forte"><%= f.kg(r.peso_liquido_kg) %></div></div>
+      </div>
+    <% } %>
+
+    <% if (r.observacoes) { %>
+      <p class="txt-min txt-fraco mt-2 mb-0"><strong>Observações:</strong> <%= r.observacoes %></p>
+    <% } %>
+
+    <% if (r.status === 'CONFIRMADO') { %>
+      <div class="aviso ok mt-2 mb-0">
+        <%- ic('ok') %>
+        <div>
+          <strong>Confirmado em <%= f.dataHora(r.confirmado_em) %></strong>
+          A mercadoria entrou no estoque de <%= r.local %>.
+        </div>
+      </div>
+    <% } %>
+
+    <% if (r.status === 'CANCELADO') { %>
+      <div class="aviso erro mt-2 mb-0">
+        <%- ic('erro') %>
+        <div><strong>Cancelado em <%= f.dataHora(r.cancelado_em) %></strong><%= r.motivo_cancelamento %></div>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<!-- ------------------------------------------------------------------ itens -->
+<div class="cartao">
+  <div class="cartao-topo">
+    <h2>Itens recebidos</h2>
+    <% if (r.divergencias) { %>
+      <span class="pill atencao"><%= r.divergencias %> item(ns) com divergência</span>
+    <% } %>
+  </div>
+  <div class="tabela-area">
+    <table class="tabela responsiva">
+      <thead>
+        <tr><th>Produto</th><th>Lote</th><th class="num">Previsto</th><th class="num">Recebido</th><th>Divergência</th></tr>
+      </thead>
+      <tbody>
+        <% for (const i of r.lista_itens) { %>
+          <tr class="<%= i.divergencia ? 'linha-alerta' : '' %>">
+            <td data-rot="Produto"><%= i.produto %>
+              <% if (i.item_pedido) { %><div class="txt-min txt-fraco"><%= i.item_pedido %></div><% } %>
+            </td>
+            <td data-rot="Lote" class="mono txt-min"><%= i.lote || '—' %></td>
+            <td data-rot="Previsto" class="num txt-fraco">
+              <%= i.quantidade_prevista_kg ? f.toneladas(i.quantidade_prevista_kg) : '—' %>
+            </td>
+            <td data-rot="Recebido" class="num txt-forte"><%= f.toneladas(i.quantidade_kg) %></td>
+            <td data-rot="Divergência" class="txt-min <%= i.divergencia ? 'txt-atencao' : 'txt-fraco' %>">
+              <%= i.divergencia || 'conforme' %>
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+      <tfoot>
+        <tr><td colspan="3" class="txt-dir">Total recebido</td>
+          <td class="num"><%= f.toneladas(r.quantidade_kg) %></td><td></td></tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+
+<!-- ------------------------------------------------------------- confirmar -->
+<% if (r.status === 'RASCUNHO' && pode('compras.aprovar')) { %>
+  <div class="cartao">
+    <div class="cartao-topo"><h2>Confirmar entrada no estoque</h2></div>
+    <div class="cartao-corpo">
+      <p class="txt-min mb-2">Ao confirmar, em uma única operação o sistema irá:</p>
+      <ol class="txt-min" style="margin:0 0 16px;padding-left:20px;line-height:1.9">
+        <li>dar entrada de <strong><%= f.toneladas(r.quantidade_kg) %></strong> no estoque de
+            <strong><%= r.local %></strong>;</li>
+        <% if (r.pedido_compra_id) { %>
+          <li>abater esse valor do saldo do pedido
+              <strong class="mono"><%= r.pedido_numero %></strong>, atualizando a situação dele;</li>
+        <% } %>
+        <li>registrar tudo na auditoria, com movimento de estoque rastreável.</li>
+      </ol>
+      <p class="txt-min txt-fraco mb-2">
+        Depois de confirmado, o recebimento não pode mais ser editado — só cancelado,
+        o que estorna a entrada.
+      </p>
+      <form method="post" action="/recebimentos/<%= r.id %>/confirmar">
+        <button type="submit" class="btn primario"
+                data-confirmar="Confirmar o recebimento <%= r.numero %>? Isso dá entrada de <%= f.toneladas(r.quantidade_kg) %> no estoque.">
+          <%- ic('ok') %> Confirmar entrada no estoque
+        </button>
+      </form>
+    </div>
+  </div>
+<% } %>
+
+<!-- ------------------------------------------------------- movimentos gerados -->
+<% if (r.movimentos.length) { %>
+  <div class="cartao">
+    <div class="cartao-topo"><h2>Movimentos de estoque gerados</h2></div>
+    <div class="tabela-area">
+      <table class="tabela">
+        <thead><tr><th>#</th><th>Data</th><th>Tipo</th><th class="num">Quantidade</th><th class="num">Saldo após</th><th>Observação</th></tr></thead>
+        <tbody>
+          <% for (const m of r.movimentos) { %>
+            <tr>
+              <td class="mono txt-min"><%= m.id %></td>
+              <td class="txt-min"><%= f.data(m.data_movimento) %></td>
+              <td><span class="pill <%= m.tipo === 'ESTORNO' ? 'erro' : 'ok' %>"><%= m.tipo %></span></td>
+              <td class="num <%= Number(m.quantidade_kg) < 0 ? 'txt-erro' : 'txt-ok' %>"><%= f.kg(m.quantidade_kg) %></td>
+              <td class="num txt-fraco"><%= f.kg(m.saldo_apos_kg) %></td>
+              <td class="txt-min txt-fraco"><%= m.observacoes || m.motivo || '' %></td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% } %>
+
+<!-- --------------------------------------------------------------- cancelar -->
+<% if (r.status !== 'CANCELADO' && pode('compras.cancelar')) { %>
+  <div class="barra-acoes mt-2">
+    <span class="espaco"></span>
+    <button type="button" class="btn contorno-perigo" data-modal="#modal-cancelar">
+      <%- ic('erro') %> Cancelar recebimento
+    </button>
+  </div>
+
+  <dialog class="modal" id="modal-cancelar">
+    <form method="post" action="/recebimentos/<%= r.id %>/cancelar">
+      <div class="modal-topo"><h2>Cancelar recebimento <%= r.numero %></h2></div>
+      <div class="modal-corpo">
+        <p class="txt-min">
+          <% if (r.status === 'CONFIRMADO') { %>
+            A entrada de <strong><%= f.toneladas(r.quantidade_kg) %></strong> será estornada do estoque
+            <% if (r.pedido_compra_id) { %>
+              e o saldo volta para o pedido <span class="mono"><%= r.pedido_numero %></span>.
+            <% } %>
+          <% } %>
+          O recebimento permanece no histórico com o motivo registrado.
+        </p>
+        <div class="campo">
+          <label for="motivo-cancelar">Motivo <span class="obrigatorio">*</span></label>
+          <textarea id="motivo-cancelar" name="motivo" rows="3" required minlength="5"></textarea>
+        </div>
+      </div>
+      <div class="modal-rodape">
+        <button type="button" class="btn" data-fechar-modal>Voltar</button>
+        <button type="submit" class="btn perigo">Confirmar cancelamento</button>
+      </div>
+    </form>
+  </dialog>
+<% } %>
+
+<%- include('../partials/fim') %>

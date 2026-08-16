@@ -15,7 +15,7 @@
 
 <div class="cartao">
   <div class="cartao-topo">
-    <a href="/estoque" class="btn pequeno">← Posição</a>
+    <a href="/estoque" class="btn pequeno"><%- ic('voltar') %> Posição</a>
     <h2>Movimentações</h2>
     <span style="flex:1"></span>
     <% if (pode('estoque.criar')) { %>
@@ -65,7 +65,7 @@
   </form>
 
   <% if (!movimentos.length) { %>
-    <div class="vazio"><span class="icone">▤</span><p>Nenhuma movimentação encontrada.</p></div>
+    <div class="vazio"><%- ic('vazio', 'icone') %><p>Nenhuma movimentação encontrada.</p></div>
   <% } else { %>
     <div class="tabela-area">
       <table class="tabela responsiva">

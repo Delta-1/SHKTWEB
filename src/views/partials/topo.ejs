@@ -3,17 +3,31 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#06331f">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)">
   <title><%= titulo %> · ERP SHKT</title>
   <link rel="icon" href="/estatico/img/logo.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="/estatico/css/app.css">
   <!-- Permite instalar o ERP como aplicativo (ícone na área de trabalho / celular) -->
   <link rel="manifest" href="/estatico/manifest.webmanifest">
   <link rel="apple-touch-icon" href="/estatico/img/icone-180.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="ERP SHKT">
+  <script>
+    /* Aplica o tema antes de pintar a tela. Sem isto, quem usa o modo escuro
+       vê um lampejo branco a cada página carregada. */
+    (function () {
+      try {
+        var t = localStorage.getItem('shkt-tema');
+        if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'escuro' : 'claro';
+        if (t === 'escuro') document.documentElement.classList.add('escuro');
+      } catch (e) { /* navegador sem localStorage: fica no tema claro */ }
+    })();
+  </script>
 </head>
 <body>
+<%- sprite %>
 <div class="app">
 
   <aside class="lateral">
@@ -21,7 +35,7 @@
       <img src="/estatico/img/logo.svg" alt="" class="logo">
       <div>
         <strong>SHKT</strong>
-        <span>ERP OPERACIONAL</span>
+        <span>ERP Operacional</span>
       </div>
     </div>
     <%- include('menu') %>
@@ -29,27 +43,30 @@
 
   <div class="conteudo">
     <header class="topo">
-      <button class="btn pequeno abrir-menu" data-abrir-menu aria-label="Abrir menu">☰</button>
+      <button class="btn-icone abrir-menu nao-imprimir" data-abrir-menu aria-label="Abrir menu"><%- ic('menu') %></button>
       <h1><%= titulo %></h1>
-      <div class="topo-acoes">
+      <div class="topo-acoes nao-imprimir">
         <%- acoesCabecalho || '' %>
-        <a href="/sair" class="usuario-chip" title="<%= usuario.email %> · <%= usuario.perfil_nome %>">
+        <button class="btn-icone" data-tema aria-label="Alternar entre tema claro e escuro" title="Tema claro / escuro">
+          <%- ic('lua', 'ic-lua') %><%- ic('sol', 'ic-sol') %>
+        </button>
+        <a href="/sair" class="usuario-chip" title="<%= usuario.email %> · <%= usuario.perfil_nome %> — clique para sair">
           <span class="avatar"><%= usuario.nome.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase() %></span>
-          <span class="nao-imprimir"><%= usuario.nome.split(' ')[0] %></span>
+          <span><%= usuario.nome.split(' ')[0] %></span>
         </a>
       </div>
     </header>
 
     <main class="pagina">
       <% if (typeof mensagem !== 'undefined' && mensagem) { %>
-        <div class="aviso <%= mensagem.tipo || 'ok' %>">
-          <span class="ic"><%= mensagem.tipo === 'erro' ? '✕' : mensagem.tipo === 'atencao' ? '!' : '✓' %></span>
+        <div class="aviso <%= mensagem.tipo || 'ok' %>" data-vira-toast>
+          <%- ic(mensagem.tipo === 'erro' ? 'erro' : mensagem.tipo === 'atencao' ? 'atencao' : 'ok') %>
           <div><%= mensagem.texto %></div>
         </div>
       <% } %>
       <% if (typeof erro !== 'undefined' && erro) { %>
         <div class="aviso erro">
-          <span class="ic">✕</span>
+          <%- ic('erro') %>
           <div><strong>Operação não realizada</strong><%= erro %></div>
         </div>
       <% } %>

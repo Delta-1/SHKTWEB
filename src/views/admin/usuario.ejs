@@ -3,7 +3,7 @@
 <form method="post" action="<%= novo ? '/admin/usuarios/novo' : '/admin/usuarios/' + registro.id %>"
       class="cartao" style="max-width:780px">
   <div class="cartao-topo">
-    <a href="/admin" class="btn pequeno">← Voltar</a>
+    <a href="/admin" class="btn pequeno"><%- ic('voltar') %> Voltar</a>
     <h2><%= novo ? 'Novo usuário' : registro.nome %></h2>
     <% if (!novo) { %>
       <span class="pill <%= registro.ativo ? 'ok' : 'neutro' %>"><%= registro.ativo ? 'Ativo' : 'Inativo' %></span>

@@ -19,32 +19,43 @@ relatórios, DRE gerencial, painel, backup verificado e rotina de restauração.
 
 ---
 
-## FASE 2 — Compras, recebimento e vendas
+## ✅ FASE 2 — Compras, recebimento e vendas (concluída)
 
-O que falta para fechar o ciclo comercial completo.
+Ciclo comercial fechado. A regra que atravessa tudo:
+**o pedido não move estoque** — quem move é o recebimento (entrada) e o
+carregamento (saída).
 
 **Compras**
-- Pedido de compra numerado (mercadoria, frete ou serviço), com Incoterm,
-  moeda, condição de pagamento e previsão de entrega
+- Pedido numerado (mercadoria, frete ou serviço), com Incoterm, moeda,
+  condição de pagamento, prazo e previsão de entrega
 - Fluxo: Rascunho → Aguardando aprovação → Aprovado → Parcialmente recebido →
   Recebido → Cancelado
 - Pedido aprovado gera a previsão em Contas a Pagar
-- **A emissão do pedido não move estoque** — quem move é o recebimento
+- Itens de pedido aprovado ficam **imutáveis no banco**: preço, quantidade e
+  produto não podem ser reescritos nem por SQL direto
+- Cancelar o pedido cancela o título previsto, e é recusado se já houver
+  recebimento confirmado
 
 **Recebimento**
-- Entrada física com pesagem, veículo, motorista e documento fiscal
-- Recebimento parcial com saldo a receber (500 t pedidas, 320 t recebidas,
-  180 t em aberto)
-- Registro de divergências entre o previsto e o recebido
-- Ao confirmar: entra no estoque e atualiza a situação do pedido
+- Entrada física com pesagem (bruto/tara/líquido), veículo, motorista,
+  transportadora e documento fiscal
+- Recebimento parcial com saldo em aberto: 500 t pedidas, 320 t recebidas,
+  180 t ainda a chegar — a situação do pedido é recalculada pelo banco
+- Divergência entre previsto e recebido preenchida automaticamente
+- Confirmar dá a entrada no estoque; cancelar estorna e devolve o saldo ao
+  pedido, sem apagar nada do histórico
 
 **Vendas**
-- Pedido de venda com reserva de estoque e atendimento parcial
-- Venda aprovada gera Contas a Receber e permite criar ordens de carregamento
-- Vínculo do carregamento (já pronto) ao pedido de venda
+- Pedido de venda com itens por produto e local de saída
+- Aprovar **reserva** o estoque (o físico não muda) e gera Contas a Receber
+- Venda acima do disponível é recusada na aprovação, inteira
+- Carregamento vinculado ao pedido **não reserva de novo**: consome o saldo do
+  pedido na expedição. Sem isso o mesmo grão apareceria comprometido duas
+  vezes e travaria vendas possíveis
+- Cancelar o carregamento expedido devolve estoque, saldo e reserva; cancelar
+  o pedido libera a reserva e cancela o título
 
-*Impacto no que já existe:* uma migração acrescenta `pedido_venda_id` em
-`carregamentos`; o resto é aditivo.
+Coberto por 16 testes automatizados de aceite, além dos 27 da Fase 1.
 
 ---
 

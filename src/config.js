@@ -72,6 +72,10 @@ export const config = {
   regras: {
     // Vencimento padrao do titulo gerado pelo Certificado de Fumigacao (secao 11)
     diasVencimentoCertificado: Number(process.env.DIAS_VENCIMENTO_CERTIFICADO || 10),
+    // Prazo padrao do titulo previsto ao aprovar um pedido de compra (secao 32)
+    diasVencimentoCompra: Number(process.env.DIAS_VENCIMENTO_COMPRA || 30),
+    // Prazo padrao do titulo previsto ao aprovar um pedido de venda
+    diasVencimentoVenda: Number(process.env.DIAS_VENCIMENTO_VENDA || 30),
   },
 
   timezone: process.env.TZ_APP || 'America/Sao_Paulo',

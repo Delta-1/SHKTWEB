@@ -10,7 +10,7 @@
 
 <div class="cartao">
   <div class="cartao-topo">
-    <a href="/fumigacao" class="btn pequeno">← Lista</a>
+    <a href="/fumigacao" class="btn pequeno"><%- ic('voltar') %> Lista</a>
     <h2>Fumigação <span class="mono"><%= x.numero %></span></h2>
     <span class="pill <%= f.classeStatus(x.status) %>"><%= f.rotuloStatus(x.status) %></span>
     <span style="flex:1"></span>
@@ -53,7 +53,7 @@
 
     <% if (x.status === 'CANCELADA') { %>
       <div class="aviso erro mt-2 mb-0">
-        <span class="ic">✕</span>
+        <%- ic('erro') %>
         <div>
           <strong>Fumigação cancelada em <%= f.dataHora(x.cancelada_em) %></strong>
           <%= x.motivo_cancelamento %>
@@ -96,7 +96,7 @@
     <div class="cartao-corpo">
       <% if (!x.numero_comunicado) { %>
         <div class="aviso atencao">
-          <span class="ic">!</span>
+          <%- ic('atencao') %>
           <div>
             <strong>Comunicado de Fumigação obrigatório</strong>
             Sem o número do comunicado emitido pela fumigadora, esta fumigação não pode ser

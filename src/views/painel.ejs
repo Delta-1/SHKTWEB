@@ -112,6 +112,45 @@
   </div>
 </div>
 
+<!-- ----------------------------------------------------------- Comercial -->
+<% if (pode('compras.visualizar') || pode('vendas.visualizar')) { %>
+  <h2 class="mb-1" style="font-size:0.8rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--tinta-3)">
+    Comercial em aberto
+  </h2>
+  <div class="grade grade-4 mb-2">
+    <% if (pode('compras.visualizar')) { %>
+      <a class="indicador <%= Number(comercial.a_receber_kg) > 0 ? 'atencao' : '' %>"
+         href="/compras?status=APROVADO">
+        <div class="rotulo"><%- ic('compras') %> Comprado, falta chegar</div>
+        <div class="valor"><%= f.toneladas(comercial.a_receber_kg) %></div>
+        <div class="apoio">saldo em aberto com fornecedores</div>
+      </a>
+      <a class="indicador <%= comercial.recebimentos_pendentes ? 'atencao' : '' %>"
+         href="/recebimentos?status=RASCUNHO">
+        <div class="rotulo"><%- ic('recebimento') %> Recebimentos a confirmar</div>
+        <div class="valor"><%= comercial.recebimentos_pendentes %></div>
+        <div class="apoio">lançados e ainda fora do estoque</div>
+      </a>
+    <% } %>
+    <% if (pode('vendas.visualizar')) { %>
+      <a class="indicador <%= Number(comercial.a_embarcar_kg) > 0 ? 'destaque' : '' %>"
+         href="/vendas?status=APROVADO">
+        <div class="rotulo"><%- ic('vendas') %> Vendido, falta embarcar</div>
+        <div class="valor"><%= f.toneladas(comercial.a_embarcar_kg) %></div>
+        <div class="apoio">reservado para clientes</div>
+      </a>
+      <a class="indicador <%= comercial.vendas_aguardando || comercial.compras_aguardando ? 'atencao' : '' %>"
+         href="/vendas?status=AGUARDANDO_APROVACAO">
+        <div class="rotulo">Aguardando aprovação</div>
+        <div class="valor"><%= comercial.compras_aguardando + comercial.vendas_aguardando %></div>
+        <div class="apoio">
+          <%= comercial.compras_aguardando %> compra(s) · <%= comercial.vendas_aguardando %> venda(s)
+        </div>
+      </a>
+    <% } %>
+  </div>
+<% } %>
+
 <!-- ------------------------------------------------------------ Alertas -->
 <%
   const painelAlertas = [
@@ -200,7 +239,7 @@
 <% } else { %>
   <div class="cartao">
     <div class="cartao-corpo txt-centro txt-fraco" style="padding:28px">
-      <div style="font-size:1.6rem">✓</div>
+      <%- ic('ok', 'icone') %>
       Nenhuma pendência: sem títulos vencidos, sem fumigação sem comunicado
       e sem certificado aguardando validação.
     </div>

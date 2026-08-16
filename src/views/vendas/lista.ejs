@@ -1,0 +1,113 @@
+<%- include('../partials/topo') %>
+
+<div class="grade grade-2 mb-2">
+  <div class="indicador destaque">
+    <div class="rotulo"><%- ic('vendas') %> Pedidos no filtro</div>
+    <div class="valor"><%= totais.quantidade %></div>
+    <div class="apoio">rascunhos e cancelados fora da contagem</div>
+  </div>
+  <div class="indicador">
+    <div class="rotulo">Valor vendido</div>
+    <div class="valor">R$ <%= f.formatar(totais.valor, 2) %></div>
+    <div class="apoio">soma dos pedidos válidos</div>
+  </div>
+</div>
+
+<div class="cartao">
+  <div class="cartao-topo">
+    <h2>Pedidos de venda</h2>
+    <span class="sub">Aprovar reserva o estoque; o carregamento é que embarca.</span>
+    <span style="flex:1"></span>
+    <% if (pode('vendas.criar')) { %>
+      <a href="/vendas/novo" class="btn primario pequeno"><%- ic('mais') %> Novo pedido</a>
+    <% } %>
+  </div>
+
+  <form method="get" class="filtros">
+    <div class="campo largo">
+      <label for="busca">Buscar</label>
+      <input type="search" id="busca" name="busca" value="<%= filtros.busca || '' %>"
+             placeholder="Nº do pedido, cliente ou destino">
+    </div>
+    <div class="campo">
+      <label for="status">Situação</label>
+      <select id="status" name="status">
+        <option value="">Todas</option>
+        <% for (const s of ['RASCUNHO','AGUARDANDO_APROVACAO','APROVADO','PARCIALMENTE_ATENDIDO','ATENDIDO','CANCELADO']) { %>
+          <option value="<%= s %>" <%= filtros.status === s ? 'selected' : '' %>><%= f.rotuloStatus(s) %></option>
+        <% } %>
+      </select>
+    </div>
+    <div class="campo">
+      <label for="cliente">Cliente</label>
+      <select id="cliente" name="cliente">
+        <option value="">Todos</option>
+        <% for (const c of ref.clientes) { %>
+          <option value="<%= c.id %>" <%= String(filtros.clienteId) === String(c.id) ? 'selected' : '' %>><%= c.nome %></option>
+        <% } %>
+      </select>
+    </div>
+    <div class="campo"><label for="de">De</label>
+      <input type="date" id="de" name="de" value="<%= filtros.de || '' %>"></div>
+    <div class="campo"><label for="ate">Até</label>
+      <input type="date" id="ate" name="ate" value="<%= filtros.ate || '' %>"></div>
+    <span class="espaco"></span>
+    <button type="submit" class="btn"><%- ic('buscar') %> Filtrar</button>
+    <a href="/vendas" class="btn">Limpar</a>
+  </form>
+
+  <% if (!lista.length) { %>
+    <div class="vazio">
+      <%- ic('vazio', 'icone') %>
+      <p>Nenhum pedido de venda encontrado.</p>
+      <% if (pode('vendas.criar')) { %>
+        <a href="/vendas/novo" class="btn primario"><%- ic('mais') %> Criar pedido</a>
+      <% } %>
+    </div>
+  <% } else { %>
+    <div class="tabela-area">
+      <table class="tabela responsiva">
+        <thead>
+          <tr>
+            <th>Nº</th><th>Cliente</th><th>Destino</th>
+            <th class="num">Vendido</th><th class="num">Embarcado</th>
+            <th class="num">Valor</th><th>Embarque</th><th>Situação</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (const p of lista) { %>
+            <tr class="<%= p.status === 'CANCELADO' ? 'linha-cancelada' : '' %>">
+              <td data-rot="Nº" class="doc">
+                <a href="/vendas/<%= p.id %>"><%= p.numero %></a>
+                <div class="txt-min txt-fraco"><%= f.data(p.data) %></div>
+              </td>
+              <td data-rot="Cliente"><%= p.cliente %></td>
+              <td data-rot="Destino" class="txt-min">
+                <%= p.destino || p.pais_destino || '—' %>
+                <% if (p.incoterm) { %><div class="txt-fraco"><%= p.incoterm %></div><% } %>
+              </td>
+              <td data-rot="Vendido" class="num"><%= f.toneladas(p.pedido_kg) %></td>
+              <td data-rot="Embarcado" class="num">
+                <%= f.toneladas(p.atendido_kg) %>
+                <% if (Number(p.pedido_kg) > 0) { %>
+                  <div class="barra nao-imprimir">
+                    <div class="parte<%= Number(p.atendido_kg) >= Number(p.pedido_kg) ? '' : ' cheio' %>"
+                         data-largura="<%= Math.min(100, Math.round((Number(p.atendido_kg) / Number(p.pedido_kg)) * 100)) %>%"></div>
+                  </div>
+                <% } %>
+              </td>
+              <td data-rot="Valor" class="num txt-forte"><%= p.moeda %> <%= f.formatar(p.valor_total, 2) %></td>
+              <td data-rot="Embarque" class="txt-min"><%= p.previsao_embarque ? f.data(p.previsao_embarque) : '—' %></td>
+              <td data-rot="Situação">
+                <span class="pill <%= f.classeStatus(p.status) %>"><%= f.rotuloStatus(p.status) %></span>
+              </td>
+              <td class="acoes"><a href="/vendas/<%= p.id %>" class="btn pequeno">Abrir</a></td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>
+
+<%- include('../partials/fim') %>

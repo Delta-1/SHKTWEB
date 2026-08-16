@@ -1,0 +1,107 @@
+<%
+  const r = recebimento;
+  const tipoDocumento = 'Comprovante de Recebimento';
+  const numeroDocumento = r.numero;
+%>
+<%- include('_topo', { tipoDocumento, numeroDocumento }) %>
+
+<% if (r.status === 'CANCELADO') { %>
+  <p class="txt-centro"><span class="doc-carimbo">CANCELADO</span></p>
+<% } %>
+<% if (r.status === 'RASCUNHO') { %>
+  <p class="txt-centro"><span class="doc-carimbo">NÃO CONFIRMADO</span></p>
+<% } %>
+
+<section class="doc-secao">
+  <h3>Identificação</h3>
+  <div class="doc-grade">
+    <div class="campo-doc largo"><div class="rot">Fornecedor</div>
+      <div class="val"><%= r.fornecedor %></div></div>
+    <div class="campo-doc"><div class="rot">Data</div><div class="val"><%= f.data(r.data) %></div></div>
+    <div class="campo-doc"><div class="rot">Situação</div>
+      <div class="val"><%= f.rotuloStatus(r.status) %></div></div>
+    <div class="campo-doc"><div class="rot">Pedido de compra</div>
+      <div class="val mono"><%= r.pedido_numero || 'avulso' %></div></div>
+    <div class="campo-doc"><div class="rot">Local de estoque</div>
+      <div class="val"><%= r.local %></div></div>
+    <div class="campo-doc"><div class="rot">Chegada</div>
+      <div class="val"><%= r.data_hora_chegada ? f.dataHora(r.data_hora_chegada) : '—' %></div></div>
+    <div class="campo-doc"><div class="rot">Conferente</div>
+      <div class="val"><%= r.conferente || '—' %></div></div>
+  </div>
+</section>
+
+<section class="doc-secao">
+  <h3>Documento fiscal e transporte</h3>
+  <div class="doc-grade">
+    <div class="campo-doc"><div class="rot">Nota fiscal</div>
+      <div class="val mono"><%= r.documento_fiscal || '—' %></div></div>
+    <div class="campo-doc"><div class="rot">Série</div>
+      <div class="val mono"><%= r.documento_serie || '—' %></div></div>
+    <div class="campo-doc"><div class="rot">Data do documento</div>
+      <div class="val"><%= r.documento_data ? f.data(r.documento_data) : '—' %></div></div>
+    <div class="campo-doc"><div class="rot">Placa</div>
+      <div class="val mono"><%= r.veiculo_placa || r.placa || '—' %></div></div>
+    <div class="campo-doc largo"><div class="rot">Motorista</div>
+      <div class="val"><%= r.motorista || '—' %></div></div>
+    <div class="campo-doc largo"><div class="rot">Transportadora</div>
+      <div class="val"><%= r.transportadora || '—' %></div></div>
+  </div>
+</section>
+
+<section class="doc-secao">
+  <h3>Pesagem</h3>
+  <div class="doc-grade">
+    <div class="campo-doc"><div class="rot">Peso bruto (kg)</div>
+      <div class="val"><%= r.peso_bruto_kg ? f.formatar(r.peso_bruto_kg, 3) : '—' %></div></div>
+    <div class="campo-doc"><div class="rot">Tara (kg)</div>
+      <div class="val"><%= r.peso_tara_kg ? f.formatar(r.peso_tara_kg, 3) : '—' %></div></div>
+    <div class="campo-doc total"><div class="rot">Peso líquido (kg)</div>
+      <div class="val"><%= r.peso_liquido_kg ? f.formatar(r.peso_liquido_kg, 3) : '—' %></div></div>
+    <div class="campo-doc total"><div class="rot">Total lançado (t)</div>
+      <div class="val"><%= f.toneladas(r.quantidade_kg) %></div></div>
+  </div>
+</section>
+
+<section class="doc-secao">
+  <h3>Mercadoria recebida</h3>
+  <table class="tabela">
+    <thead>
+      <tr><th>Produto</th><th>Lote</th><th class="num">Previsto</th>
+        <th class="num">Recebido</th><th>Divergência</th></tr>
+    </thead>
+    <tbody>
+      <% for (const i of r.lista_itens) { %>
+        <tr>
+          <td><%= i.produto %></td>
+          <td class="mono"><%= i.lote || '—' %></td>
+          <td class="num"><%= i.quantidade_prevista_kg ? f.toneladas(i.quantidade_prevista_kg) : '—' %></td>
+          <td class="num"><%= f.toneladas(i.quantidade_kg) %></td>
+          <td><%= i.divergencia || 'conforme' %></td>
+        </tr>
+      <% } %>
+    </tbody>
+    <tfoot>
+      <tr><td colspan="3" class="txt-dir">Total recebido</td>
+        <td class="num"><%= f.toneladas(r.quantidade_kg) %></td><td></td></tr>
+    </tfoot>
+  </table>
+</section>
+
+<section class="doc-secao">
+  <h3>Observações</h3>
+  <div class="doc-observacao"><%= r.observacoes || '' %></div>
+</section>
+
+<div class="assinaturas">
+  <div class="linha-assinatura">
+    <div class="traco"></div>
+    <span>Motorista / entregador</span>
+  </div>
+  <div class="linha-assinatura">
+    <div class="traco"></div>
+    <span><%= empresa.nomeCurto || 'SHKT' %> — conferência de recebimento</span>
+  </div>
+</div>
+
+<%- include('_fim', { tipoDocumento, numeroDocumento }) %>

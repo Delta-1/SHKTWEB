@@ -14,7 +14,7 @@
 
 <form method="post" action="<%= novo ? base + '/novo' : base + '/' + registro.id %>" class="cartao">
   <div class="cartao-topo">
-    <a href="<%= base %>" class="btn pequeno">← Voltar</a>
+    <a href="<%= base %>" class="btn pequeno"><%- ic('voltar') %> Voltar</a>
     <h2><%= novo ? 'Novo ' + def.singular.toLowerCase() : def.singular %></h2>
     <% if (!novo && registro.codigo) { %><span class="sub mono"><%= registro.codigo %></span><% } %>
     <span style="flex:1"></span>

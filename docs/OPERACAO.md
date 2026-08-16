@@ -36,19 +36,43 @@ outro.
 
 ## O fluxo do dia a dia
 
-### 1. Entrada de mercadoria
+### 1. Comprar
 
-Enquanto o módulo de Compras/Recebimento não entra (Fase 2), use
+**Pedidos de compra → Novo pedido**. Escolha o fornecedor, o tipo (mercadoria,
+frete ou serviço), o local de entrega e lance os itens com quantidade e preço.
+O total é somado sozinho.
+
+Salve, confira, e clique em **Aprovar**. A aprovação faz três coisas de uma vez:
+trava o pedido (preço e quantidade não mudam mais), gera o **Contas a Pagar**
+previsto e libera o pedido para receber mercadoria.
+
+> **O pedido não coloca nada no estoque.** Ele é um compromisso com o
+> fornecedor. O grão só entra quando o caminhão chega — no passo 2.
+
+Para saldo inicial, ou para uma entrada sem pedido nenhum, continua valendo
 **Estoque → Ajuste → Entrada**, sempre com o motivo preenchido.
 
-### 2. Pedido de fumigação
+### 2. Receber a mercadoria
+
+**Recebimentos → Novo recebimento**, ou o botão **Receber** direto no pedido —
+por ele, os itens em aberto já vêm preenchidos.
+
+Informe a nota fiscal, a placa, a pesagem na balança e o que efetivamente
+chegou. Salve: o recebimento nasce como **rascunho** e ainda não mexeu em nada.
+Confira com calma e clique em **Confirmar entrada no estoque**.
+
+Chegou menos do que o pedido previa? Não tem problema — lance o que chegou. O
+sistema registra a diferença como divergência e deixa o saldo em aberto no
+pedido. O resto entra em outro recebimento, depois.
+
+### 3. Pedido de fumigação
 
 **Fumigação → Nova fumigação**. Informe produto, local, quantidade e a empresa
 fumigadora. O custo por tonelada vem do cadastro dela.
 
 Pode salvar sem o comunicado — ele costuma chegar depois.
 
-### 3. Informar o comunicado e validar
+### 4. Informar o comunicado e validar
 
 Quando a fumigadora enviar o **Comunicado de Fumigação**, abra a fumigação,
 preencha o número, a data/hora de término (exaustão) e clique em
@@ -60,7 +84,7 @@ preencha o número, a data/hora de término (exaustão) e clique em
 
 Ao validar, aparece o **saldo fumigado disponível**. Ex.: 500 t.
 
-### 4. Emitir certificado
+### 5. Emitir certificado
 
 **Certificados → Novo certificado**. Escolha a fumigação (só aparecem as
 validadas com saldo), informe a quantidade e o número do certificado que a
@@ -76,14 +100,33 @@ O certificado nasce como **rascunho**. Confira e clique em
 Se o valor estiver errado, **cancele o certificado** — o saldo volta e o título
 é cancelado junto. Nunca há necessidade de "acertar na mão".
 
-### 5. Carregamento e expedição
+### 6. Vender
 
-**Carregamentos → Nova ordem**. Informe cliente, produto, quantidade, veículo,
-motorista, destino e **vincule o certificado**.
+**Pedidos de venda → Novo pedido**. Cliente, destino, condição de pagamento e
+os itens (produto, local de saída, quantidade e preço).
+
+Ao **Aprovar**, o sistema confere o estoque disponível de cada item e
+**reserva** a quantidade. Reservar não é dar baixa: o físico continua o mesmo,
+mas aquela mercadoria deixa de aparecer como disponível para qualquer outro
+pedido. Também nasce aí o **Contas a Receber**.
+
+Se faltar estoque em qualquer linha, a aprovação inteira é recusada. É de
+propósito: um pedido meio aprovado seria pior do que nenhum.
+
+### 7. Carregamento e expedição
+
+**Carregamentos → Nova ordem**, ou o botão **Criar carregamento** dentro do
+pedido de venda. Informe cliente, produto, quantidade, veículo, motorista,
+destino e **vincule o certificado**.
+
+Se a ordem atende um pedido de venda, escolha o pedido no campo do topo. Aí a
+mercadoria **já está reservada pelo pedido** — a ordem apenas consome esse
+saldo na hora de expedir. Ordem avulsa, sem pedido, reserva por conta própria.
 
 Depois:
 
-1. **Programar** — reserva a quantidade no estoque. O físico não muda ainda;
+1. **Programar** — reserva a quantidade no estoque (ou confere o saldo do
+   pedido, se a ordem estiver vinculada a um). O físico não muda ainda;
    o disponível diminui, para ninguém prometer a mesma carga duas vezes.
 2. **Imprimir romaneio** — leve para a balança e para o motorista.
 3. **Confirmar expedição** — informe o peso real, se diferente. **É aqui que o
@@ -91,10 +134,14 @@ Depois:
 
 Registre DANFE, MIC-DTA e CRT na própria ordem, na aba de documentos.
 
-### 6. Pagar a fumigação
+### 8. Pagar e receber
 
 **Financeiro → Contas a pagar** → abra o título → **Registrar pagamento**.
 Escolha a conta de saída. Pode pagar em partes: o saldo continua em aberto.
+
+Em **Contas a receber** é o mesmo caminho para o dinheiro que entra. Os
+títulos gerados pelos pedidos de compra e de venda já aparecem aqui,
+apontando de volta para o documento que os criou.
 
 ---
 
@@ -109,6 +156,11 @@ Escolha a conta de saída. Pode pagar em partes: o saldo continua em aberto.
 | Validar o mesmo certificado duas vezes | Bloqueado | Impede título financeiro em duplicidade |
 | Apagar movimento de estoque ou registro de auditoria | Impossível | Histórico é prova; correção se faz por estorno |
 | Editar documento já validado | Bloqueado | Cancele e emita outro — o histórico fica |
+| Mudar preço ou quantidade de pedido já aprovado | Bloqueado no banco | O compromisso com o fornecedor ou cliente já foi assumido |
+| Receber contra pedido que ninguém aprovou | Bloqueado | Recebimento é a execução de um compromisso, não a criação dele |
+| Vender mais do que está disponível | Bloqueado, mostrando o disponível real | O que já está reservado para um cliente não pode ser vendido a outro |
+| Cancelar pedido de compra que já teve recebimento | Bloqueado | Cancele o recebimento primeiro — é ele que devolve o estoque |
+| Cancelar pedido de venda com carregamento em andamento | Bloqueado | Cancele o carregamento primeiro |
 
 Toda mensagem de bloqueio diz **o número real e a quantidade disponível**, para
 o operador resolver sem chamar ninguém.

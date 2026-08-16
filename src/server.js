@@ -9,6 +9,7 @@ import { pool } from './db/index.js';
 import { injetarUsuario, exigirLogin } from './lib/auth.js';
 import { ErroNegocio } from './lib/erros.js';
 import * as formato from './lib/formato.js';
+import { icone, SPRITE } from './lib/icones.js';
 
 import rotasAuth from './routes/auth.js';
 import rotasPainel from './routes/painel.js';
@@ -17,6 +18,9 @@ import rotasEstoque from './routes/estoque.js';
 import rotasFumigacao from './routes/fumigacao.js';
 import rotasCertificados from './routes/certificados.js';
 import rotasCarregamento from './routes/carregamento.js';
+import rotasCompras from './routes/compras.js';
+import rotasRecebimentos from './routes/recebimentos.js';
+import rotasVendas from './routes/vendas.js';
 import rotasFinanceiro from './routes/financeiro.js';
 import rotasRelatorios from './routes/relatorios.js';
 import rotasAuditoria from './routes/auditoria.js';
@@ -54,6 +58,8 @@ export function criarApp() {
   // Variaveis disponiveis em todas as telas
   app.use((req, res, next) => {
     res.locals.f = formato;
+    res.locals.ic = icone;
+    res.locals.sprite = SPRITE;
     res.locals.empresa = config.empresa;
     res.locals.caminho = req.path;
     res.locals.query = req.query;
@@ -99,6 +105,9 @@ export function criarApp() {
   app.use('/fumigacao', exigirLogin, rotasFumigacao);
   app.use('/certificados', exigirLogin, rotasCertificados);
   app.use('/carregamentos', exigirLogin, rotasCarregamento);
+  app.use('/compras', exigirLogin, rotasCompras);
+  app.use('/recebimentos', exigirLogin, rotasRecebimentos);
+  app.use('/vendas', exigirLogin, rotasVendas);
   app.use('/financeiro', exigirLogin, rotasFinanceiro);
   app.use('/relatorios', exigirLogin, rotasRelatorios);
   app.use('/auditoria', exigirLogin, rotasAuditoria);

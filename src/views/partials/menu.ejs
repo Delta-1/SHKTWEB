@@ -4,48 +4,58 @@
   const grupos = [
     {
       nome: null,
-      itens: [{ url: '/', ic: '▣', texto: 'Painel', perm: 'dashboard.visualizar', exato: true }],
+      itens: [{ url: '/', ic: 'painel', texto: 'Painel', perm: 'dashboard.visualizar', exato: true }],
     },
     {
       nome: 'Operação',
       itens: [
-        { url: '/estoque', ic: '▤', texto: 'Estoque', perm: 'estoque.visualizar' },
-        { url: '/fumigacao', ic: '☁', texto: 'Fumigação', perm: 'fumigacao.visualizar',
+        { url: '/estoque', ic: 'estoque', texto: 'Estoque', perm: 'estoque.visualizar' },
+        { url: '/fumigacao', ic: 'fumigacao', texto: 'Fumigação', perm: 'fumigacao.visualizar',
           marcador: typeof alertaFumigacao !== 'undefined' ? alertaFumigacao : 0 },
-        { url: '/certificados', ic: '⛉', texto: 'Certificados', perm: 'certificados.visualizar' },
-        { url: '/carregamentos', ic: '⇥', texto: 'Carregamentos', perm: 'carregamento.visualizar' },
+        { url: '/certificados', ic: 'certificado', texto: 'Certificados', perm: 'certificados.visualizar' },
+        { url: '/carregamentos', ic: 'carregamento', texto: 'Carregamentos', perm: 'carregamento.visualizar' },
+      ],
+    },
+    {
+      nome: 'Comercial',
+      itens: [
+        { url: '/compras', ic: 'compras', texto: 'Pedidos de compra', perm: 'compras.visualizar',
+          marcador: typeof alertaCompras !== 'undefined' ? alertaCompras : 0 },
+        { url: '/recebimentos', ic: 'recebimento', texto: 'Recebimentos', perm: 'compras.visualizar' },
+        { url: '/vendas', ic: 'vendas', texto: 'Pedidos de venda', perm: 'vendas.visualizar',
+          marcador: typeof alertaVendas !== 'undefined' ? alertaVendas : 0 },
       ],
     },
     {
       nome: 'Financeiro',
       itens: [
-        { url: '/financeiro/pagar', ic: '↑', texto: 'Contas a pagar', perm: 'financeiro.visualizar',
+        { url: '/financeiro/pagar', ic: 'pagar', texto: 'Contas a pagar', perm: 'financeiro.visualizar',
           marcador: typeof alertaVencidos !== 'undefined' ? alertaVencidos : 0 },
-        { url: '/financeiro/receber', ic: '↓', texto: 'Contas a receber', perm: 'financeiro.visualizar' },
-        { url: '/financeiro/contas', ic: '▦', texto: 'Caixa e bancos', perm: 'financeiro.visualizar' },
+        { url: '/financeiro/receber', ic: 'receber', texto: 'Contas a receber', perm: 'financeiro.visualizar' },
+        { url: '/financeiro/contas', ic: 'caixa', texto: 'Caixa e bancos', perm: 'financeiro.visualizar' },
       ],
     },
     {
       nome: 'Cadastros',
       itens: [
-        { url: '/cadastros/clientes', ic: '◉', texto: 'Clientes', perm: 'cadastros.visualizar' },
-        { url: '/cadastros/fornecedores', ic: '◎', texto: 'Fornecedores', perm: 'cadastros.visualizar' },
-        { url: '/cadastros/fumigadoras', ic: '◈', texto: 'Fumigadoras', perm: 'cadastros.visualizar' },
-        { url: '/cadastros/transportadoras', ic: '◇', texto: 'Transportadoras', perm: 'cadastros.visualizar' },
-        { url: '/cadastros/produtos', ic: '◧', texto: 'Produtos', perm: 'cadastros.visualizar' },
-        { url: '/cadastros/lotes', ic: '◨', texto: 'Lotes', perm: 'cadastros.visualizar' },
-        { url: '/cadastros/veiculos', ic: '⛟', texto: 'Veículos', perm: 'cadastros.visualizar' },
-        { url: '/cadastros/motoristas', ic: '☺', texto: 'Motoristas', perm: 'cadastros.visualizar' },
-        { url: '/cadastros/funcionarios', ic: '☻', texto: 'Funcionários', perm: 'cadastros.visualizar' },
-        { url: '/cadastros', ic: '⚙', texto: 'Tabelas de apoio', perm: 'cadastros.visualizar', exato: true },
+        { url: '/cadastros/clientes', ic: 'clientes', texto: 'Clientes', perm: 'cadastros.visualizar' },
+        { url: '/cadastros/fornecedores', ic: 'fornecedores', texto: 'Fornecedores', perm: 'cadastros.visualizar' },
+        { url: '/cadastros/fumigadoras', ic: 'fumigadora', texto: 'Fumigadoras', perm: 'cadastros.visualizar' },
+        { url: '/cadastros/transportadoras', ic: 'carregamento', texto: 'Transportadoras', perm: 'cadastros.visualizar' },
+        { url: '/cadastros/produtos', ic: 'produtos', texto: 'Produtos', perm: 'cadastros.visualizar' },
+        { url: '/cadastros/lotes', ic: 'lotes', texto: 'Lotes', perm: 'cadastros.visualizar' },
+        { url: '/cadastros/veiculos', ic: 'veiculos', texto: 'Veículos', perm: 'cadastros.visualizar' },
+        { url: '/cadastros/motoristas', ic: 'motoristas', texto: 'Motoristas', perm: 'cadastros.visualizar' },
+        { url: '/cadastros/funcionarios', ic: 'funcionarios', texto: 'Funcionários', perm: 'cadastros.visualizar' },
+        { url: '/cadastros', ic: 'admin', texto: 'Tabelas de apoio', perm: 'cadastros.visualizar', exato: true },
       ],
     },
     {
       nome: 'Gestão',
       itens: [
-        { url: '/relatorios', ic: '▥', texto: 'Relatórios', perm: 'relatorios.visualizar' },
-        { url: '/auditoria', ic: '☑', texto: 'Auditoria', perm: 'auditoria.visualizar' },
-        { url: '/admin', ic: '⚙', texto: 'Administração', perm: 'admin.visualizar' },
+        { url: '/relatorios', ic: 'relatorios', texto: 'Relatórios', perm: 'relatorios.visualizar' },
+        { url: '/auditoria', ic: 'auditoria', texto: 'Auditoria', perm: 'auditoria.visualizar' },
+        { url: '/admin', ic: 'admin', texto: 'Administração', perm: 'admin.visualizar' },
       ],
     },
   ];
@@ -59,7 +69,7 @@
       <% if (grupo.nome) { %><div class="menu-grupo"><%= grupo.nome %></div><% } %>
       <% for (const item of visiveis) { %>
         <a href="<%= item.url %>" class="<%= ativo(item) ? 'ativo' : '' %>">
-          <span class="ic"><%= item.ic %></span>
+          <%- ic(item.ic) %>
           <span><%= item.texto %></span>
           <% if (item.marcador) { %><span class="marcador"><%= item.marcador %></span><% } %>
         </a>

@@ -1,0 +1,254 @@
+<%- include('../partials/topo') %>
+
+<% const r = recebimento;
+   const acao = novo ? '/recebimentos/novo' : `/recebimentos/${r.id}/editar`;
+   // Vindo de um pedido, as linhas ja nascem preenchidas com o saldo em aberto.
+   const linhas = (r.lista_itens && r.lista_itens.length)
+     ? r.lista_itens
+     : (itensPedido.length
+        ? itensPedido.map(i => ({
+            pedido_compra_item_id: i.id, produto_id: i.produto_id,
+            quantidade_origem: Number(i.saldo_kg) / Number(i.fator_kg || 1),
+            unidade_id: i.unidade_id, saldo_kg: i.saldo_kg, item_pedido: i.descricao,
+          }))
+        : [null]); %>
+
+<form method="post" action="<%= acao %>" class="cartao" style="max-width:1100px">
+  <div class="cartao-topo">
+    <a href="<%= novo ? '/recebimentos' : '/recebimentos/' + r.id %>" class="btn pequeno"><%- ic('voltar') %> Voltar</a>
+    <h2><%= novo ? 'Novo recebimento' : 'Editar recebimento ' + r.numero %></h2>
+  </div>
+
+  <div class="cartao-corpo">
+    <div class="aviso info">
+      <%- ic('info') %>
+      <div>
+        <strong>Nada entra no estoque ainda</strong>
+        O recebimento nasce como rascunho. O estoque só se move quando você confirmar,
+        na tela seguinte — assim dá para conferir a pesagem com calma.
+      </div>
+    </div>
+
+    <fieldset>
+      <legend>Origem</legend>
+      <div class="campos">
+        <div class="campo c4">
+          <label for="pedido_compra_id">Pedido de compra</label>
+          <select id="pedido_compra_id" name="pedido_compra_id"
+                  onchange="if(this.value) location.href='/recebimentos/novo?pedido='+this.value">
+            <option value="">Entrada avulsa (sem pedido)</option>
+            <% for (const x of pedidos) { %>
+              <option value="<%= x.id %>" <%= String(r.pedido_compra_id) === String(x.id) ? 'selected' : '' %>>
+                <%= x.numero %> · <%= x.fornecedor %> · falta <%= f.formatar(Number(x.saldo_kg) / 1000, 3) %> t
+              </option>
+            <% } %>
+          </select>
+          <span class="ajuda">Escolher o pedido preenche os itens em aberto.</span>
+        </div>
+        <div class="campo c4">
+          <label for="fornecedor_id">Fornecedor <span class="obrigatorio">*</span></label>
+          <select id="fornecedor_id" name="fornecedor_id" required>
+            <option value="">Selecione...</option>
+            <% for (const x of ref.fornecedores) { %>
+              <option value="<%= x.id %>" <%= String(r.fornecedor_id) === String(x.id) ? 'selected' : '' %>><%= x.nome %></option>
+            <% } %>
+          </select>
+        </div>
+        <div class="campo c4">
+          <label for="local_id">Local de estoque <span class="obrigatorio">*</span></label>
+          <select id="local_id" name="local_id" required>
+            <option value="">Selecione...</option>
+            <% for (const x of ref.locais) { %>
+              <option value="<%= x.id %>" <%= String(r.local_id) === String(x.id) ? 'selected' : '' %>><%= x.nome %></option>
+            <% } %>
+          </select>
+          <span class="ajuda">Para onde a mercadoria vai.</span>
+        </div>
+
+        <div class="campo c3">
+          <label for="data">Data <span class="obrigatorio">*</span></label>
+          <input type="date" id="data" name="data" required value="<%= f.dataInput(r.data) %>">
+        </div>
+        <div class="campo c3">
+          <label for="data_hora_chegada">Chegada</label>
+          <input type="datetime-local" id="data_hora_chegada" name="data_hora_chegada"
+                 value="<%= f.dataHoraInput(r.data_hora_chegada) %>">
+        </div>
+        <div class="campo c6">
+          <label for="conferente">Conferente</label>
+          <input type="text" id="conferente" name="conferente" maxlength="120"
+                 value="<%= r.conferente || '' %>" placeholder="Quem conferiu a carga">
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Documento fiscal</legend>
+      <div class="campos">
+        <div class="campo c4">
+          <label for="documento_fiscal">Nota fiscal / documento</label>
+          <input type="text" id="documento_fiscal" name="documento_fiscal" maxlength="60"
+                 value="<%= r.documento_fiscal || '' %>">
+        </div>
+        <div class="campo c3">
+          <label for="documento_serie">Série</label>
+          <input type="text" id="documento_serie" name="documento_serie" maxlength="20"
+                 value="<%= r.documento_serie || '' %>">
+        </div>
+        <div class="campo c3">
+          <label for="documento_data">Data do documento</label>
+          <input type="date" id="documento_data" name="documento_data"
+                 value="<%= f.dataInput(r.documento_data) %>">
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Transporte e pesagem</legend>
+      <div class="campos">
+        <div class="campo c3">
+          <label for="veiculo_id">Veículo</label>
+          <select id="veiculo_id" name="veiculo_id">
+            <option value="">—</option>
+            <% for (const x of ref.veiculos) { %>
+              <option value="<%= x.id %>" <%= String(r.veiculo_id) === String(x.id) ? 'selected' : '' %>><%= x.placa %> <%= x.marca_modelo || '' %></option>
+            <% } %>
+          </select>
+        </div>
+        <div class="campo c2">
+          <label for="placa">Placa</label>
+          <input type="text" id="placa" name="placa" maxlength="10" value="<%= r.placa || '' %>"
+                 style="text-transform:uppercase">
+        </div>
+        <div class="campo c3">
+          <label for="motorista_id">Motorista</label>
+          <select id="motorista_id" name="motorista_id">
+            <option value="">—</option>
+            <% for (const x of ref.motoristas) { %>
+              <option value="<%= x.id %>" <%= String(r.motorista_id) === String(x.id) ? 'selected' : '' %>><%= x.nome %></option>
+            <% } %>
+          </select>
+        </div>
+        <div class="campo c4">
+          <label for="transportadora_id">Transportadora</label>
+          <select id="transportadora_id" name="transportadora_id">
+            <option value="">—</option>
+            <% for (const x of ref.transportadoras) { %>
+              <option value="<%= x.id %>" <%= String(r.transportadora_id) === String(x.id) ? 'selected' : '' %>><%= x.nome %></option>
+            <% } %>
+          </select>
+        </div>
+
+        <div class="campo c4">
+          <label for="peso_bruto">Peso bruto (kg)</label>
+          <input type="text" inputmode="decimal" class="numerico" data-casas="3"
+                 id="peso_bruto" name="peso_bruto"
+                 value="<%= r.peso_bruto_kg ? f.formatar(r.peso_bruto_kg, 3) : '' %>">
+        </div>
+        <div class="campo c4">
+          <label for="peso_tara">Tara (kg)</label>
+          <input type="text" inputmode="decimal" class="numerico" data-casas="3"
+                 id="peso_tara" name="peso_tara"
+                 value="<%= r.peso_tara_kg ? f.formatar(r.peso_tara_kg, 3) : '' %>">
+        </div>
+        <div class="campo c4">
+          <label for="peso_liquido">Peso líquido (kg)</label>
+          <input type="text" inputmode="decimal" class="numerico" data-casas="3"
+                 id="peso_liquido" name="peso_liquido"
+                 value="<%= r.peso_liquido_kg ? f.formatar(r.peso_liquido_kg, 3) : '' %>">
+          <span class="ajuda">Calculado como bruto − tara.</span>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>O que chegou</legend>
+      <div class="tabela-area">
+        <table class="tabela" data-linhas="itens">
+          <thead>
+            <tr>
+              <th style="width:24%">Produto</th>
+              <th style="width:14%">Lote</th>
+              <th style="width:13%" class="num">Quantidade</th>
+              <th style="width:10%">Unidade</th>
+              <th class="num" style="width:12%">Previsto</th>
+              <th>Divergência</th>
+              <th style="width:40px"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% for (const it of linhas) { %>
+              <tr data-linha>
+                <td>
+                  <input type="hidden" name="item_pedido_item_id" value="<%= it ? (it.pedido_compra_item_id || '') : '' %>">
+                  <select name="item_produto_id" data-item-produto required>
+                    <option value="">Selecione...</option>
+                    <% for (const x of ref.produtos) { %>
+                      <option value="<%= x.id %>" data-unidade="<%= x.unidade_id %>"
+                              <%= it && String(it.produto_id) === String(x.id) ? 'selected' : '' %>><%= x.descricao %></option>
+                    <% } %>
+                  </select>
+                  <% if (it && it.item_pedido) { %>
+                    <div class="txt-min txt-fraco"><%= it.item_pedido %></div>
+                  <% } %>
+                </td>
+                <td>
+                  <select name="item_lote_id">
+                    <option value="">—</option>
+                    <% for (const x of ref.lotes) { %>
+                      <option value="<%= x.id %>" <%= it && String(it.lote_id) === String(x.id) ? 'selected' : '' %>><%= x.codigo %></option>
+                    <% } %>
+                  </select>
+                </td>
+                <td><input type="text" inputmode="decimal" class="numerico" data-casas="3"
+                           name="item_quantidade" data-item-quantidade
+                           value="<%= it && it.quantidade_origem ? f.formatar(it.quantidade_origem, 3) : '' %>"></td>
+                <td>
+                  <select name="item_unidade_id" data-item-unidade>
+                    <% for (const x of ref.unidades) { %>
+                      <option value="<%= x.id %>" data-fator="<%= x.fator_kg %>"
+                              <%= it && String(it.unidade_id) === String(x.id) ? 'selected' : '' %>><%= x.codigo %></option>
+                    <% } %>
+                  </select>
+                </td>
+                <td class="num txt-min txt-fraco">
+                  <%= it && it.saldo_kg ? f.toneladas(it.saldo_kg) : (it && it.quantidade_prevista_kg ? f.toneladas(it.quantidade_prevista_kg) : '—') %>
+                </td>
+                <td><input type="text" name="item_divergencia" maxlength="300"
+                           placeholder="Preenchida sozinha se a quantidade não bater"
+                           value="<%= it ? (it.divergencia || '') : '' %>"></td>
+                <td class="acoes">
+                  <button type="button" class="btn pequeno contorno-perigo" data-remover-linha
+                          title="Remover linha"><%- ic('excluir') %></button>
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+      <div class="mt-1">
+        <button type="button" class="btn pequeno" data-adicionar-linha="itens">
+          <%- ic('mais') %> Adicionar linha
+        </button>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Observações</legend>
+      <div class="campos">
+        <div class="campo c12">
+          <textarea name="observacoes" rows="3"
+                    placeholder="Estado da carga, ocorrências na descarga..."><%= r.observacoes || '' %></textarea>
+        </div>
+      </div>
+    </fieldset>
+  </div>
+
+  <div class="rodape-form">
+    <a href="<%= novo ? '/recebimentos' : '/recebimentos/' + r.id %>" class="btn">Cancelar</a>
+    <span class="espaco"></span>
+    <button type="submit" class="btn primario"><%- ic('ok') %> <%= novo ? 'Lançar recebimento' : 'Salvar alterações' %></button>
+  </div>
+</form>
+
+<%- include('../partials/fim') %>

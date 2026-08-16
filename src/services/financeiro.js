@@ -345,6 +345,59 @@ export async function cancelarTitulo(tipo, tituloId, motivo, usuario, contexto =
   });
 }
 
+/**
+ * Cancela, DENTRO de uma transacao ja aberta, o titulo gerado por um
+ * documento de outro modulo (pedido de compra, pedido de venda...).
+ *
+ * Existe para que "cancelar o documento" e "cancelar o dinheiro previsto"
+ * sejam uma coisa so: ou as duas acontecem, ou nenhuma. E recusa cancelar
+ * o que ja foi pago ou recebido — dinheiro que mudou de mao nao se apaga,
+ * se estorna.
+ *
+ * @returns {Promise<object|null>} o titulo cancelado, ou null se nao havia
+ */
+export async function cancelarTituloEmTransacao(cx, tipo, origemTipo, origemId, motivo, usuario) {
+  const tabela = tipo === 'CP' ? 'contas_pagar' : 'contas_receber';
+  const campoLiquidado = tipo === 'CP' ? 'valor_pago' : 'valor_recebido';
+
+  const { rows } = await cx.query(
+    `SELECT * FROM ${tabela}
+      WHERE origem_tipo = $1 AND origem_id = $2 AND status <> 'CANCELADO'
+        FOR UPDATE`,
+    [origemTipo, origemId]
+  );
+  const titulo = rows[0];
+  if (!titulo) return null;
+
+  if (Number(titulo[campoLiquidado]) > 0)
+    throw new ErroNegocio(
+      `O título ${titulo.numero} gerado por este documento já teve ` +
+        `${tipo === 'CP' ? 'pagamento' : 'recebimento'}. ` +
+        'Estorne a baixa antes de cancelar.'
+    );
+
+  await cx.query(
+    `UPDATE ${tabela}
+        SET status = 'CANCELADO', motivo_cancelamento = $1, atualizado_por = $2
+      WHERE id = $3`,
+    [motivo, usuario?.id ?? null, titulo.id]
+  );
+
+  await registrar(cx, {
+    usuario,
+    acao: ACOES.CANCELAR,
+    modulo: 'financeiro',
+    registroTipo: tipo === 'CP' ? 'CONTA_PAGAR' : 'CONTA_RECEBER',
+    registroId: titulo.id,
+    registroNumero: titulo.numero,
+    descricao: `Título ${titulo.numero} cancelado junto com a origem. Motivo: ${motivo}`,
+    antes: { status: titulo.status },
+    depois: { status: 'CANCELADO' },
+  });
+
+  return titulo;
+}
+
 /** Transferencia entre contas proprias. */
 export async function transferirEntreContas(dados, usuario, contexto = {}) {
   return transacao(async (cx) => {
@@ -519,6 +572,7 @@ export default {
   baixar,
   estornarBaixa,
   cancelarTitulo,
+  cancelarTituloEmTransacao,
   transferirEntreContas,
   listarTitulos,
   buscarTitulo,

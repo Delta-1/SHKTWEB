@@ -4,7 +4,7 @@
 
 <% if (novo && !fumigacoes.length) { %>
   <div class="aviso atencao" style="max-width:900px">
-    <span class="ic">!</span>
+    <%- ic('atencao') %>
     <div>
       <strong>Nenhuma fumigação com saldo disponível</strong>
       Um certificado só pode ser emitido a partir de uma fumigação <em>validada</em> que ainda
@@ -16,7 +16,7 @@
 
 <form method="post" action="<%= acao %>" class="cartao" style="max-width:1000px">
   <div class="cartao-topo">
-    <a href="<%= novo ? '/certificados' : '/certificados/' + certificado.id %>" class="btn pequeno">← Voltar</a>
+    <a href="<%= novo ? '/certificados' : '/certificados/' + certificado.id %>" class="btn pequeno"><%- ic('voltar') %> Voltar</a>
     <h2><%= novo ? 'Novo certificado de fumigação' : 'Editar certificado ' + certificado.numero %></h2>
   </div>
 
@@ -131,7 +131,7 @@
     </fieldset>
 
     <div class="aviso info mb-0">
-      <span class="ic">i</span>
+      <%- ic('info') %>
       <div>
         O certificado é criado como <strong>rascunho</strong>. Ao <strong>validar</strong>, o sistema
         consome o saldo fumigado e gera automaticamente o título em Contas a Pagar da fumigadora.

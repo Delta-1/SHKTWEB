@@ -57,9 +57,25 @@ CREATE UNIQUE INDEX uq_cp_origem ON contas_pagar (origem_tipo, origem_id)
 -- Movimentos de estoque e auditoria não podem ser alterados nem excluídos
 CREATE TRIGGER trg_estoque_movimento_imutavel BEFORE UPDATE OR DELETE ...
 CREATE TRIGGER trg_auditoria_imutavel        BEFORE UPDATE OR DELETE ...
+
+-- Preço e quantidade de pedido aprovado não se reescrevem (só o saldo muda)
+CREATE TRIGGER trg_pci_proteger BEFORE INSERT OR UPDATE OR DELETE
+  ON pedido_compra_itens ...
+CREATE TRIGGER trg_pvi_proteger BEFORE INSERT OR UPDATE OR DELETE
+  ON pedido_venda_itens ...
+
+-- O total do cabeçalho é sempre a soma dos itens: não existe caminho pelo
+-- qual um pedido mostre um valor que os itens não sustentem
+CREATE TRIGGER trg_pci_total AFTER INSERT OR UPDATE OR DELETE
+  ON pedido_compra_itens EXECUTE FUNCTION fn_pc_recalcular_total();
+
+-- Um documento nunca reserva DUAS VEZES a mesma posição de estoque
+CREATE UNIQUE INDEX uq_reservas_documento ON estoque_reservas
+  (documento_tipo, documento_id, produto_id, local_id, COALESCE(lote_id, 0))
+  WHERE status = 'ATIVA';
 ```
 
-Três funções PL/pgSQL concentram as operações críticas, porque precisam
+Algumas funções PL/pgSQL concentram as operações críticas, porque precisam
 bloquear linhas e conferir saldos de forma atômica:
 
 | Função | Garante |
@@ -67,6 +83,10 @@ bloquear linhas e conferir saldos de forma atômica:
 | `fn_proximo_numero(tipo, ano)` | Numeração `0001-2026` sem duplicidade, mesmo com vários usuários criando documentos ao mesmo tempo |
 | `fn_estoque_movimentar(...)` | Bloqueia a linha de saldo, recalcula, recusa saldo negativo e grava o histórico |
 | `fn_fumigacao_consumir(...)` | Bloqueia a fumigação, recusa certificado acima do saldo e lança a saída na conta-corrente |
+| `fn_pedido_compra_recalcular(id)` | A situação do pedido sai do saldo recebido, nunca é digitada |
+| `fn_pedido_venda_recalcular(id)` | Idem, a partir do saldo embarcado |
+| `fn_reserva_consumir_parcial(...)` | Baixa só o pedaço da reserva que está saindo agora |
+| `fn_reserva_repor(...)` | Devolve reserva somando à que existe, em vez de criar uma segunda linha para o mesmo saldo |
 
 ---
 
@@ -87,11 +107,21 @@ bloquear linhas e conferir saldos de forma atômica:
 |---|---|
 | `estoque_movimentos` | Razão do estoque: append-only, cada linha com origem, documento, usuário e saldo resultante |
 | `estoque_saldos` | Saldo consolidado por produto+local+lote; serve de ponto de bloqueio contra concorrência |
-| `estoque_reservas` | Quantidade comprometida por carregamentos ainda não expedidos |
+| `estoque_reservas` | Quantidade comprometida por pedidos de venda aprovados e carregamentos ainda não expedidos |
 | `fumigacoes` | Pedido, comunicado, quantidade e quanto já foi certificado |
 | `fumigacao_movimentos` | Conta-corrente: entradas (validação) e saídas (certificados) |
 | `certificados_fumigacao` | Certificado emitido, custo e vínculo com o título financeiro |
 | `carregamentos` + `carregamento_documentos` | Ordem de carregamento e documentos da operação |
+
+### Comercial (Fase 2)
+| Tabela | Papel |
+|---|---|
+| `pedidos_compra` + `pedido_compra_itens` | Compromisso com o fornecedor. O item guarda `recebido_kg`: o saldo em aberto é `quantidade_kg − recebido_kg` |
+| `recebimentos` + `recebimento_itens` | Entrada física. Guarda o previsto ao lado do recebido, para a divergência ficar registrada |
+| `pedidos_venda` + `pedido_venda_itens` | Compromisso com o cliente. O item guarda `atendido_kg` |
+
+`carregamentos` ganhou `pedido_venda_id` e `pedido_venda_item_id`: uma ordem
+pode nascer de um pedido ou ser avulsa.
 
 ### Financeiro
 `contas_pagar`, `contas_receber`, `financeiro_baixas`, `caixa_movimentos`,
@@ -99,7 +129,7 @@ bloquear linhas e conferir saldos de forma atômica:
 
 ### Visões
 `vw_estoque_posicao`, `vw_fumigacao_saldos`, `vw_contas_saldos`, `vw_titulos`,
-`vw_rastreabilidade`.
+`vw_rastreabilidade`, `vw_compras_saldo`, `vw_vendas_saldo`.
 
 **Tipos:** valores monetários em `NUMERIC(18,4)`, quantidades em
 `NUMERIC(18,3)`. Nunca ponto flutuante binário. No JavaScript, o cálculo passa
@@ -126,7 +156,38 @@ Validar exige o número emitido pela fumigadora e executa, **em uma única
 transação**: confere saldo → consome a conta-corrente → gera o Contas a Pagar →
 registra a auditoria. Se qualquer etapa falhar, nada é gravado.
 
-### Carregamento — quem move o estoque
+### Pedido de compra
+```
+RASCUNHO ──► AGUARDANDO_APROVACAO ──(aprovar)──► APROVADO
+                                                    │
+                              (recebimento parcial) ▼
+                                          PARCIALMENTE_RECEBIDO ──► RECEBIDO
+    └────────────────────────────────────────────────────────────► CANCELADO
+```
+Aprovar gera o Contas a Pagar previsto e **congela os itens**: um gatilho no
+banco recusa mudança de produto, quantidade, preço ou descrição depois disso —
+só o saldo recebido continua podendo mudar, que é o que a operação faz. A
+situação após APROVADO nunca é digitada: sai de `fn_pedido_compra_recalcular`,
+que compara pedido e recebido.
+
+### Recebimento — quem move o estoque na entrada
+```
+RASCUNHO    não toca no estoque
+CONFIRMADO  ENTRADA no estoque + abate o saldo do pedido   ◄── único evento que entra
+CANCELADO   estorna a entrada e devolve o saldo ao pedido
+```
+
+### Pedido de venda
+```
+RASCUNHO ──► AGUARDANDO_APROVACAO ──(aprovar)──► APROVADO
+                                     reserva estoque + gera Contas a Receber
+                                                    │
+                                 (carregamento) ────▼
+                                        PARCIALMENTE_ATENDIDO ──► ATENDIDO
+    └────────────────────────────────────────────────────────────► CANCELADO
+```
+
+### Carregamento — quem move o estoque na saída
 ```
 RASCUNHO         não toca no estoque
 PROGRAMADO       RESERVA a quantidade (comprometido)
@@ -137,11 +198,26 @@ CANCELADO        libera a reserva; se já expedido, estorna a baixa
 Isso responde à seção 13 do documento de requisitos: a baixa acontece **uma vez
 só**, na confirmação da expedição.
 
+**Reserva de quem?** Se a ordem está ligada a um pedido de venda, quem reservou
+foi o *pedido*, na aprovação — a ordem apenas consome um pedaço dessa reserva
+na expedição (`fn_reserva_consumir_parcial`). Se as duas reservassem, o mesmo
+grão apareceria comprometido duas vezes e o disponível ficaria menor do que o
+armazém, travando vendas possíveis. Ordem avulsa reserva por conta própria.
+
 ---
 
 ## 5. Cadeia de integração
 
 ```
+Pedido de compra 0001-2026 (600 t) ──► APROVADO
+   ├─► Contas a Pagar 0001-2026 (previsão)
+   └─► não move estoque
+   │
+   ▼
+Recebimento 0001-2026 ──► CONFIRMADO
+   └─► ENTRADA de 600 t no armazém        ◄── aqui o grão existe no sistema
+   │
+   ▼
 Estoque (600 t)
    │
    ▼
@@ -153,9 +229,15 @@ Certificado 0001-2026 (100 t) ──► VALIDADO
    └─► Contas a Pagar 0001-2026: R$ 1.250,00, vence em 10 dias
    │
    ▼
-Carregamento 0001-2026 (100 t, certificado vinculado)
-   ├─► PROGRAMADO: reserva 100 t   (físico 600 · disponível 500)
-   └─► EXPEDIDO:   baixa 100 t     (físico 500 · expedido 100)
+Pedido de venda 0001-2026 (100 t) ──► APROVADO
+   ├─► reserva 100 t                (físico 600 · disponível 500)
+   └─► Contas a Receber 0001-2026
+   │
+   ▼
+Carregamento 0001-2026 (100 t, certificado + pedido de venda vinculados)
+   ├─► PROGRAMADO: não reserva de novo — já está reservado pelo pedido
+   └─► EXPEDIDO:   baixa 100 t      (físico 500 · expedido 100)
+       └─► consome a reserva do pedido e soma ao atendido
 ```
 
 Cada seta acima é uma transação única e auditada. A visão

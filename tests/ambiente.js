@@ -37,6 +37,9 @@ export async function limparOperacional() {
     TRUNCATE TABLE
       caixa_movimentos, caixa_transferencias, financeiro_baixas,
       contas_pagar, contas_receber,
+      recebimento_itens, recebimentos,
+      pedido_compra_itens, pedidos_compra,
+      pedido_venda_itens, pedidos_venda,
       carregamento_documentos, carregamentos,
       certificados_fumigacao, fumigacao_movimentos, fumigacoes,
       estoque_reservas, estoque_movimentos, estoque_saldos, lotes,
@@ -68,7 +71,7 @@ export async function usuarioTeste() {
 
 /** Ids das entidades de apoio mais usadas nos testes. */
 export async function referencias() {
-  const [produto, local, ton, kg, brl, fumigadora, cliente] = await Promise.all([
+  const [produto, local, ton, kg, brl, fumigadora, cliente, fornecedor] = await Promise.all([
     um(`SELECT id FROM produtos WHERE codigo = 'MILHO-AD'`),
     um(`SELECT id FROM locais_estoque WHERE codigo = 'ARMAZEM-01'`),
     um(`SELECT id FROM unidades_medida WHERE codigo = 'TON'`),
@@ -76,6 +79,7 @@ export async function referencias() {
     um(`SELECT id FROM moedas WHERE codigo = 'BRL'`),
     garantirParceiro('TESTE-FUM', 'FUMIGADORA TESTE LTDA', { is_fumigadora: true, custo_tonelada: '12.5000' }),
     garantirParceiro('TESTE-CLI', 'CLIENTE TESTE S.A.', { is_cliente: true }),
+    garantirParceiro('TESTE-FOR', 'FORNECEDOR TESTE LTDA', { is_fornecedor: true }),
   ]);
 
   return {
@@ -86,6 +90,7 @@ export async function referencias() {
     brlId: brl.id,
     fumigadoraId: fumigadora.id,
     clienteId: cliente.id,
+    fornecedorId: fornecedor.id,
   };
 }
 

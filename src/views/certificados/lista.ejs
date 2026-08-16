@@ -45,7 +45,7 @@
 
   <% if (!lista.length) { %>
     <div class="vazio">
-      <span class="icone">⛉</span>
+      <%- ic('vazio', 'icone') %>
       <p>Nenhum certificado encontrado.</p>
       <% if (pode('certificados.criar')) { %>
         <a href="/certificados/novo" class="btn primario">Emitir certificado</a>

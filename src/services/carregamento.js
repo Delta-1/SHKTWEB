@@ -18,13 +18,22 @@ import { proximoNumero, TIPOS_DOCUMENTO } from '../lib/numeracao.js';
 import { Decimal } from '../lib/decimal.js';
 import { paraKg } from './unidades.js';
 import * as estoque from './estoque.js';
+import * as vendas from './vendas.js';
 
 const EDITAVEIS = ['RASCUNHO', 'PROGRAMADO', 'EM_CARREGAMENTO'];
+
+/**
+ * Quem reserva o estoque de uma ordem ligada a pedido de venda e o PEDIDO,
+ * na aprovacao. A ordem so consome esse saldo na expedicao. Reservar de novo
+ * aqui contaria o mesmo grao duas vezes como comprometido.
+ */
+const reservaPropria = (c) => !c.pedido_venda_item_id;
 
 export async function criar(dados, usuario, contexto = {}) {
   return transacao(async (cx) => {
     const conv = await paraKg(cx, dados.quantidade, dados.unidadeId);
     await conferirCertificado(cx, dados, conv.kg, null);
+    const itemVenda = await conferirPedidoVenda(cx, dados, conv.kg, null);
 
     const numero = await proximoNumero(cx, TIPOS_DOCUMENTO.CARREGAMENTO);
     const pesos = calcularPesos(dados);
@@ -36,9 +45,10 @@ export async function criar(dados, usuario, contexto = {}) {
           peso_bruto_kg, peso_tara_kg, peso_liquido_kg,
           veiculo_id, placa, placa_reboque, motorista_id, transportadora_id,
           origem, destino, pais_destino_id, incoterm_id, certificado_id,
-          tipo_operacao, observacoes, responsavel, status, criado_por
+          tipo_operacao, observacoes, responsavel, status, criado_por,
+          pedido_venda_id, pedido_venda_item_id
        ) VALUES ($1,COALESCE($2,CURRENT_DATE),$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,
-                 $14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,'RASCUNHO',$27)
+                 $14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,'RASCUNHO',$27,$28,$29)
        RETURNING *`,
       [
         numero,
@@ -68,6 +78,8 @@ export async function criar(dados, usuario, contexto = {}) {
         dados.observacoes ?? null,
         dados.responsavel ?? usuario.nome,
         usuario.id,
+        itemVenda?.pedido_id ?? null,
+        itemVenda?.id ?? null,
       ]
     );
     const carregamento = rows[0];
@@ -100,6 +112,7 @@ export async function atualizar(id, dados, usuario, contexto = {}) {
 
     const conv = await paraKg(cx, dados.quantidade, dados.unidadeId);
     await conferirCertificado(cx, dados, conv.kg, id);
+    const itemVenda = await conferirPedidoVenda(cx, dados, conv.kg, id);
     const pesos = calcularPesos(dados);
 
     const { rows } = await cx.query(
@@ -111,7 +124,8 @@ export async function atualizar(id, dados, usuario, contexto = {}) {
           veiculo_id = $13, placa = $14, placa_reboque = $15, motorista_id = $16,
           transportadora_id = $17, origem = $18, destino = $19, pais_destino_id = $20,
           incoterm_id = $21, certificado_id = $22, tipo_operacao = $23,
-          observacoes = $24, responsavel = $25, atualizado_por = $26
+          observacoes = $24, responsavel = $25, atualizado_por = $26,
+          pedido_venda_id = $28, pedido_venda_item_id = $29
         WHERE id = $27
         RETURNING *`,
       [
@@ -142,11 +156,15 @@ export async function atualizar(id, dados, usuario, contexto = {}) {
         dados.responsavel ?? null,
         usuario.id,
         id,
+        itemVenda?.pedido_id ?? null,
+        itemVenda?.id ?? null,
       ]
     );
 
-    // Se ja estava reservado, ajusta a reserva para a nova quantidade
-    if (atual.status !== 'RASCUNHO') {
+    // Se ja estava reservado por conta propria, ajusta a reserva para a nova
+    // quantidade. Ordem vinculada a pedido de venda nao mexe em reserva aqui:
+    // o compromisso ja esta reservado no pedido.
+    if (atual.status !== 'RASCUNHO' && reservaPropria(rows[0])) {
       await estoque.liberarReserva(cx, 'CARREGAMENTO', id);
       await estoque.conferirDisponivel(cx, {
         produtoId: dados.produtoId,
@@ -164,6 +182,10 @@ export async function atualizar(id, dados, usuario, contexto = {}) {
         documentoNumero: atual.numero,
         usuarioId: usuario.id,
       });
+    } else if (atual.status !== 'RASCUNHO') {
+      // Trocou de pedido de venda depois de programado: a reserva antiga do
+      // proprio carregamento, se existir, deixa de fazer sentido.
+      await estoque.liberarReserva(cx, 'CARREGAMENTO', id);
     }
 
     const dif = diferenca(atual, rows[0]);
@@ -194,23 +216,29 @@ export async function programar(id, usuario, contexto = {}) {
     if (c.status !== 'RASCUNHO')
       throw new ErroNegocio(`O carregamento ${c.numero} já foi programado.`);
 
-    await estoque.conferirDisponivel(cx, {
-      produtoId: c.produto_id,
-      localId: c.local_id,
-      loteId: c.lote_id,
-      quantidadeKg: c.quantidade_kg,
-    });
+    if (reservaPropria(c)) {
+      await estoque.conferirDisponivel(cx, {
+        produtoId: c.produto_id,
+        localId: c.local_id,
+        loteId: c.lote_id,
+        quantidadeKg: c.quantidade_kg,
+      });
 
-    await estoque.reservar(cx, {
-      produtoId: c.produto_id,
-      localId: c.local_id,
-      loteId: c.lote_id,
-      quantidadeKg: c.quantidade_kg,
-      documentoTipo: 'CARREGAMENTO',
-      documentoId: id,
-      documentoNumero: c.numero,
-      usuarioId: usuario.id,
-    });
+      await estoque.reservar(cx, {
+        produtoId: c.produto_id,
+        localId: c.local_id,
+        loteId: c.lote_id,
+        quantidadeKg: c.quantidade_kg,
+        documentoTipo: 'CARREGAMENTO',
+        documentoId: id,
+        documentoNumero: c.numero,
+        usuarioId: usuario.id,
+      });
+    } else {
+      // Ja reservado pelo pedido de venda: aqui so confere que o saldo do
+      // pedido ainda comporta esta ordem.
+      await vendas.conferirSaldoItem(cx, c.pedido_venda_item_id, c.quantidade_kg, id);
+    }
 
     await cx.query(`UPDATE carregamentos SET status = 'PROGRAMADO', atualizado_por = $1 WHERE id = $2`, [
       usuario.id,
@@ -224,7 +252,10 @@ export async function programar(id, usuario, contexto = {}) {
       registroTipo: 'CARREGAMENTO',
       registroId: id,
       registroNumero: c.numero,
-      descricao: `Carregamento ${c.numero} programado. ${c.quantidade_kg} kg reservados no estoque.`,
+      descricao: reservaPropria(c)
+        ? `Carregamento ${c.numero} programado. ${c.quantidade_kg} kg reservados no estoque.`
+        : `Carregamento ${c.numero} programado sobre o pedido de venda ` +
+          `(${c.quantidade_kg} kg já reservados pelo pedido).`,
       antes: { status: c.status },
       depois: { status: 'PROGRAMADO' },
       ip: contexto.ip,
@@ -279,8 +310,17 @@ export async function expedir(id, dados, usuario, contexto = {}) {
         );
     }
 
-    // Libera a reserva e da a baixa fisica (uma unica movimentacao de estoque)
-    await estoque.consumirReserva(cx, 'CARREGAMENTO', id);
+    // Libera a reserva e da a baixa fisica (uma unica movimentacao de estoque).
+    // Ordem vinculada a pedido de venda consome a reserva do PEDIDO, na
+    // medida exata do que esta saindo agora.
+    let embarque = null;
+    if (reservaPropria(c)) {
+      await estoque.consumirReserva(cx, 'CARREGAMENTO', id);
+    } else {
+      const item = await vendas.itemDoCarregamento(cx, c.pedido_venda_item_id);
+      if (!item) throw new ErroNaoEncontrado('Item do pedido de venda não encontrado.');
+      embarque = await vendas.registrarEmbarque(cx, item, quantidadeKg, usuario);
+    }
 
     const movId = await estoque.movimentar(cx, {
       tipo: 'CARREGAMENTO',
@@ -323,7 +363,11 @@ export async function expedir(id, dados, usuario, contexto = {}) {
       registroNumero: c.numero,
       descricao:
         `Carregamento ${c.numero} expedido. Baixa de ${quantidadeKg} kg no estoque ` +
-        `(movimento #${movId}).`,
+        `(movimento #${movId}).` +
+        (embarque ? ` Pedido de venda passou a "${embarque.situacao}".` : '') +
+        (embarque?.semReserva
+          ? ` Atenção: ${embarque.semReserva} kg saíram além do reservado pelo pedido.`
+          : ''),
       antes: { status: c.status, quantidade_kg: c.quantidade_kg },
       depois: { status: 'EXPEDIDO', quantidade_kg: quantidadeKg },
       ip: contexto.ip,
@@ -342,6 +386,23 @@ export async function cancelar(id, motivo, usuario, contexto = {}) {
     if (c.status === 'CANCELADO') throw new ErroNegocio('Este carregamento já está cancelado.');
 
     await estoque.liberarReserva(cx, 'CARREGAMENTO', id);
+
+    // Ordem ligada a pedido de venda ja expedida: devolve o atendido ao
+    // pedido e refaz a reserva — o compromisso com o cliente continua.
+    let estorno = null;
+    if (c.status === 'EXPEDIDO' && c.pedido_venda_item_id) {
+      const item = await vendas.itemDoCarregamento(cx, c.pedido_venda_item_id);
+      if (item) {
+        estorno = await vendas.estornarEmbarque(
+          cx,
+          item,
+          c.quantidade_kg,
+          usuario,
+          motivo,
+          item.pedido_numero
+        );
+      }
+    }
 
     // Se ja tinha saido do estoque, devolve a mercadoria por estorno
     if (c.status === 'EXPEDIDO') {
@@ -385,7 +446,9 @@ export async function cancelar(id, motivo, usuario, contexto = {}) {
       registroTipo: 'CARREGAMENTO',
       registroId: id,
       registroNumero: c.numero,
-      descricao: `Carregamento ${c.numero} cancelado. Motivo: ${motivo}`,
+      descricao:
+        `Carregamento ${c.numero} cancelado. Motivo: ${motivo}` +
+        (estorno ? ` Pedido de venda voltou para "${estorno.situacao}".` : ''),
       antes: { status: c.status },
       depois: { status: 'CANCELADO' },
       ip: contexto.ip,
@@ -459,6 +522,35 @@ async function conferirCertificado(cx, dados, quantidadeKg, ignorarId) {
     );
 }
 
+/**
+ * Ordem nascida de um pedido de venda: confere que o item existe, que o
+ * pedido esta aprovado, que a carga cabe no saldo e que produto e local
+ * batem com o que foi vendido. Sem isto, seria possivel "atender" um pedido
+ * embarcando outro produto, ou de outro armazem.
+ */
+async function conferirPedidoVenda(cx, dados, quantidadeKg, ignorarId) {
+  if (!dados.pedidoVendaItemId) return null;
+
+  const item = await vendas.conferirSaldoItem(
+    cx,
+    dados.pedidoVendaItemId,
+    quantidadeKg,
+    ignorarId ?? null
+  );
+
+  if (Number(item.produto_id) !== Number(dados.produtoId))
+    throw new ErroNegocio(
+      `O item do pedido de venda ${item.pedido_numero} é de outro produto. ` +
+        'Selecione o item correto ou desvincule o pedido.'
+    );
+  if (Number(item.local_id) !== Number(dados.localId))
+    throw new ErroNegocio(
+      `O item do pedido de venda ${item.pedido_numero} foi vendido a partir de outro local de estoque.`
+    );
+
+  return item;
+}
+
 async function bloquear(cx, id) {
   const { rows } = await cx.query('SELECT * FROM carregamentos WHERE id = $1 FOR UPDATE', [id]);
   if (!rows[0]) throw new ErroNaoEncontrado('Carregamento não encontrado.');
@@ -481,7 +573,8 @@ const SELECT_BASE = `
          un.codigo AS unidade, un.fator_kg,
          ce.numero AS certificado_numero, ce.numero_certificado AS certificado_externo,
          ce.status AS certificado_status,
-         f.numero AS fumigacao_numero, f.numero_comunicado
+         f.numero AS fumigacao_numero, f.numero_comunicado,
+         pv.numero AS pedido_venda_numero, pv.status AS pedido_venda_status
     FROM carregamentos cg
     LEFT JOIN parceiros cli ON cli.id = cg.cliente_id
     JOIN produtos p         ON p.id = cg.produto_id
@@ -494,7 +587,8 @@ const SELECT_BASE = `
     LEFT JOIN incoterms ic  ON ic.id = cg.incoterm_id
     LEFT JOIN unidades_medida un ON un.id = cg.unidade_id
     LEFT JOIN certificados_fumigacao ce ON ce.id = cg.certificado_id
-    LEFT JOIN fumigacoes f  ON f.id = ce.fumigacao_id`;
+    LEFT JOIN fumigacoes f  ON f.id = ce.fumigacao_id
+    LEFT JOIN pedidos_venda pv ON pv.id = cg.pedido_venda_id`;
 
 export function listar(filtros = {}) {
   const cond = [];

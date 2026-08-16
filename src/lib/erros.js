@@ -85,6 +85,19 @@ export function traduzirErroBanco(erro) {
         ck_fumigacao_saldo:
           'A quantidade certificada não pode ultrapassar a quantidade fumigada.',
         ck_transf_contas: 'A conta de origem e a de destino devem ser diferentes.',
+        ck_pc_aprovacao:
+          'Um pedido de compra aprovado precisa registrar quem aprovou e quando.',
+        ck_pc_cancelamento: 'Informe o motivo do cancelamento do pedido de compra.',
+        ck_pv_aprovacao:
+          'Um pedido de venda aprovado precisa registrar quem aprovou e quando.',
+        ck_pv_cancelamento: 'Informe o motivo do cancelamento do pedido de venda.',
+        ck_rec_confirmacao:
+          'Um recebimento confirmado precisa registrar quem confirmou e quando.',
+        ck_rec_cancelamento: 'Informe o motivo do cancelamento do recebimento.',
+        contas_pagar_origem_check:
+          'Origem inválida para um título a pagar. Isto é um erro do sistema — avise o suporte.',
+        contas_receber_origem_check:
+          'Origem inválida para um título a receber. Isto é um erro do sistema — avise o suporte.',
       };
       return new ErroNegocio(mapa[erro.constraint] || 'Os dados informados violam uma regra do sistema.');
     }

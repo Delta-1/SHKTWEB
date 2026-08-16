@@ -62,7 +62,7 @@
 
   <% if (!lista.length) { %>
     <div class="vazio">
-      <span class="icone">⇥</span>
+      <%- ic('vazio', 'icone') %>
       <p>Nenhum carregamento encontrado.</p>
       <% if (pode('carregamento.criar')) { %>
         <a href="/carregamentos/novo" class="btn primario">Criar ordem de carregamento</a>

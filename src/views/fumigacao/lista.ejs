@@ -65,7 +65,7 @@
 
   <% if (!lista.length) { %>
     <div class="vazio">
-      <span class="icone">☁</span>
+      <%- ic('vazio', 'icone') %>
       <p>Nenhuma fumigação encontrada.</p>
       <% if (pode('fumigacao.criar')) { %>
         <a href="/fumigacao/novo" class="btn primario">Criar pedido de fumigação</a>

@@ -4,7 +4,7 @@
 
 <div class="cartao">
   <div class="cartao-topo">
-    <a href="/certificados" class="btn pequeno">← Lista</a>
+    <a href="/certificados" class="btn pequeno"><%- ic('voltar') %> Lista</a>
     <h2>Certificado <span class="mono"><%= c.numero %></span></h2>
     <span class="pill <%= f.classeStatus(c.status) %>"><%= f.rotuloStatus(c.status) %></span>
     <span style="flex:1"></span>
@@ -71,7 +71,7 @@
 
     <% if (c.status === 'VALIDADO') { %>
       <div class="aviso ok mt-2 mb-0">
-        <span class="ic">✓</span>
+        <%- ic('ok') %>
         <div>
           <strong>Validado em <%= f.dataHora(c.validado_em) %><%= c.validado_por_nome ? ' por ' + c.validado_por_nome : '' %></strong>
           Saldo fumigado consumido e título financeiro gerado.
@@ -81,7 +81,7 @@
 
     <% if (c.status === 'CANCELADO') { %>
       <div class="aviso erro mt-2 mb-0">
-        <span class="ic">✕</span>
+        <%- ic('erro') %>
         <div>
           <strong>Cancelado em <%= f.dataHora(c.cancelado_em) %></strong>
           <%= c.motivo_cancelamento %>
@@ -109,13 +109,13 @@
 
       <% if (!c.numero_certificado) { %>
         <div class="aviso atencao mb-0">
-          <span class="ic">!</span>
+          <%- ic('atencao') %>
           <div>Informe o <strong>número do certificado emitido pela fumigadora</strong> antes de validar.
             <a href="/certificados/<%= c.id %>/editar">Editar certificado</a>.</div>
         </div>
       <% } else if (Number(c.quantidade_kg) > Number(c.fumigacao_saldo_kg)) { %>
         <div class="aviso erro mb-0">
-          <span class="ic">✕</span>
+          <%- ic('erro') %>
           <div>A quantidade do certificado é maior que o saldo fumigado disponível.
             Ajuste a quantidade ou valide outra fumigação.</div>
         </div>

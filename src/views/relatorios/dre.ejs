@@ -13,7 +13,7 @@
 
 <div class="cartao">
   <div class="cartao-topo">
-    <a href="/relatorios" class="btn pequeno nao-imprimir">← Relatórios</a>
+    <a href="/relatorios" class="btn pequeno nao-imprimir"><%- ic('voltar') %> Relatórios</a>
     <h2>DRE gerencial</h2>
     <span class="sub"><%= f.data(de) %> a <%= f.data(ate) %></span>
     <span style="flex:1"></span>
@@ -80,7 +80,7 @@
             </tr>
 
           <% } else { %>
-            <tr style="background:var(--verde-050);border-top:2px solid var(--linha-forte)">
+            <tr style="background:var(--marca-50);border-top:2px solid var(--linha-forte)">
               <td class="txt-forte" style="font-size:1rem"><%= linha.rotulo %></td>
               <td class="num txt-forte <%= cor(total) %>" style="font-size:1.1rem">
                 <%= f.formatar(total, 2) %>
@@ -98,7 +98,7 @@
   <% if (semCategoria.n > 0) { %>
     <div class="cartao-corpo">
       <div class="aviso atencao mb-0">
-        <span class="ic">!</span>
+        <%- ic('atencao') %>
         <div>
           <strong><%= semCategoria.n %> título(s) sem categoria financeira</strong>
           totalizando R$ <%= f.formatar(semCategoria.total, 2) %> não entram nesta DRE.

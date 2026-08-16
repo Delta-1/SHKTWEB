@@ -52,6 +52,22 @@ router.get('/', exigir('dashboard.visualizar'), async (req, res, next) => {
          WHERE COALESCE(t.emissao, CURRENT_DATE) BETWEEN $1 AND $2`, [de, ate]),
     ]);
 
+    // Fase 2: o que o comercial deixou em aberto
+    const comercial = await um(
+      `SELECT
+         (SELECT COUNT(*)::INT FROM pedidos_compra
+           WHERE status = 'AGUARDANDO_APROVACAO')                       AS compras_aguardando,
+         (SELECT COUNT(*)::INT FROM pedidos_venda
+           WHERE status = 'AGUARDANDO_APROVACAO')                       AS vendas_aguardando,
+         (SELECT COALESCE(SUM(i.quantidade_kg - i.recebido_kg), 0)
+            FROM pedido_compra_itens i JOIN pedidos_compra p ON p.id = i.pedido_id
+           WHERE p.status IN ('APROVADO','PARCIALMENTE_RECEBIDO'))::NUMERIC(18,3) AS a_receber_kg,
+         (SELECT COALESCE(SUM(i.quantidade_kg - i.atendido_kg), 0)
+            FROM pedido_venda_itens i JOIN pedidos_venda p ON p.id = i.pedido_id
+           WHERE p.status IN ('APROVADO','PARCIALMENTE_ATENDIDO'))::NUMERIC(18,3) AS a_embarcar_kg,
+         (SELECT COUNT(*)::INT FROM recebimentos WHERE status = 'RASCUNHO') AS recebimentos_pendentes`
+    );
+
     const [saldosContas, vencidos, semComunicado, certificadosRascunho, estoqueBaixo, carregamentosAbertos] =
       await Promise.all([
         muitos('SELECT * FROM vw_contas_saldos WHERE ativo ORDER BY tipo DESC, nome'),
@@ -118,8 +134,11 @@ router.get('/', exigir('dashboard.visualizar'), async (req, res, next) => {
       certificadosRascunho,
       estoqueBaixo,
       carregamentosAbertos,
+      comercial,
       alertaFumigacao: semComunicado.length,
       alertaVencidos: financeiro.qtd_vencidos,
+      alertaCompras: comercial.compras_aguardando + comercial.recebimentos_pendentes,
+      alertaVendas: comercial.vendas_aguardando,
     });
   } catch (e) {
     next(e);

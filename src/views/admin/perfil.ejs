@@ -2,7 +2,7 @@
 
 <form method="post" action="/admin/perfis/<%= perfil.id %>" class="cartao">
   <div class="cartao-topo">
-    <a href="/admin" class="btn pequeno">← Voltar</a>
+    <a href="/admin" class="btn pequeno"><%- ic('voltar') %> Voltar</a>
     <h2>Perfil: <%= perfil.nome %></h2>
     <% if (perfil.sistema) { %><span class="pill neutro">perfil de sistema</span><% } %>
   </div>
@@ -20,7 +20,7 @@
     </div>
 
     <div class="aviso info">
-      <span class="ic">i</span>
+      <%- ic('info') %>
       <div>
         As permissões valem no servidor, não apenas na tela: um usuário sem
         “Aprovar / Validar” não consegue validar um certificado nem digitando o endereço direto.
@@ -47,7 +47,7 @@
                     <% const p = `${m.codigo}.${acao}`; %>
                     <input type="checkbox" name="permissoes" value="<%= p %>"
                            <%= permissoes.includes(p) ? 'checked' : '' %>
-                           style="width:17px;height:17px;accent-color:var(--verde-600)"
+                           style="width:17px;height:17px;accent-color:var(--marca-600)"
                            aria-label="<%= m.nome %> — <%= acoesPermissao[acao] %>">
                   <% } else { %>
                     <span class="txt-fraco">—</span>

@@ -96,11 +96,13 @@ export async function atualizar(id, dados, usuario, contexto = {}) {
 
     const { rows } = await cx.query(
       `UPDATE fumigacoes SET
-          numero_comunicado = $1, fumigadora_id = $2, produto_id = $3, local_id = $4,
+          numero_comunicado = $1::TEXT, fumigadora_id = $2, produto_id = $3, local_id = $4,
           lote_id = $5, quantidade_kg = $6, quantidade_origem = $7, unidade_id = $8,
           data_hora_inicio = $9, data_hora_termino = $10, custo_tonelada = $11,
           moeda_id = $12, responsavel = $13, observacoes = $14,
-          status = CASE WHEN $1 IS NOT NULL AND btrim($1) <> '' AND status = 'RASCUNHO'
+          -- Informar o Comunicado tira a fumigação do rascunho sozinho: é o
+          -- passo que faz o pedido virar operação de verdade.
+          status = CASE WHEN btrim(COALESCE($1::TEXT, '')) <> '' AND status = 'RASCUNHO'
                         THEN 'EM_ANDAMENTO' ELSE status END,
           atualizado_por = $15
         WHERE id = $16

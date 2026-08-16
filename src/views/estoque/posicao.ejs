@@ -70,7 +70,7 @@
 
   <% if (!posicao.length) { %>
     <div class="vazio">
-      <span class="icone">▤</span>
+      <%- ic('vazio', 'icone') %>
       <p>Nenhum saldo de estoque para os filtros escolhidos.</p>
       <% if (pode('estoque.criar')) { %>
         <a href="/estoque/ajuste" class="btn primario">Registrar entrada inicial</a>

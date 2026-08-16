@@ -5,12 +5,17 @@ Sistema de gestão web da **SHKT INDÚSTRIA IMPORTAÇÃO & EXPORTAÇÃO LTDA**.
 Funciona inteiramente no navegador — notebook, tablet ou celular, de qualquer
 lugar, com login e senha. Não há programa para instalar na máquina do usuário.
 
-**Estado atual: FASE 1 concluída e testada.** O núcleo crítico da operação está
-pronto ponta a ponta:
+**Estado atual: FASES 1 e 2 concluídas e testadas.** O ciclo comercial e
+operacional está fechado ponta a ponta:
 
 ```
-Cadastros → Estoque → Fumigação → Certificado → Carregamento/Exportação → Financeiro
+Compra → Recebimento → Estoque → Fumigação → Certificado
+                                                  ↓
+                        Venda → Carregamento/Exportação → Financeiro
 ```
+
+Regra que organiza tudo: **pedido não move estoque**. Quem coloca grão no
+armazém é o *recebimento*; quem tira é a *expedição* do carregamento.
 
 ---
 
@@ -20,17 +25,27 @@ Cadastros → Estoque → Fumigação → Certificado → Carregamento/Exportaç
 |---|---|
 | **Painel** | Indicadores de estoque, saldo fumigado, financeiro e operação, com alertas do que está travando o dia. Somente leitura. |
 | **Cadastros** | Clientes, fornecedores, fumigadoras, transportadoras, produtos, lotes, veículos, motoristas, funcionários e tabelas de apoio. |
+| **Compras** | Pedido numerado (mercadoria, frete ou serviço) com itens, Incoterm, moeda e prazo. Aprovar trava o pedido e gera a previsão em Contas a Pagar. |
+| **Recebimento** | Entrada física com pesagem, veículo, motorista e nota fiscal. Recebimento parcial com saldo em aberto e registro de divergência entre previsto e recebido. Confirmar é o que dá entrada no estoque. |
+| **Vendas** | Pedido de venda com itens por produto/local. Aprovar reserva o estoque (sem tirar do físico) e gera o Contas a Receber. Cada carregamento consome o saldo do pedido. |
 | **Estoque** | Posição por produto/local/lote (físico, reservado, disponível, fumigado, expedido), movimentações, ajustes com motivo, transferências e estornos. |
 | **Fumigação** | Pedido numerado, Comunicado obrigatório para validar, conta-corrente de saldo fumigado. |
 | **Certificados** | Emissão a partir do saldo fumigado; ao validar, gera o Contas a Pagar automaticamente. |
-| **Carregamento** | Programação com reserva de estoque, expedição com baixa física, documentos (DANFE, MIC-DTA, CRT) e romaneio impresso. |
+| **Carregamento** | Programação com reserva de estoque, expedição com baixa física, vínculo opcional ao pedido de venda, documentos (DANFE, MIC-DTA, CRT) e romaneio impresso. |
 | **Financeiro** | Contas a pagar e receber, baixas parciais, estornos, caixa e bancos com extrato. |
 | **Relatórios** | Estoque, fumigação, certificados, carregamentos, financeiro, fluxo de caixa e DRE gerencial — com impressão e exportação para planilha. |
 | **Auditoria** | Registro imutável de quem fez o quê, quando, com valor anterior e posterior. |
 | **Administração** | Usuários, perfis de permissão por módulo/ação e parâmetros da empresa. |
 
-As próximas fases (Compras/Recebimento/Vendas, RH, Abastecimento, Viagens,
-Manutenção, Impostos) estão descritas em [`docs/ROADMAP.md`](docs/ROADMAP.md).
+As próximas fases (RH, Abastecimento, Viagens, Manutenção, Impostos) estão
+descritas em [`docs/ROADMAP.md`](docs/ROADMAP.md).
+
+### Aparência
+
+Tema claro e escuro, alternável no cabeçalho e lembrado por usuário. Telas
+pensadas para uso no celular no pátio: tabelas viram fichas empilhadas, botões
+com área de toque grande, e o sistema pode ser instalado como aplicativo
+(PWA).
 
 ---
 

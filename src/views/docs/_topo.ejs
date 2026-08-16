@@ -8,8 +8,16 @@
   <link rel="stylesheet" href="/estatico/css/app.css">
   <style>
     /* Layout de papel: o documento aparece centralizado na tela e ocupa a
-       folha inteira na impressão. */
-    body { background: #eef0f3; }
+       folha inteira na impressão.
+       Documento é papel: sempre tinta escura sobre branco, mesmo que o
+       operador esteja com o modo escuro ligado no resto do sistema. */
+    html {
+      color-scheme: light;
+      --papel: #fff; --papel-2: #fafafa; --papel-3: #f4f4f5; --fundo: #eef0f3;
+      --tinta: #09090b; --tinta-2: #3f3f46; --tinta-3: #71717a; --tinta-4: #a1a1aa;
+      --linha: #e4e4e7; --linha-forte: #d4d4d8;
+    }
+    body { background: #eef0f3; color: #09090b; }
     .folha {
       width: 210mm;
       min-height: 297mm;
@@ -20,11 +28,11 @@
     }
     .doc-cabecalho {
       display: flex; align-items: flex-start; gap: 14px;
-      border-bottom: 2px solid var(--verde-800); padding-bottom: 10px; margin-bottom: 6px;
+      border-bottom: 2px solid var(--marca-800); padding-bottom: 10px; margin-bottom: 6px;
     }
     .doc-cabecalho .marca { width: 56px; height: 56px; flex: none; }
     .doc-cabecalho .empresa { flex: 1; }
-    .doc-cabecalho .empresa strong { font-size: 1.05rem; display: block; color: var(--verde-900); }
+    .doc-cabecalho .empresa strong { font-size: 1.05rem; display: block; color: var(--marca-900); }
     .doc-cabecalho .empresa span { font-size: 0.72rem; color: var(--tinta-3); display: block; }
     .doc-cabecalho .identificacao { text-align: right; }
     .doc-cabecalho .identificacao .tipo {
@@ -32,7 +40,7 @@
       font-weight: 700;
     }
     .doc-cabecalho .identificacao .numero {
-      font-size: 1.5rem; font-weight: 700; font-family: var(--mono); color: var(--verde-800);
+      font-size: 1.5rem; font-weight: 700; font-family: var(--mono); color: var(--marca-800);
     }
     .doc-cabecalho .identificacao .data { font-size: 0.75rem; color: var(--tinta-3); }
 
@@ -83,10 +91,11 @@
   </style>
 </head>
 <body>
+<%- sprite %>
 
 <div class="barra-impressao">
-  <a href="javascript:history.back()" class="btn">← Voltar</a>
-  <button type="button" class="btn primario" data-imprimir>Imprimir / salvar PDF</button>
+  <a href="javascript:history.back()" class="btn"><%- ic('voltar') %> Voltar</a>
+  <button type="button" class="btn primario" data-imprimir><%- ic('imprimir') %> Imprimir / salvar PDF</button>
 </div>
 
 <div class="folha">

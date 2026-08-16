@@ -3,6 +3,7 @@ import { exigir } from '../lib/auth.js';
 import { carregar } from '../lib/referencias.js';
 import * as carregamento from '../services/carregamento.js';
 import * as certificadosSvc from '../services/certificados.js';
+import * as vendasSvc from '../services/vendas.js';
 import * as validar from '../lib/validar.js';
 import { ErroNaoEncontrado } from '../lib/erros.js';
 import { hojeISO } from '../lib/formato.js';
@@ -33,6 +34,7 @@ function lerFormulario(corpo) {
     paisDestinoId: validar.id(corpo.pais_destino_id, 'País de destino'),
     incotermId: validar.id(corpo.incoterm_id, 'Incoterm'),
     certificadoId: validar.id(corpo.certificado_id, 'Certificado de fumigação'),
+    pedidoVendaItemId: validar.id(corpo.pedido_venda_item_id, 'Item do pedido de venda'),
     tipoOperacao: validar.escolha(
       corpo.tipo_operacao,
       'Tipo de operação',
@@ -77,20 +79,37 @@ router.get('/', exigir('carregamento.visualizar'), async (req, res, next) => {
 // ------------------------------------------------------------------- novo
 router.get('/novo', exigir('carregamento.criar'), async (req, res, next) => {
   try {
-    const [ref, certificados] = await Promise.all([
+    const [ref, certificados, itensVenda] = await Promise.all([
       listasFormulario(),
       certificadosSvc.disponiveis(),
+      vendasSvc.itensEmAberto(),
     ]);
+
+    // Vindo do botao "Criar carregamento" de um pedido de venda, a tela ja
+    // nasce apontada para o primeiro item em aberto daquele pedido.
+    const doPedido = req.query.pedido_venda
+      ? itensVenda.find((i) => String(i.pedido_id) === String(req.query.pedido_venda))
+      : null;
 
     res.render('carregamento/form', {
       titulo: 'Nova ordem de carregamento',
       ref,
       certificados,
+      itensVenda,
       carregamento: {
         data: hojeISO(),
         tipo_operacao: 'EXPORTACAO',
         responsavel: req.usuario.nome,
         certificado_id: req.query.certificado || null,
+        pedido_venda_item_id: doPedido?.item_id ?? null,
+        cliente_id: doPedido?.cliente_id ?? null,
+        produto_id: doPedido?.produto_id ?? null,
+        local_id: doPedido?.local_id ?? null,
+        lote_id: doPedido?.lote_id ?? null,
+        unidade_id: doPedido?.unidade_id ?? null,
+        destino: doPedido?.destino ?? null,
+        pais_destino_id: doPedido?.pais_destino_id ?? null,
+        incoterm_id: doPedido?.incoterm_id ?? null,
       },
       novo: true,
     });
@@ -125,15 +144,17 @@ router.get('/:id/editar', exigir('carregamento.editar'), async (req, res, next) 
     const c = await carregamento.buscar(req.params.id);
     if (!c) throw new ErroNaoEncontrado('Carregamento não encontrado.');
 
-    const [ref, certificados] = await Promise.all([
+    const [ref, certificados, itensVenda] = await Promise.all([
       listasFormulario(),
       certificadosSvc.disponiveis(),
+      vendasSvc.itensEmAberto(),
     ]);
 
     res.render('carregamento/form', {
       titulo: `Editar carregamento ${c.numero}`,
       ref,
       certificados,
+      itensVenda,
       carregamento: c,
       novo: false,
     });

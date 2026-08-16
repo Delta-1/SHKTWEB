@@ -259,6 +259,28 @@ export async function reservar(cx, r) {
   return rows[0].id;
 }
 
+/**
+ * Repoe reserva: soma a quantidade a reserva ativa daquela posicao, ou cria
+ * uma se nao houver. Usada quando um embarque e desfeito e o compromisso
+ * com o cliente volta a valer.
+ */
+export async function reporReserva(cx, r) {
+  const { rows } = await cx.query(
+    'SELECT fn_reserva_repor($1,$2,$3,$4,$5,$6,$7,$8) AS id',
+    [
+      r.documentoTipo,
+      r.documentoId,
+      r.documentoNumero ?? null,
+      r.produtoId,
+      r.localId,
+      r.loteId ?? null,
+      r.quantidadeKg,
+      r.usuarioId ?? null,
+    ]
+  );
+  return rows[0].id;
+}
+
 /** Marca a reserva como consumida (a mercadoria saiu de verdade). */
 export async function consumirReserva(cx, documentoTipo, documentoId) {
   await cx.query(

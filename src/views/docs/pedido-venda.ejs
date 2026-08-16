@@ -1,0 +1,114 @@
+<%
+  const p = pedido;
+  const tipoDocumento = 'Pedido de Venda';
+  const numeroDocumento = p.numero;
+  const saldoKg = Math.max(Number(p.pedido_kg) - Number(p.atendido_kg), 0);
+%>
+<%- include('_topo', { tipoDocumento, numeroDocumento }) %>
+
+<% if (p.status === 'CANCELADO') { %>
+  <p class="txt-centro"><span class="doc-carimbo">CANCELADO</span></p>
+<% } %>
+
+<section class="doc-secao">
+  <h3>Cliente e destino</h3>
+  <div class="doc-grade">
+    <div class="campo-doc largo"><div class="rot">Cliente</div>
+      <div class="val"><%= p.cliente %></div></div>
+    <div class="campo-doc"><div class="rot">Data do pedido</div>
+      <div class="val"><%= f.data(p.data) %></div></div>
+    <div class="campo-doc"><div class="rot">Situação</div>
+      <div class="val"><%= f.rotuloStatus(p.status) %></div></div>
+    <div class="campo-doc largo"><div class="rot">Destino</div>
+      <div class="val"><%= p.destino || '—' %><%= p.pais_destino ? ' — ' + p.pais_destino : '' %></div></div>
+    <div class="campo-doc"><div class="rot">Incoterm</div><div class="val"><%= p.incoterm || '—' %></div></div>
+    <div class="campo-doc"><div class="rot">Previsão de embarque</div>
+      <div class="val"><%= p.previsao_embarque ? f.data(p.previsao_embarque) : '—' %></div></div>
+  </div>
+</section>
+
+<section class="doc-secao">
+  <h3>Mercadoria</h3>
+  <table class="tabela">
+    <thead>
+      <tr><th>Produto</th><th>Lote</th><th class="num">Quantidade</th>
+        <th class="num">Preço unit.</th><th class="num">Total</th></tr>
+    </thead>
+    <tbody>
+      <% for (const i of p.lista_itens) { %>
+        <tr>
+          <td><%= i.produto %></td>
+          <td class="mono"><%= i.lote || '—' %></td>
+          <td class="num"><%= f.formatar(i.quantidade_origem, 3) %> <%= i.unidade %></td>
+          <td class="num"><%= f.formatar(i.preco_unitario, 2) %></td>
+          <td class="num"><%= f.formatar(i.valor_total, 2) %></td>
+        </tr>
+      <% } %>
+    </tbody>
+    <tfoot>
+      <tr><td colspan="4" class="txt-dir">Total do pedido</td>
+        <td class="num"><%= p.moeda %> <%= f.formatar(p.valor_total, 2) %></td></tr>
+    </tfoot>
+  </table>
+</section>
+
+<section class="doc-secao">
+  <h3>Condições comerciais</h3>
+  <div class="doc-grade">
+    <div class="campo-doc largo"><div class="rot">Condição de pagamento</div>
+      <div class="val"><%= p.condicao_pagamento || (p.prazo_dias ? p.prazo_dias + ' dias' : '—') %></div></div>
+    <div class="campo-doc"><div class="rot">Moeda</div><div class="val"><%= p.moeda %></div></div>
+    <div class="campo-doc total"><div class="rot">Valor total</div>
+      <div class="val"><%= p.moeda %> <%= f.formatar(p.valor_total, 2) %></div></div>
+  </div>
+</section>
+
+<% if (Number(p.pedido_kg) > 0) { %>
+  <section class="doc-secao">
+    <h3>Situação do embarque</h3>
+    <div class="doc-grade">
+      <div class="campo-doc"><div class="rot">Vendido</div>
+        <div class="val"><%= f.toneladas(p.pedido_kg) %></div></div>
+      <div class="campo-doc"><div class="rot">Embarcado</div>
+        <div class="val"><%= f.toneladas(p.atendido_kg) %></div></div>
+      <div class="campo-doc total"><div class="rot">Saldo a embarcar</div>
+        <div class="val"><%= f.toneladas(saldoKg) %></div></div>
+    </div>
+
+    <% if (p.carregamentos && p.carregamentos.length) { %>
+      <table class="tabela mt-1">
+        <thead><tr><th>Carregamento</th><th>Data</th><th>Destino</th>
+          <th class="num">Quantidade</th><th>Situação</th></tr></thead>
+        <tbody>
+          <% for (const c of p.carregamentos) { %>
+            <tr>
+              <td class="doc"><%= c.numero %></td>
+              <td><%= f.data(c.data) %></td>
+              <td><%= c.destino || '—' %></td>
+              <td class="num"><%= f.toneladas(c.quantidade_kg) %></td>
+              <td><%= f.rotuloStatus(c.status) %></td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    <% } %>
+  </section>
+<% } %>
+
+<section class="doc-secao">
+  <h3>Observações</h3>
+  <div class="doc-observacao"><%= p.observacoes || '' %></div>
+</section>
+
+<div class="assinaturas">
+  <div class="linha-assinatura">
+    <div class="traco"></div>
+    <span><%= empresa.nomeCurto || 'SHKT' %> — vendedor</span>
+  </div>
+  <div class="linha-assinatura">
+    <div class="traco"></div>
+    <span><%= p.cliente %> — de acordo</span>
+  </div>
+</div>
+
+<%- include('_fim', { tipoDocumento, numeroDocumento }) %>

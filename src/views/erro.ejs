@@ -2,26 +2,38 @@
 <!doctype html><html lang="pt-BR"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title><%= titulo %> · ERP SHKT</title>
+<link rel="icon" href="/estatico/img/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/estatico/css/app.css">
-</head><body><div class="pagina" style="max-width:640px;margin:60px auto">
+<script>
+  (function () {
+    try {
+      var t = localStorage.getItem('shkt-tema');
+      if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'escuro' : 'claro';
+      if (t === 'escuro') document.documentElement.classList.add('escuro');
+    } catch (e) { /* sem storage */ }
+  })();
+</script>
+</head><body><%- sprite %><div class="pagina" style="max-width:640px;margin:60px auto">
 <% } %>
 
 <div class="cartao">
-  <div class="cartao-corpo txt-centro" style="padding:40px 24px">
-    <div style="font-size:2.5rem;line-height:1"><%= status === 404 ? '🔍' : status === 403 ? '🔒' : '⚠️' %></div>
+  <div class="cartao-corpo txt-centro" style="padding:44px 24px">
+    <%- ic(status === 404 ? 'buscar' : status === 403 ? 'chave' : 'atencao') %>
+    <style>.cartao-corpo > .ic { width:40px; height:40px; color: var(--tinta-4); stroke-width: 1.5; }</style>
     <h2 class="mt-2"><%= titulo %></h2>
     <p class="txt-fraco" style="max-width:520px;margin:10px auto 0"><%= mensagem %></p>
 
     <% if (detalhes) { %>
       <pre class="mono txt-min" style="text-align:left;background:var(--papel-2);border:1px solid var(--linha);
-           border-radius:8px;padding:12px;margin-top:20px;overflow:auto;max-height:300px"><%= detalhes %></pre>
+           border-radius:10px;padding:12px;margin-top:20px;overflow:auto;max-height:300px"><%= detalhes %></pre>
     <% } %>
 
     <div class="barra-acoes mt-2" style="justify-content:center">
-      <a href="javascript:history.back()" class="btn">Voltar</a>
-      <a href="/" class="btn primario">Ir para o painel</a>
+      <a href="javascript:history.back()" class="btn"><%- ic('voltar') %> Voltar</a>
+      <a href="/" class="btn primario"><%- ic('painel') %> Ir para o painel</a>
     </div>
   </div>
 </div>
 
-<% if (usuario) { %><%- include('partials/fim') %><% } else { %></div></body></html><% } %>
+<% if (usuario) { %><%- include('partials/fim') %><% } else { %></div>
+<script src="/estatico/js/app.js"></script></body></html><% } %>

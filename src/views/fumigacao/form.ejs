@@ -4,7 +4,7 @@
 
 <form method="post" action="<%= acao %>" class="cartao" style="max-width:1000px">
   <div class="cartao-topo">
-    <a href="<%= novo ? '/fumigacao' : '/fumigacao/' + fumigacao.id %>" class="btn pequeno">← Voltar</a>
+    <a href="<%= novo ? '/fumigacao' : '/fumigacao/' + fumigacao.id %>" class="btn pequeno"><%- ic('voltar') %> Voltar</a>
     <h2><%= novo ? 'Novo pedido de fumigação' : 'Editar fumigação ' + fumigacao.numero %></h2>
     <% if (!novo) { %>
       <span class="pill <%= f.classeStatus(fumigacao.status) %>"><%= f.rotuloStatus(fumigacao.status) %></span>

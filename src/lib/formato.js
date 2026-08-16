@@ -52,9 +52,28 @@ export function dataHoraInput(valor) {
 
 export const hojeISO = () => new Date().toISOString().slice(0, 10);
 
-/** Soma dias a uma data ISO. somarDias('2026-03-15', 10) -> '2026-03-25' */
+/**
+ * Normaliza para "aaaa-mm-dd".
+ * Uma coluna DATE volta do Postgres como objeto Date, e um campo de
+ * formulario volta como texto — as duas coisas precisam funcionar aqui,
+ * senao a conta de vencimento quebra dependendo de onde a data veio.
+ */
+export function paraISO(valor) {
+  if (!valor) return null;
+  if (valor instanceof Date) {
+    if (Number.isNaN(valor.getTime())) return null;
+    const mes = String(valor.getMonth() + 1).padStart(2, '0');
+    const dia = String(valor.getDate()).padStart(2, '0');
+    return `${valor.getFullYear()}-${mes}-${dia}`;
+  }
+  const texto = String(valor).slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(texto) ? texto : null;
+}
+
+/** Soma dias a uma data. somarDias('2026-03-15', 10) -> '2026-03-25' */
 export function somarDias(dataISO, dias) {
-  const d = new Date(`${String(dataISO).slice(0, 10)}T12:00:00Z`);
+  const base = paraISO(dataISO) || hojeISO();
+  const d = new Date(`${base}T12:00:00Z`);
   d.setUTCDate(d.getUTCDate() + Number(dias || 0));
   return d.toISOString().slice(0, 10);
 }
@@ -62,7 +81,7 @@ export function somarDias(dataISO, dias) {
 /** Diferenca em dias entre hoje e uma data (positivo = vencido ha N dias). */
 export function diasVencidos(dataISO) {
   if (!dataISO) return 0;
-  const alvo = new Date(`${String(dataISO).slice(0, 10)}T12:00:00Z`);
+  const alvo = new Date(`${paraISO(dataISO) || hojeISO()}T12:00:00Z`);
   const hoje = new Date(`${hojeISO()}T12:00:00Z`);
   return Math.round((hoje - alvo) / 86_400_000);
 }
@@ -107,6 +126,9 @@ export const STATUS_ROTULOS = {
   EXPEDIDO: 'Expedido',
   PARCIALMENTE_RECEBIDO: 'Parcialmente recebido',
   RECEBIDO: 'Recebido',
+  PARCIALMENTE_ATENDIDO: 'Parcialmente atendido',
+  ATENDIDO: 'Atendido',
+  CONFIRMADO: 'Confirmado',
   CONCLUIDO: 'Concluído',
   CANCELADO: 'Cancelado',
   CANCELADA: 'Cancelada',
@@ -130,6 +152,10 @@ export const STATUS_CLASSES = {
   VALIDADO: 'ok',
   EXPEDIDO: 'ok',
   RECEBIDO: 'ok',
+  ATENDIDO: 'ok',
+  CONFIRMADO: 'ok',
+  PARCIALMENTE_RECEBIDO: 'info',
+  PARCIALMENTE_ATENDIDO: 'info',
   CONCLUIDO: 'ok',
   PAGO: 'ok',
   ABERTO: 'atencao',
@@ -154,6 +180,7 @@ export function escapar(texto) {
 export default {
   data,
   dataHora,
+  paraISO,
   dataInput,
   dataHoraInput,
   hojeISO,

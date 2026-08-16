@@ -1,0 +1,127 @@
+<%- include('../partials/topo') %>
+
+<% if (aguardando.length) { %>
+  <div class="cartao">
+    <div class="cartao-topo">
+      <h2>Pedidos aguardando entrega</h2>
+      <span class="sub">mercadoria comprada que ainda não chegou</span>
+    </div>
+    <div class="tabela-area">
+      <table class="tabela responsiva">
+        <thead>
+          <tr><th>Pedido</th><th>Fornecedor</th><th>Previsão</th><th class="num">Falta chegar</th><th></th></tr>
+        </thead>
+        <tbody>
+          <% for (const p of aguardando) { %>
+            <tr>
+              <td data-rot="Pedido" class="doc"><a href="/compras/<%= p.id %>"><%= p.numero %></a></td>
+              <td data-rot="Fornecedor"><%= p.fornecedor %></td>
+              <td data-rot="Previsão" class="txt-min"><%= p.previsao_entrega ? f.data(p.previsao_entrega) : '—' %></td>
+              <td data-rot="Falta chegar" class="num txt-forte"><%= f.toneladas(p.saldo_kg) %></td>
+              <td class="acoes">
+                <% if (pode('compras.criar')) { %>
+                  <a href="/recebimentos/novo?pedido=<%= p.id %>" class="btn primario pequeno">
+                    <%- ic('recebimento') %> Receber
+                  </a>
+                <% } %>
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% } %>
+
+<div class="cartao">
+  <div class="cartao-topo">
+    <h2>Recebimentos</h2>
+    <span class="sub">é aqui que a mercadoria entra no estoque</span>
+    <span style="flex:1"></span>
+    <% if (pode('compras.criar')) { %>
+      <a href="/recebimentos/novo" class="btn primario pequeno"><%- ic('mais') %> Novo recebimento</a>
+    <% } %>
+  </div>
+
+  <form method="get" class="filtros">
+    <div class="campo largo">
+      <label for="busca">Buscar</label>
+      <input type="search" id="busca" name="busca" value="<%= filtros.busca || '' %>"
+             placeholder="Nº, nota fiscal, placa ou fornecedor">
+    </div>
+    <div class="campo">
+      <label for="status">Situação</label>
+      <select id="status" name="status">
+        <option value="">Todas</option>
+        <% for (const s of ['RASCUNHO','CONFIRMADO','CANCELADO']) { %>
+          <option value="<%= s %>" <%= filtros.status === s ? 'selected' : '' %>><%= f.rotuloStatus(s) %></option>
+        <% } %>
+      </select>
+    </div>
+    <div class="campo">
+      <label for="fornecedor">Fornecedor</label>
+      <select id="fornecedor" name="fornecedor">
+        <option value="">Todos</option>
+        <% for (const p of ref.fornecedores) { %>
+          <option value="<%= p.id %>" <%= String(filtros.fornecedorId) === String(p.id) ? 'selected' : '' %>><%= p.nome %></option>
+        <% } %>
+      </select>
+    </div>
+    <div class="campo"><label for="de">De</label>
+      <input type="date" id="de" name="de" value="<%= filtros.de || '' %>"></div>
+    <div class="campo"><label for="ate">Até</label>
+      <input type="date" id="ate" name="ate" value="<%= filtros.ate || '' %>"></div>
+    <span class="espaco"></span>
+    <button type="submit" class="btn"><%- ic('buscar') %> Filtrar</button>
+    <a href="/recebimentos" class="btn">Limpar</a>
+  </form>
+
+  <% if (!lista.length) { %>
+    <div class="vazio">
+      <%- ic('vazio', 'icone') %>
+      <p>Nenhum recebimento encontrado.</p>
+      <% if (pode('compras.criar')) { %>
+        <a href="/recebimentos/novo" class="btn primario"><%- ic('mais') %> Lançar recebimento</a>
+      <% } %>
+    </div>
+  <% } else { %>
+    <div class="tabela-area">
+      <table class="tabela responsiva">
+        <thead>
+          <tr>
+            <th>Nº</th><th>Fornecedor</th><th>Pedido</th><th>Nota fiscal</th>
+            <th>Local</th><th class="num">Quantidade</th><th>Situação</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (const r of lista) { %>
+            <tr class="<%= r.status === 'CANCELADO' ? 'linha-cancelada' : '' %>">
+              <td data-rot="Nº" class="doc">
+                <a href="/recebimentos/<%= r.id %>"><%= r.numero %></a>
+                <div class="txt-min txt-fraco"><%= f.data(r.data) %></div>
+              </td>
+              <td data-rot="Fornecedor"><%= r.fornecedor %></td>
+              <td data-rot="Pedido" class="doc txt-min">
+                <% if (r.pedido_compra_id) { %>
+                  <a href="/compras/<%= r.pedido_compra_id %>"><%= r.pedido_numero %></a>
+                <% } else { %><span class="txt-fraco">avulso</span><% } %>
+              </td>
+              <td data-rot="Nota fiscal" class="mono txt-min"><%= r.documento_fiscal || '—' %></td>
+              <td data-rot="Local" class="txt-min"><%= r.local %></td>
+              <td data-rot="Quantidade" class="num txt-forte"><%= f.toneladas(r.quantidade_kg) %></td>
+              <td data-rot="Situação">
+                <span class="pill <%= f.classeStatus(r.status) %>"><%= f.rotuloStatus(r.status) %></span>
+                <% if (r.divergencias) { %>
+                  <span class="pill atencao" title="Diferença entre o previsto e o recebido"><%= r.divergencias %> diverg.</span>
+                <% } %>
+              </td>
+              <td class="acoes"><a href="/recebimentos/<%= r.id %>" class="btn pequeno">Abrir</a></td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>
+
+<%- include('../partials/fim') %>

@@ -1,7 +1,7 @@
 <%- include('../partials/topo') %>
 
 <div class="aviso info" style="max-width:900px">
-  <span class="ic">i</span>
+  <%- ic('info') %>
   <div>
     <strong>Ajuste manual de estoque</strong>
     Use apenas para saldo de implantação, quebra técnica, sobra de balança ou correção
@@ -12,7 +12,7 @@
 
 <form method="post" action="/estoque/ajuste" class="cartao" style="max-width:900px">
   <div class="cartao-topo">
-    <a href="/estoque" class="btn pequeno">← Voltar</a>
+    <a href="/estoque" class="btn pequeno"><%- ic('voltar') %> Voltar</a>
     <h2>Ajuste de estoque</h2>
   </div>
 

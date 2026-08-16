@@ -22,7 +22,7 @@
 
 <div class="cartao">
   <div class="cartao-topo">
-    <a href="<%= voltar %>" class="btn pequeno nao-imprimir">← Relatórios</a>
+    <a href="<%= voltar %>" class="btn pequeno nao-imprimir"><%- ic('voltar') %> Relatórios</a>
     <h2><%= titulo %></h2>
     <% if (typeof subtitulo !== 'undefined' && subtitulo) { %>
       <span class="sub"><%= subtitulo %></span>

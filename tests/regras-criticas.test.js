@@ -214,6 +214,47 @@ test('validar Comunicado obrigatório', async () => {
   assert.equal(depois.status, 'RASCUNHO');
 });
 
+test('informar o Comunicado pela edição tira a fumigação do rascunho', async () => {
+  // Este é o caminho que o operador usa de verdade: abre a fumigação e digita
+  // o número do Comunicado quando ele chega. Sem isto funcionar, o passo mais
+  // importante do fluxo fica inacessível pela tela.
+  const f = await fumigacaoSvc.criar(
+    {
+      fumigadoraId: ref.fumigadoraId,
+      produtoId: ref.produtoId,
+      localId: ref.localId,
+      quantidade: '100',
+      unidadeId: ref.tonId,
+      moedaId: ref.brlId,
+    },
+    usuario
+  );
+  assert.equal(f.status, 'RASCUNHO');
+
+  const dados = {
+    numeroComunicado: 'COM-2026-0001',
+    fumigadoraId: ref.fumigadoraId,
+    produtoId: ref.produtoId,
+    localId: ref.localId,
+    quantidade: '100',
+    unidadeId: ref.tonId,
+    moedaId: ref.brlId,
+  };
+  const comComunicado = await fumigacaoSvc.atualizar(f.id, dados, usuario);
+
+  assert.equal(comComunicado.numero_comunicado, 'COM-2026-0001');
+  assert.equal(comComunicado.status, 'EM_ANDAMENTO', 'o comunicado tira do rascunho sozinho');
+
+  // Salvar de novo sem mexer no comunicado não pode reverter a situação
+  const denovo = await fumigacaoSvc.atualizar(f.id, dados, usuario);
+  assert.equal(denovo.status, 'EM_ANDAMENTO');
+
+  // E agora a validação passa
+  await fumigacaoSvc.validar(f.id, { termino: new Date().toISOString() }, usuario);
+  const validada = await um('SELECT status FROM fumigacoes WHERE id = $1', [f.id]);
+  assert.equal(validada.status, 'VALIDADA');
+});
+
 test('impedir certificado acima do saldo fumigado', async () => {
   const f = await fumigacaoValidada(500);
 

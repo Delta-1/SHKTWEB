@@ -4,13 +4,13 @@
 
 <form method="post" action="/financeiro/<%= segmento %>/novo" class="cartao" style="max-width:960px">
   <div class="cartao-topo">
-    <a href="/financeiro/<%= segmento %>" class="btn pequeno">← Voltar</a>
+    <a href="/financeiro/<%= segmento %>" class="btn pequeno"><%- ic('voltar') %> Voltar</a>
     <h2>Novo título — <%= ehPagar ? 'contas a pagar' : 'contas a receber' %></h2>
   </div>
 
   <div class="cartao-corpo">
     <div class="aviso info">
-      <span class="ic">i</span>
+      <%- ic('info') %>
       <div>
         Use esta tela apenas para lançamentos <strong>manuais</strong>. Títulos originados de
         fumigação, compras, RH ou manutenção são gerados automaticamente pelos respectivos

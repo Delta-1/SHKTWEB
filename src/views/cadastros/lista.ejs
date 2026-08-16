@@ -55,7 +55,7 @@
 
   <% if (!registros.length) { %>
     <div class="vazio">
-      <span class="icone">◇</span>
+      <%- ic('vazio', 'icone') %>
       <p>
         <% if (busca) { %>
           Nenhum registro encontrado para “<%= busca %>”.

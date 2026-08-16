@@ -3,9 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0b2018">
+  <meta name="theme-color" content="#09090b">
   <title>Entrar · ERP SHKT</title>
   <link rel="icon" href="/estatico/img/logo.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="/estatico/css/app.css">
   <link rel="manifest" href="/estatico/manifest.webmanifest">
   <link rel="apple-touch-icon" href="/estatico/img/icone-180.png">
@@ -13,18 +14,19 @@
   <meta name="apple-mobile-web-app-title" content="ERP SHKT">
 </head>
 <body class="login-tela">
+  <%- sprite %>
   <div class="login-caixa">
     <div class="login-marca">
-      <img src="/estatico/img/logo.svg" alt="SHKT" class="logo" style="width:52px;height:52px">
+      <img src="/estatico/img/logo.svg" alt="SHKT" class="logo" style="width:54px;height:54px">
       <h1>ERP SHKT</h1>
       <p>Indústria, Importação &amp; Exportação</p>
     </div>
 
     <% if (erro) { %>
-      <div class="aviso erro"><span class="ic">✕</span><div><%= erro %></div></div>
+      <div class="aviso erro"><%- ic('erro') %><div><%= erro %></div></div>
     <% } %>
     <% if (typeof aviso !== 'undefined' && aviso) { %>
-      <div class="aviso ok"><span class="ic">✓</span><div><%= aviso %></div></div>
+      <div class="aviso ok"><%- ic('ok') %><div><%= aviso %></div></div>
     <% } %>
 
     <form method="post" action="/login">
@@ -33,26 +35,28 @@
         <div class="campo c12">
           <label for="email">E-mail</label>
           <input type="email" id="email" name="email" value="<%= email || '' %>"
-                 autocomplete="username" required data-foco>
+                 autocomplete="username" placeholder="voce@shkt.com.br" required data-foco>
         </div>
         <div class="campo c12">
           <label for="senha">Senha</label>
-          <input type="password" id="senha" name="senha" autocomplete="current-password" required>
+          <input type="password" id="senha" name="senha" autocomplete="current-password"
+                 placeholder="••••••••" required>
         </div>
         <div class="campo c12">
-          <button type="submit" class="btn primario bloco">Entrar</button>
+          <button type="submit" class="btn primario bloco"><%- ic('sair') %> Entrar</button>
         </div>
       </div>
     </form>
 
     <button type="button" class="btn bloco mt-2 oculto" data-instalar>
-      Instalar como aplicativo
+      <%- ic('instalar') %> Instalar como aplicativo
     </button>
 
     <p class="txt-min txt-fraco txt-centro mt-2 mb-0">
       Acesso restrito. Todas as ações são registradas.
     </p>
   </div>
+  <div class="torre-avisos" id="avisos" aria-live="polite"></div>
   <script src="/estatico/js/app.js"></script>
 </body>
 </html>

@@ -1,0 +1,266 @@
+<%- include('../partials/topo') %>
+
+<% const p = pedido;
+   const editavel = ['RASCUNHO','AGUARDANDO_APROVACAO'].includes(p.status);
+   const emAberto = ['APROVADO','PARCIALMENTE_RECEBIDO'].includes(p.status);
+   const saldoKg = Math.max(Number(p.pedido_kg) - Number(p.recebido_kg), 0); %>
+
+<div class="cartao">
+  <div class="cartao-topo">
+    <a href="/compras" class="btn pequeno"><%- ic('voltar') %> Lista</a>
+    <h2>Pedido de compra <span class="mono"><%= p.numero %></span></h2>
+    <span class="pill <%= f.classeStatus(p.status) %>"><%= f.rotuloStatus(p.status) %></span>
+    <span style="flex:1"></span>
+    <a href="/compras/<%= p.id %>/documento" class="btn pequeno" target="_blank"><%- ic('imprimir') %> Imprimir</a>
+    <% if (editavel && pode('compras.editar')) { %>
+      <a href="/compras/<%= p.id %>/editar" class="btn pequeno"><%- ic('editar') %> Editar</a>
+    <% } %>
+    <% if (emAberto && p.tipo === 'MERCADORIA' && pode('compras.criar')) { %>
+      <a href="/recebimentos/novo?pedido=<%= p.id %>" class="btn primario pequeno">
+        <%- ic('recebimento') %> Receber mercadoria
+      </a>
+    <% } %>
+  </div>
+
+  <div class="cartao-corpo">
+    <!-- Rastreabilidade: pedido → recebimento → estoque → financeiro -->
+    <div class="trilha mb-2">
+      <span class="elo">
+        <span class="rot">Pedido</span>
+        <span class="mono"><%= p.numero %></span>
+      </span>
+      <span class="seta">→</span>
+      <span class="elo">
+        <span class="rot">Recebimentos</span>
+        <% if (p.recebimentos.length) { %>
+          <% for (const r of p.recebimentos) { %>
+            <a href="/recebimentos/<%= r.id %>" class="mono"><%= r.numero %></a>
+          <% } %>
+        <% } else { %><span class="txt-fraco">nenhum</span><% } %>
+      </span>
+      <span class="seta">→</span>
+      <span class="elo">
+        <span class="rot">Contas a pagar</span>
+        <% if (p.titulo) { %>
+          <a href="/financeiro/pagar/<%= p.titulo.id %>" class="mono"><%= p.titulo.numero %></a>
+        <% } else { %><span class="txt-fraco">—</span><% } %>
+      </span>
+    </div>
+
+    <div class="ficha">
+      <div class="item"><div class="rot">Fornecedor</div><div class="val"><%= p.fornecedor %></div></div>
+      <div class="item"><div class="rot">Tipo</div>
+        <div class="val"><%= p.tipo === 'MERCADORIA' ? 'Mercadoria' : p.tipo === 'FRETE' ? 'Frete' : 'Serviço' %></div></div>
+      <div class="item"><div class="rot">Data</div><div class="val"><%= f.data(p.data) %></div></div>
+      <div class="item"><div class="rot">Previsão de entrega</div>
+        <div class="val"><%= p.previsao_entrega ? f.data(p.previsao_entrega) : '—' %></div></div>
+      <div class="item"><div class="rot">Local de entrega</div>
+        <div class="val"><%= p.local_entrega || '—' %></div></div>
+      <div class="item"><div class="rot">Incoterm</div><div class="val"><%= p.incoterm || '—' %></div></div>
+      <div class="item"><div class="rot">Condição de pagamento</div>
+        <div class="val"><%= p.condicao_pagamento || (p.prazo_dias ? p.prazo_dias + ' dias' : '—') %></div></div>
+      <div class="item"><div class="rot">Valor total</div>
+        <div class="val grande"><%= p.moeda %> <%= f.formatar(p.valor_total, 2) %></div></div>
+    </div>
+
+    <% if (p.tipo === 'MERCADORIA' && Number(p.pedido_kg) > 0) { %>
+      <div class="grade grade-3 mt-2">
+        <div class="indicador">
+          <div class="rotulo">Pedido</div>
+          <div class="valor"><%= f.toneladas(p.pedido_kg) %></div>
+        </div>
+        <div class="indicador">
+          <div class="rotulo">Já recebido</div>
+          <div class="valor"><%= f.toneladas(p.recebido_kg) %></div>
+          <div class="barra">
+            <div class="parte<%= saldoKg > 0 ? ' cheio' : '' %>"
+                 data-largura="<%= Math.min(100, Math.round((Number(p.recebido_kg) / Number(p.pedido_kg)) * 100)) %>%"></div>
+          </div>
+        </div>
+        <div class="indicador <%= saldoKg > 0 ? 'atencao' : 'destaque' %>">
+          <div class="rotulo">Saldo a receber</div>
+          <div class="valor"><%= f.toneladas(saldoKg) %></div>
+          <div class="apoio"><%= saldoKg > 0 ? 'ainda em aberto com o fornecedor' : 'pedido atendido por completo' %></div>
+        </div>
+      </div>
+    <% } %>
+
+    <% if (p.observacoes) { %>
+      <p class="txt-min txt-fraco mt-2 mb-0"><strong>Observações:</strong> <%= p.observacoes %></p>
+    <% } %>
+
+    <% if (p.status === 'CANCELADO') { %>
+      <div class="aviso erro mt-2 mb-0">
+        <%- ic('erro') %>
+        <div><strong>Cancelado em <%= f.dataHora(p.cancelado_em) %></strong><%= p.motivo_cancelamento %></div>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<!-- ------------------------------------------------------------------ itens -->
+<div class="cartao">
+  <div class="cartao-topo"><h2>Itens</h2>
+    <span class="sub"><%= p.itens %> item(ns)</span></div>
+  <div class="tabela-area">
+    <table class="tabela responsiva">
+      <thead>
+        <tr>
+          <th>Item</th><th>Produto</th>
+          <th class="num">Pedido</th><th class="num">Recebido</th><th class="num">Saldo</th>
+          <th class="num">Preço unit.</th><th class="num">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% for (const i of p.lista_itens) { %>
+          <tr>
+            <td data-rot="Item"><%= i.descricao %></td>
+            <td data-rot="Produto" class="txt-min"><%= i.produto || '—' %></td>
+            <td data-rot="Pedido" class="num"><%= f.formatar(i.quantidade_origem, 3) %> <%= i.unidade %></td>
+            <td data-rot="Recebido" class="num"><%= f.toneladas(i.recebido_kg) %></td>
+            <td data-rot="Saldo" class="num <%= Number(i.saldo_kg) > 0 ? 'txt-atencao txt-forte' : '' %>">
+              <%= f.toneladas(i.saldo_kg) %>
+            </td>
+            <td data-rot="Preço unit." class="num"><%= f.formatar(i.preco_unitario, 2) %></td>
+            <td data-rot="Total" class="num txt-forte"><%= f.formatar(i.valor_total, 2) %></td>
+          </tr>
+        <% } %>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="6" class="txt-dir">Total do pedido</td>
+          <td class="num"><%= p.moeda %> <%= f.formatar(p.valor_total, 2) %></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+
+<!-- ----------------------------------------------------------- aprovação -->
+<% if (editavel) { %>
+  <div class="cartao">
+    <div class="cartao-topo"><h2>Próximo passo</h2></div>
+    <div class="cartao-corpo">
+      <% if (p.status === 'RASCUNHO' && pode('compras.editar')) { %>
+        <p class="txt-min mb-2">
+          Enquanto o pedido está em rascunho, tudo pode ser corrigido. Ao enviar para aprovação,
+          ele fica visível para quem aprova e sai da sua fila.
+        </p>
+        <form method="post" action="/compras/<%= p.id %>/enviar" style="display:inline">
+          <button type="submit" class="btn"><%- ic('avancar') %> Enviar para aprovação</button>
+        </form>
+      <% } %>
+
+      <% if (pode('compras.aprovar')) { %>
+        <p class="txt-min mb-2 mt-2">Ao aprovar, em uma única operação o sistema irá:</p>
+        <ol class="txt-min" style="margin:0 0 16px;padding-left:20px;line-height:1.9">
+          <li>travar itens, quantidades e preços — o compromisso passa a valer;</li>
+          <li>gerar o <strong>Contas a Pagar</strong> de
+              <strong><%= p.moeda %> <%= f.formatar(p.valor_total, 2) %></strong>
+              para <strong><%= p.fornecedor %></strong>;</li>
+          <li>liberar o pedido para receber mercadoria;</li>
+          <li>registrar tudo na auditoria.</li>
+        </ol>
+        <p class="txt-min txt-fraco mb-2">
+          <strong>O estoque não se mexe aqui.</strong> Ele só muda quando o recebimento for confirmado.
+        </p>
+        <form method="post" action="/compras/<%= p.id %>/aprovar">
+          <button type="submit" class="btn primario"
+                  data-confirmar="Aprovar o pedido <%= p.numero %>? Isso gera o título financeiro de <%= p.moeda %> <%= f.formatar(p.valor_total, 2) %>.">
+            <%- ic('ok') %> Aprovar e gerar contas a pagar
+          </button>
+        </form>
+      <% } %>
+    </div>
+  </div>
+<% } %>
+
+<!-- --------------------------------------------------------- recebimentos -->
+<% if (p.recebimentos.length) { %>
+  <div class="cartao">
+    <div class="cartao-topo"><h2>Recebimentos deste pedido</h2></div>
+    <div class="tabela-area">
+      <table class="tabela">
+        <thead><tr><th>Nº</th><th>Data</th><th>Documento fiscal</th><th class="num">Quantidade</th><th>Situação</th><th></th></tr></thead>
+        <tbody>
+          <% for (const r of p.recebimentos) { %>
+            <tr class="<%= r.status === 'CANCELADO' ? 'linha-cancelada' : '' %>">
+              <td class="doc"><a href="/recebimentos/<%= r.id %>"><%= r.numero %></a></td>
+              <td><%= f.data(r.data) %></td>
+              <td class="mono txt-min"><%= r.documento_fiscal || '—' %></td>
+              <td class="num"><%= f.toneladas(r.quantidade_kg) %></td>
+              <td><span class="pill <%= f.classeStatus(r.status) %>"><%= f.rotuloStatus(r.status) %></span></td>
+              <td class="acoes"><a href="/recebimentos/<%= r.id %>" class="btn pequeno">Abrir</a></td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% } %>
+
+<!-- ------------------------------------------------------------ financeiro -->
+<% if (p.titulo) { %>
+  <div class="cartao">
+    <div class="cartao-topo">
+      <h2>Título financeiro gerado</h2>
+      <span class="sub">criado automaticamente pela aprovação deste pedido</span>
+    </div>
+    <div class="tabela-area">
+      <table class="tabela">
+        <thead><tr><th>Título</th><th>Beneficiário</th><th>Vencimento</th><th class="num">Valor</th><th>Situação</th><th></th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="doc"><a href="/financeiro/pagar/<%= p.titulo.id %>"><%= p.titulo.numero %></a></td>
+            <td><%= p.fornecedor %></td>
+            <td><%= f.data(p.titulo.vencimento) %></td>
+            <td class="num txt-forte"><%= f.formatar(p.titulo.valor, 2) %></td>
+            <td><span class="pill <%= f.classeStatus(p.titulo.status) %>"><%= f.rotuloStatus(p.titulo.status) %></span></td>
+            <td class="acoes"><a href="/financeiro/pagar/<%= p.titulo.id %>" class="btn pequeno">Abrir</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% } %>
+
+<!-- --------------------------------------------------------------- cancelar -->
+<% if (p.status !== 'CANCELADO' && pode('compras.cancelar')) { %>
+  <div class="barra-acoes mt-2">
+    <span class="espaco"></span>
+    <button type="button" class="btn contorno-perigo" data-modal="#modal-cancelar">
+      <%- ic('erro') %> Cancelar pedido
+    </button>
+  </div>
+
+  <dialog class="modal" id="modal-cancelar">
+    <form method="post" action="/compras/<%= p.id %>/cancelar">
+      <div class="modal-topo"><h2>Cancelar pedido <%= p.numero %></h2></div>
+      <div class="modal-corpo">
+        <p class="txt-min">
+          <% if (p.titulo) { %>
+            O título <span class="mono"><%= p.titulo.numero %></span> é cancelado junto.
+          <% } %>
+          O pedido permanece no histórico com o motivo registrado.
+        </p>
+        <% if (p.recebimentos.some(r => r.status === 'CONFIRMADO')) { %>
+          <div class="aviso atencao">
+            <%- ic('atencao') %>
+            <div>Este pedido já tem recebimento confirmado. Cancele o recebimento primeiro —
+              é ele que devolve o estoque.</div>
+          </div>
+        <% } %>
+        <div class="campo">
+          <label for="motivo-cancelar">Motivo <span class="obrigatorio">*</span></label>
+          <textarea id="motivo-cancelar" name="motivo" rows="3" required minlength="5"></textarea>
+        </div>
+      </div>
+      <div class="modal-rodape">
+        <button type="button" class="btn" data-fechar-modal>Voltar</button>
+        <button type="submit" class="btn perigo">Confirmar cancelamento</button>
+      </div>
+    </form>
+  </dialog>
+<% } %>
+
+<%- include('../partials/fim') %>

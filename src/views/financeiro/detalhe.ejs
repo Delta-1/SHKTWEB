@@ -10,7 +10,7 @@
 
 <div class="cartao">
   <div class="cartao-topo">
-    <a href="/financeiro/<%= segmento %>" class="btn pequeno">← Lista</a>
+    <a href="/financeiro/<%= segmento %>" class="btn pequeno"><%- ic('voltar') %> Lista</a>
     <h2><%= ehPagar ? 'Contas a pagar' : 'Contas a receber' %> <span class="mono"><%= t.numero %></span></h2>
     <span class="pill <%= f.classeStatus(t.status) %>"><%= f.rotuloStatus(t.status) %></span>
     <% if (vencido) { %>
@@ -71,7 +71,7 @@
 
     <% if (t.status === 'CANCELADO') { %>
       <div class="aviso erro mt-2 mb-0">
-        <span class="ic">✕</span><div><%= t.motivo_cancelamento %></div>
+        <%- ic('erro') %><div><%= t.motivo_cancelamento %></div>
       </div>
     <% } %>
   </div>

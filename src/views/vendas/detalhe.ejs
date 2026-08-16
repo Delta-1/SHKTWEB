@@ -1,0 +1,268 @@
+<%- include('../partials/topo') %>
+
+<% const p = pedido;
+   const editavel = ['RASCUNHO','AGUARDANDO_APROVACAO'].includes(p.status);
+   const emAberto = ['APROVADO','PARCIALMENTE_ATENDIDO'].includes(p.status);
+   const saldoKg = Math.max(Number(p.pedido_kg) - Number(p.atendido_kg), 0); %>
+
+<div class="cartao">
+  <div class="cartao-topo">
+    <a href="/vendas" class="btn pequeno"><%- ic('voltar') %> Lista</a>
+    <h2>Pedido de venda <span class="mono"><%= p.numero %></span></h2>
+    <span class="pill <%= f.classeStatus(p.status) %>"><%= f.rotuloStatus(p.status) %></span>
+    <span style="flex:1"></span>
+    <a href="/vendas/<%= p.id %>/documento" class="btn pequeno" target="_blank"><%- ic('imprimir') %> Imprimir</a>
+    <% if (editavel && pode('vendas.editar')) { %>
+      <a href="/vendas/<%= p.id %>/editar" class="btn pequeno"><%- ic('editar') %> Editar</a>
+    <% } %>
+    <% if (emAberto && pode('carregamento.criar')) { %>
+      <a href="/carregamentos/novo?pedido_venda=<%= p.id %>" class="btn primario pequeno">
+        <%- ic('carregamento') %> Criar carregamento
+      </a>
+    <% } %>
+  </div>
+
+  <div class="cartao-corpo">
+    <div class="trilha mb-2">
+      <span class="elo"><span class="rot">Pedido</span><span class="mono"><%= p.numero %></span></span>
+      <span class="seta">→</span>
+      <span class="elo">
+        <span class="rot">Carregamentos</span>
+        <% if (p.carregamentos.length) { %>
+          <% for (const c of p.carregamentos) { %>
+            <a href="/carregamentos/<%= c.id %>" class="mono"><%= c.numero %></a>
+          <% } %>
+        <% } else { %><span class="txt-fraco">nenhum</span><% } %>
+      </span>
+      <span class="seta">→</span>
+      <span class="elo">
+        <span class="rot">Contas a receber</span>
+        <% if (p.titulo) { %>
+          <a href="/financeiro/receber/<%= p.titulo.id %>" class="mono"><%= p.titulo.numero %></a>
+        <% } else { %><span class="txt-fraco">—</span><% } %>
+      </span>
+    </div>
+
+    <div class="ficha">
+      <div class="item"><div class="rot">Cliente</div><div class="val"><%= p.cliente %></div></div>
+      <div class="item"><div class="rot">Destino</div>
+        <div class="val"><%= p.destino || '—' %>
+          <% if (p.pais_destino) { %><div class="txt-min txt-fraco"><%= p.pais_destino %></div><% } %></div></div>
+      <div class="item"><div class="rot">Data</div><div class="val"><%= f.data(p.data) %></div></div>
+      <div class="item"><div class="rot">Previsão de embarque</div>
+        <div class="val"><%= p.previsao_embarque ? f.data(p.previsao_embarque) : '—' %></div></div>
+      <div class="item"><div class="rot">Incoterm</div><div class="val"><%= p.incoterm || '—' %></div></div>
+      <div class="item"><div class="rot">Condição de pagamento</div>
+        <div class="val"><%= p.condicao_pagamento || (p.prazo_dias ? p.prazo_dias + ' dias' : '—') %></div></div>
+      <div class="item"><div class="rot">Valor total</div>
+        <div class="val grande"><%= p.moeda %> <%= f.formatar(p.valor_total, 2) %></div></div>
+    </div>
+
+    <% if (Number(p.pedido_kg) > 0) { %>
+      <div class="grade grade-3 mt-2">
+        <div class="indicador">
+          <div class="rotulo">Vendido</div>
+          <div class="valor"><%= f.toneladas(p.pedido_kg) %></div>
+        </div>
+        <div class="indicador">
+          <div class="rotulo">Já embarcado</div>
+          <div class="valor"><%= f.toneladas(p.atendido_kg) %></div>
+          <div class="barra">
+            <div class="parte<%= saldoKg > 0 ? ' cheio' : '' %>"
+                 data-largura="<%= Math.min(100, Math.round((Number(p.atendido_kg) / Number(p.pedido_kg)) * 100)) %>%"></div>
+          </div>
+        </div>
+        <div class="indicador <%= saldoKg > 0 ? 'atencao' : 'destaque' %>">
+          <div class="rotulo">Saldo a embarcar</div>
+          <div class="valor"><%= f.toneladas(saldoKg) %></div>
+          <div class="apoio">
+            <%= emAberto && saldoKg > 0 ? 'reservado no estoque para este cliente' : (saldoKg > 0 ? 'ainda não reservado' : 'pedido atendido por completo') %>
+          </div>
+        </div>
+      </div>
+    <% } %>
+
+    <% if (p.observacoes) { %>
+      <p class="txt-min txt-fraco mt-2 mb-0"><strong>Observações:</strong> <%= p.observacoes %></p>
+    <% } %>
+
+    <% if (emAberto) { %>
+      <div class="aviso ok mt-2 mb-0">
+        <%- ic('ok') %>
+        <div>
+          <strong>Aprovado em <%= f.dataHora(p.aprovado_em) %></strong>
+          <%= f.toneladas(saldoKg) %> continuam reservados no estoque para este pedido —
+          nenhum outro documento consegue usar essa mercadoria.
+        </div>
+      </div>
+    <% } %>
+
+    <% if (p.status === 'CANCELADO') { %>
+      <div class="aviso erro mt-2 mb-0">
+        <%- ic('erro') %>
+        <div><strong>Cancelado em <%= f.dataHora(p.cancelado_em) %></strong><%= p.motivo_cancelamento %></div>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<!-- ------------------------------------------------------------------ itens -->
+<div class="cartao">
+  <div class="cartao-topo"><h2>Itens</h2><span class="sub"><%= p.itens %> item(ns)</span></div>
+  <div class="tabela-area">
+    <table class="tabela responsiva">
+      <thead>
+        <tr>
+          <th>Produto</th><th>Local</th><th>Lote</th>
+          <th class="num">Vendido</th><th class="num">Embarcado</th><th class="num">Saldo</th>
+          <th class="num">Preço unit.</th><th class="num">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% for (const i of p.lista_itens) { %>
+          <tr>
+            <td data-rot="Produto"><%= i.produto %></td>
+            <td data-rot="Local" class="txt-min"><%= i.local %></td>
+            <td data-rot="Lote" class="mono txt-min"><%= i.lote || '—' %></td>
+            <td data-rot="Vendido" class="num"><%= f.formatar(i.quantidade_origem, 3) %> <%= i.unidade %></td>
+            <td data-rot="Embarcado" class="num"><%= f.toneladas(i.atendido_kg) %></td>
+            <td data-rot="Saldo" class="num <%= Number(i.saldo_kg) > 0 ? 'txt-atencao txt-forte' : '' %>">
+              <%= f.toneladas(i.saldo_kg) %>
+            </td>
+            <td data-rot="Preço unit." class="num"><%= f.formatar(i.preco_unitario, 2) %></td>
+            <td data-rot="Total" class="num txt-forte"><%= f.formatar(i.valor_total, 2) %></td>
+          </tr>
+        <% } %>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="7" class="txt-dir">Total do pedido</td>
+          <td class="num"><%= p.moeda %> <%= f.formatar(p.valor_total, 2) %></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+
+<!-- ----------------------------------------------------------- aprovação -->
+<% if (editavel) { %>
+  <div class="cartao">
+    <div class="cartao-topo"><h2>Próximo passo</h2></div>
+    <div class="cartao-corpo">
+      <% if (p.status === 'RASCUNHO' && pode('vendas.editar')) { %>
+        <form method="post" action="/vendas/<%= p.id %>/enviar" style="display:inline">
+          <button type="submit" class="btn"><%- ic('avancar') %> Enviar para aprovação</button>
+        </form>
+      <% } %>
+
+      <% if (pode('vendas.aprovar')) { %>
+        <p class="txt-min mb-2 mt-2">Ao aprovar, em uma única operação o sistema irá:</p>
+        <ol class="txt-min" style="margin:0 0 16px;padding-left:20px;line-height:1.9">
+          <li>conferir o estoque disponível de cada item;</li>
+          <li><strong>reservar <%= f.toneladas(p.pedido_kg) %></strong> — essa mercadoria deixa de aparecer
+              como disponível para qualquer outro pedido;</li>
+          <li>gerar o <strong>Contas a Receber</strong> de
+              <strong><%= p.moeda %> <%= f.formatar(p.valor_total, 2) %></strong>
+              de <strong><%= p.cliente %></strong>;</li>
+          <li>liberar o pedido para gerar ordens de carregamento.</li>
+        </ol>
+        <p class="txt-min txt-fraco mb-2">
+          <strong>Reservar não é dar baixa.</strong> O estoque físico só diminui na expedição
+          do carregamento.
+        </p>
+        <form method="post" action="/vendas/<%= p.id %>/aprovar">
+          <button type="submit" class="btn primario"
+                  data-confirmar="Aprovar o pedido <%= p.numero %>? Isso reserva <%= f.toneladas(p.pedido_kg) %> do estoque e gera o título a receber.">
+            <%- ic('ok') %> Aprovar e reservar estoque
+          </button>
+        </form>
+      <% } %>
+    </div>
+  </div>
+<% } %>
+
+<!-- -------------------------------------------------------- carregamentos -->
+<% if (p.carregamentos.length) { %>
+  <div class="cartao">
+    <div class="cartao-topo"><h2>Carregamentos deste pedido</h2></div>
+    <div class="tabela-area">
+      <table class="tabela">
+        <thead><tr><th>Nº</th><th>Data</th><th>Destino</th><th class="num">Quantidade</th><th>Situação</th><th></th></tr></thead>
+        <tbody>
+          <% for (const c of p.carregamentos) { %>
+            <tr class="<%= c.status === 'CANCELADO' ? 'linha-cancelada' : '' %>">
+              <td class="doc"><a href="/carregamentos/<%= c.id %>"><%= c.numero %></a></td>
+              <td><%= f.data(c.data) %></td>
+              <td><%= c.destino || '—' %></td>
+              <td class="num"><%= f.toneladas(c.quantidade_kg) %></td>
+              <td><span class="pill <%= f.classeStatus(c.status) %>"><%= f.rotuloStatus(c.status) %></span></td>
+              <td class="acoes"><a href="/carregamentos/<%= c.id %>" class="btn pequeno">Abrir</a></td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% } %>
+
+<!-- ------------------------------------------------------------ financeiro -->
+<% if (p.titulo) { %>
+  <div class="cartao">
+    <div class="cartao-topo">
+      <h2>Título financeiro gerado</h2>
+      <span class="sub">criado automaticamente pela aprovação deste pedido</span>
+    </div>
+    <div class="tabela-area">
+      <table class="tabela">
+        <thead><tr><th>Título</th><th>Pagador</th><th>Vencimento</th><th class="num">Valor</th><th>Situação</th><th></th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="doc"><a href="/financeiro/receber/<%= p.titulo.id %>"><%= p.titulo.numero %></a></td>
+            <td><%= p.cliente %></td>
+            <td><%= f.data(p.titulo.vencimento) %></td>
+            <td class="num txt-forte"><%= f.formatar(p.titulo.valor, 2) %></td>
+            <td><span class="pill <%= f.classeStatus(p.titulo.status) %>"><%= f.rotuloStatus(p.titulo.status) %></span></td>
+            <td class="acoes"><a href="/financeiro/receber/<%= p.titulo.id %>" class="btn pequeno">Abrir</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% } %>
+
+<!-- --------------------------------------------------------------- cancelar -->
+<% if (p.status !== 'CANCELADO' && pode('vendas.cancelar')) { %>
+  <div class="barra-acoes mt-2">
+    <span class="espaco"></span>
+    <button type="button" class="btn contorno-perigo" data-modal="#modal-cancelar">
+      <%- ic('erro') %> Cancelar pedido
+    </button>
+  </div>
+
+  <dialog class="modal" id="modal-cancelar">
+    <form method="post" action="/vendas/<%= p.id %>/cancelar">
+      <div class="modal-topo"><h2>Cancelar pedido <%= p.numero %></h2></div>
+      <div class="modal-corpo">
+        <p class="txt-min">
+          <% if (emAberto) { %>
+            A reserva de <strong><%= f.toneladas(saldoKg) %></strong> é liberada e volta a aparecer
+            como estoque disponível.
+          <% } %>
+          <% if (p.titulo) { %>
+            O título <span class="mono"><%= p.titulo.numero %></span> é cancelado junto.
+          <% } %>
+        </p>
+        <div class="campo">
+          <label for="motivo-cancelar">Motivo <span class="obrigatorio">*</span></label>
+          <textarea id="motivo-cancelar" name="motivo" rows="3" required minlength="5"></textarea>
+        </div>
+      </div>
+      <div class="modal-rodape">
+        <button type="button" class="btn" data-fechar-modal>Voltar</button>
+        <button type="submit" class="btn perigo">Confirmar cancelamento</button>
+      </div>
+    </form>
+  </dialog>
+<% } %>
+
+<%- include('../partials/fim') %>

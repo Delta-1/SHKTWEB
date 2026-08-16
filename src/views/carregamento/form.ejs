@@ -4,7 +4,7 @@
 
 <form method="post" action="<%= acao %>" class="cartao">
   <div class="cartao-topo">
-    <a href="<%= novo ? '/carregamentos' : '/carregamentos/' + c.id %>" class="btn pequeno">← Voltar</a>
+    <a href="<%= novo ? '/carregamentos' : '/carregamentos/' + c.id %>" class="btn pequeno"><%- ic('voltar') %> Voltar</a>
     <h2><%= novo ? 'Nova ordem de carregamento' : 'Editar carregamento ' + c.numero %></h2>
     <% if (!novo) { %>
       <span class="pill <%= f.classeStatus(c.status) %>"><%= f.rotuloStatus(c.status) %></span>
@@ -36,6 +36,27 @@
               <option value="<%= x.id %>" <%= String(c.cliente_id) === String(x.id) ? 'selected' : '' %>><%= x.nome %></option>
             <% } %>
           </select>
+        </div>
+
+        <div class="campo c12">
+          <label for="pedido_venda_item_id">Atende um pedido de venda?</label>
+          <select id="pedido_venda_item_id" name="pedido_venda_item_id">
+            <option value="">Não — carregamento avulso (reserva o estoque por conta própria)</option>
+            <% for (const i of (typeof itensVenda !== 'undefined' ? itensVenda : [])) { %>
+              <option value="<%= i.item_id %>"
+                      data-cliente="<%= i.cliente_id %>" data-produto="<%= i.produto_id %>"
+                      data-local="<%= i.local_id %>" data-lote="<%= i.lote_id || '' %>"
+                      data-unidade="<%= i.unidade_id || '' %>"
+                      <%= String(c.pedido_venda_item_id) === String(i.item_id) ? 'selected' : '' %>>
+                <%= i.pedido_numero %> · <%= i.cliente %> · <%= i.produto %> ·
+                falta embarcar <%= f.formatar(Number(i.saldo_kg) / 1000, 3) %> t
+              </option>
+            <% } %>
+          </select>
+          <span class="ajuda">
+            Ligado a um pedido, o estoque já está reservado pelo pedido — esta ordem consome
+            esse saldo na expedição, sem reservar de novo.
+          </span>
         </div>
       </div>
     </fieldset>
