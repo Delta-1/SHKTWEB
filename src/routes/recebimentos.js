@@ -43,6 +43,7 @@ function lerItens(corpo) {
 function lerFormulario(corpo) {
   return {
     data: validar.data(corpo.data, 'Data', { obrigatorio: true }),
+    operacaoId: validar.id(corpo.operacao_id, 'Operação'),
     dataHoraChegada: validar.dataHora(corpo.data_hora_chegada, 'Chegada'),
     pedidoCompraId: validar.id(corpo.pedido_compra_id, 'Pedido de compra'),
     fornecedorId: validar.id(corpo.fornecedor_id, 'Fornecedor', { obrigatorio: true }),
@@ -73,6 +74,7 @@ const referencias = () =>
     'veiculos',
     'motoristas',
     'transportadoras',
+    'operacoes',
   ]);
 
 // --------------------------------------------------------------- listagem

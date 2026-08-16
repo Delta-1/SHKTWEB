@@ -51,8 +51,9 @@ export async function criar(dados, usuario, contexto = {}) {
     const { rows } = await cx.query(
       `INSERT INTO pedidos_venda (
           numero, data, cliente_id, incoterm_id, pais_destino_id, destino, moeda,
-          condicao_pagamento, prazo_dias, previsao_embarque, observacoes, status, criado_por
-       ) VALUES ($1,COALESCE($2,CURRENT_DATE),$3,$4,$5,$6,$7,$8,$9,$10,$11,'RASCUNHO',$12)
+          condicao_pagamento, prazo_dias, previsao_embarque, observacoes, status, criado_por,
+          operacao_id
+       ) VALUES ($1,COALESCE($2,CURRENT_DATE),$3,$4,$5,$6,$7,$8,$9,$10,$11,'RASCUNHO',$12,$13)
        RETURNING *`,
       [
         numero,
@@ -67,6 +68,7 @@ export async function criar(dados, usuario, contexto = {}) {
         dados.previsaoEmbarque ?? null,
         dados.observacoes ?? null,
         usuario.id,
+        dados.operacaoId ?? null,
       ]
     );
     const pedido = rows[0];
@@ -103,7 +105,8 @@ export async function atualizar(id, dados, usuario, contexto = {}) {
       `UPDATE pedidos_venda SET
           data = COALESCE($1, data), cliente_id = $2, incoterm_id = $3, pais_destino_id = $4,
           destino = $5, moeda = $6, condicao_pagamento = $7, prazo_dias = $8,
-          previsao_embarque = $9, observacoes = $10, atualizado_por = $11
+          previsao_embarque = $9, observacoes = $10, atualizado_por = $11,
+          operacao_id = $13
         WHERE id = $12 RETURNING *`,
       [
         dados.data ?? null,
@@ -118,6 +121,7 @@ export async function atualizar(id, dados, usuario, contexto = {}) {
         dados.observacoes ?? null,
         usuario.id,
         id,
+        dados.operacaoId ?? null,
       ]
     );
 
@@ -243,6 +247,7 @@ export async function aprovar(id, usuario, contexto = {}) {
           origemId: pedido.id,
           origemNumero: pedido.numero,
           parceiroId: pedido.cliente_id,
+          operacaoId: pedido.operacao_id,
           categoriaId: categoria.rows[0]?.id ?? null,
           emissao: pedido.data,
           vencimento: vencimentoPrevisto(pedido),
@@ -529,6 +534,7 @@ export const rotuloStatus = (s) => ROTULOS[s] || s;
 const SELECT_BASE = `
   SELECT p.*,
          c.razao_social AS cliente,
+         op.nome        AS operacao, op.cor AS operacao_cor,
          ic.codigo      AS incoterm,
          pa.nome        AS pais_destino,
          (SELECT COALESCE(SUM(i.quantidade_kg), 0) FROM pedido_venda_itens i
@@ -538,6 +544,7 @@ const SELECT_BASE = `
          (SELECT COUNT(*)::INT FROM pedido_venda_itens i WHERE i.pedido_id = p.id) AS itens
     FROM pedidos_venda p
     JOIN parceiros c        ON c.id = p.cliente_id
+    LEFT JOIN operacoes op  ON op.id = p.operacao_id
     LEFT JOIN incoterms ic  ON ic.id = p.incoterm_id
     LEFT JOIN paises pa     ON pa.id = p.pais_destino_id`;
 

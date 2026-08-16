@@ -3,7 +3,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title><%= titulo %> · ERP SHKT</title>
 <link rel="icon" href="/estatico/img/logo.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/estatico/css/app.css">
+<link rel="stylesheet" href="<%= estatico('css/app.css') %>">
 <script>
   (function () {
     try {
@@ -36,4 +36,4 @@
 </div>
 
 <% if (usuario) { %><%- include('partials/fim') %><% } else { %></div>
-<script src="/estatico/js/app.js"></script></body></html><% } %>
+<script src="<%= estatico('js/app.js') %>"></script></body></html><% } %>

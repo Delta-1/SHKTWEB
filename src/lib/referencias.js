@@ -6,6 +6,8 @@
 import { muitos } from '../db/index.js';
 
 const consultas = {
+  operacoes: () =>
+    muitos('SELECT id, codigo, nome, tipo, cor FROM operacoes WHERE ativo ORDER BY ordem, nome'),
   produtos: () =>
     muitos(
       `SELECT id, codigo, descricao, unidade_id, controla_lote, exige_fumigacao

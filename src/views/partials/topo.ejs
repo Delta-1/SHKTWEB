@@ -3,12 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f2f4f7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0f141f" media="(prefers-color-scheme: dark)">
   <title><%= titulo %> · ERP SHKT</title>
   <link rel="icon" href="/estatico/img/logo.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/estatico/css/app.css">
-  <!-- Permite instalar o ERP como aplicativo (ícone na área de trabalho / celular) -->
+  <link rel="stylesheet" href="<%= estatico('css/app.css') %>">
   <link rel="manifest" href="/estatico/manifest.webmanifest">
   <link rel="apple-touch-icon" href="/estatico/img/icone-180.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -29,33 +28,9 @@
 <%- sprite %>
 <div class="app">
 
-  <aside class="lateral">
-    <div class="lateral-marca">
-      <img src="/estatico/img/logo.svg" alt="" class="logo">
-      <div>
-        <strong>SHKT</strong>
-        <span>ERP Operacional</span>
-      </div>
-    </div>
-    <%- include('menu') %>
-  </aside>
+  <%- include('menu') %>
 
   <div class="conteudo">
-    <header class="topo">
-      <button class="btn-icone abrir-menu nao-imprimir" data-abrir-menu aria-label="Abrir menu"><%- ic('menu') %></button>
-      <h1><%= titulo %></h1>
-      <div class="topo-acoes nao-imprimir">
-        <%- acoesCabecalho || '' %>
-        <button class="btn-icone" data-tema aria-label="Alternar entre tema claro e escuro" title="Tema claro / escuro">
-          <%- ic('lua', 'ic-lua') %><%- ic('sol', 'ic-sol') %>
-        </button>
-        <a href="/sair" class="usuario-chip" title="<%= usuario.email %> · <%= usuario.perfil_nome %> — clique para sair">
-          <span class="avatar"><%= usuario.nome.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase() %></span>
-          <span><%= usuario.nome.split(' ')[0] %></span>
-        </a>
-      </div>
-    </header>
-
     <main class="pagina">
       <% if (typeof mensagem !== 'undefined' && mensagem) { %>
         <div class="aviso <%= mensagem.tipo || 'ok' %>" data-vira-toast>

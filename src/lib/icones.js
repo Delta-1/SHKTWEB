@@ -91,6 +91,7 @@ const TRACOS = {
     '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
   voltar: '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
   avancar: '<path d="m9 18 6-6-6-6"/>',
+  baixo: '<path d="m6 9 6 6 6-6"/>',
   sair:
     '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>',
   atualizar:

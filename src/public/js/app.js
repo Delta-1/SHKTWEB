@@ -53,19 +53,63 @@
     faixa.remove();
   });
 
-  // ------------------------------------------------------------- menu movel
+  // ------------------------------------------------------ barra de menus
+  // Clica para abrir, clica fora ou Esc para fechar. Um menu aberto fecha o
+  // outro: nunca dois abertos ao mesmo tempo, como em qualquer barra de
+  // menus de sistema.
+  function fecharMenus(exceto) {
+    var abertos = doc.querySelectorAll('.menu-raiz.aberto');
+    for (var i = 0; i < abertos.length; i++) {
+      if (abertos[i] === exceto) continue;
+      abertos[i].classList.remove('aberto');
+      var b = abertos[i].querySelector('[data-menu]');
+      if (b) b.setAttribute('aria-expanded', 'false');
+    }
+  }
+
   doc.addEventListener('click', function (ev) {
+    // Botão do menu de celular
     if (ev.target.closest('[data-abrir-menu]')) {
       doc.body.classList.toggle('menu-aberto');
+      fecharMenus(null);
       return;
     }
-    if (doc.body.classList.contains('menu-aberto') && !ev.target.closest('.lateral')) {
+
+    var botao = ev.target.closest('[data-menu]');
+    if (botao) {
+      ev.preventDefault();
+      var raiz = botao.closest('.menu-raiz');
+      var vaiAbrir = !raiz.classList.contains('aberto');
+      fecharMenus(raiz);
+      raiz.classList.toggle('aberto', vaiAbrir);
+      botao.setAttribute('aria-expanded', vaiAbrir ? 'true' : 'false');
+      return;
+    }
+
+    if (!ev.target.closest('.menu-lista')) fecharMenus(null);
+    if (doc.body.classList.contains('menu-aberto') && !ev.target.closest('.menus') &&
+        !ev.target.closest('[data-abrir-menu]')) {
       doc.body.classList.remove('menu-aberto');
     }
   });
 
+  // No computador, com um menu já aberto, passar o mouse nos outros troca
+  doc.addEventListener('mouseover', function (ev) {
+    if (!doc.querySelector('.menu-raiz.aberto')) return;
+    if (window.innerWidth < 860) return;
+    var botao = ev.target.closest('[data-menu]');
+    if (!botao) return;
+    var raiz = botao.closest('.menu-raiz');
+    if (raiz.classList.contains('aberto')) return;
+    fecharMenus(raiz);
+    raiz.classList.add('aberto');
+    botao.setAttribute('aria-expanded', 'true');
+  });
+
   doc.addEventListener('keydown', function (ev) {
-    if (ev.key === 'Escape') doc.body.classList.remove('menu-aberto');
+    if (ev.key !== 'Escape') return;
+    fecharMenus(null);
+    doc.body.classList.remove('menu-aberto');
   });
 
   // ---------------------------------------------------- confirmacao de acao
@@ -535,15 +579,6 @@
 
     var comEtapas = doc.querySelectorAll('form[data-etapas]');
     for (var e = 0; e < comEtapas.length; e++) montarEtapas(comEtapas[e]);
-
-    // Seções do menu que não são a atual abrem e fecham no clique
-    doc.addEventListener('click', function (ev) {
-      var cabeca = ev.target.closest('[data-secao]');
-      if (!cabeca) return;
-      var secao = cabeca.closest('.menu-secao');
-      var aberta = secao.classList.toggle('aberta');
-      cabeca.setAttribute('aria-expanded', aberta ? 'true' : 'false');
-    });
 
     // Barras de saldo crescem a partir do zero: o olho percebe a proporcao
     var barras = doc.querySelectorAll('.barra .parte[data-largura]');

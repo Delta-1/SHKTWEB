@@ -49,8 +49,8 @@ export async function criar(dados, usuario, contexto = {}) {
       `INSERT INTO pedidos_compra (
           numero, data, fornecedor_id, tipo, incoterm_id, moeda,
           condicao_pagamento, prazo_dias, previsao_entrega, local_entrega_id,
-          observacoes, status, criado_por
-       ) VALUES ($1,COALESCE($2,CURRENT_DATE),$3,$4,$5,$6,$7,$8,$9,$10,$11,'RASCUNHO',$12)
+          observacoes, status, criado_por, operacao_id
+       ) VALUES ($1,COALESCE($2,CURRENT_DATE),$3,$4,$5,$6,$7,$8,$9,$10,$11,'RASCUNHO',$12,$13)
        RETURNING *`,
       [
         numero,
@@ -65,6 +65,7 @@ export async function criar(dados, usuario, contexto = {}) {
         dados.localEntregaId ?? null,
         dados.observacoes ?? null,
         usuario.id,
+        dados.operacaoId ?? null,
       ]
     );
     const pedido = rows[0];
@@ -101,7 +102,8 @@ export async function atualizar(id, dados, usuario, contexto = {}) {
       `UPDATE pedidos_compra SET
           data = COALESCE($1, data), fornecedor_id = $2, tipo = $3, incoterm_id = $4,
           moeda = $5, condicao_pagamento = $6, prazo_dias = $7, previsao_entrega = $8,
-          local_entrega_id = $9, observacoes = $10, atualizado_por = $11
+          local_entrega_id = $9, observacoes = $10, atualizado_por = $11,
+          operacao_id = $13
         WHERE id = $12 RETURNING *`,
       [
         dados.data ?? null,
@@ -116,6 +118,7 @@ export async function atualizar(id, dados, usuario, contexto = {}) {
         dados.observacoes ?? null,
         usuario.id,
         id,
+        dados.operacaoId ?? null,
       ]
     );
 
@@ -226,6 +229,7 @@ export async function aprovar(id, usuario, contexto = {}) {
           origemId: pedido.id,
           origemNumero: pedido.numero,
           parceiroId: pedido.fornecedor_id,
+          operacaoId: pedido.operacao_id,
           categoriaId: categoria.rows[0]?.id ?? null,
           emissao: pedido.data,
           vencimento: vencimentoPrevisto(pedido),
@@ -412,6 +416,7 @@ export const rotuloStatus = (s) => ROTULOS[s] || s;
 const SELECT_BASE = `
   SELECT p.*,
          f.razao_social AS fornecedor,
+         op.nome        AS operacao, op.cor AS operacao_cor,
          ic.codigo      AS incoterm,
          le.nome        AS local_entrega,
          (SELECT COALESCE(SUM(i.quantidade_kg), 0) FROM pedido_compra_itens i
@@ -421,6 +426,7 @@ const SELECT_BASE = `
          (SELECT COUNT(*)::INT FROM pedido_compra_itens i WHERE i.pedido_id = p.id) AS itens
     FROM pedidos_compra p
     JOIN parceiros f            ON f.id = p.fornecedor_id
+    LEFT JOIN operacoes op      ON op.id = p.operacao_id
     LEFT JOIN incoterms ic      ON ic.id = p.incoterm_id
     LEFT JOIN locais_estoque le ON le.id = p.local_entrega_id`;
 

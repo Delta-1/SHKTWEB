@@ -42,6 +42,7 @@ function lerItens(corpo) {
 function lerFormulario(corpo) {
   return {
     data: validar.data(corpo.data, 'Data', { obrigatorio: true }),
+    operacaoId: validar.id(corpo.operacao_id, 'Operação'),
     clienteId: validar.id(corpo.cliente_id, 'Cliente', { obrigatorio: true }),
     incotermId: validar.id(corpo.incoterm_id, 'Incoterm'),
     paisDestinoId: validar.id(corpo.pais_destino_id, 'País de destino'),
@@ -56,7 +57,7 @@ function lerFormulario(corpo) {
 }
 
 const referencias = () =>
-  carregar(['clientes', 'produtos', 'locais', 'lotes', 'unidades', 'incoterms', 'paises', 'moedas']);
+  carregar(['clientes', 'produtos', 'locais', 'lotes', 'unidades', 'incoterms', 'paises', 'moedas', 'operacoes']);
 
 // --------------------------------------------------------------- listagem
 router.get('/', exigir('vendas.visualizar'), async (req, res, next) => {

@@ -28,9 +28,9 @@ export async function criarContaPagar(cx, dados, usuario) {
         numero, descricao, origem, origem_tipo, origem_id, origem_numero,
         parceiro_id, funcionario_id, beneficiario, categoria_id, centro_custo_id,
         emissao, vencimento, competencia, valor, moeda_id, documento_fiscal,
-        observacoes, criado_por
+        observacoes, criado_por, operacao_id
      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,
-               COALESCE($12, CURRENT_DATE),$13,$14,$15,$16,$17,$18,$19)
+               COALESCE($12, CURRENT_DATE),$13,$14,$15,$16,$17,$18,$19,$20)
      RETURNING *`,
     [
       numero,
@@ -52,6 +52,7 @@ export async function criarContaPagar(cx, dados, usuario) {
       dados.documentoFiscal ?? null,
       dados.observacoes ?? null,
       usuario?.id ?? null,
+      dados.operacaoId ?? null,
     ]
   );
 
@@ -68,9 +69,9 @@ export async function criarContaReceber(cx, dados, usuario) {
         numero, descricao, origem, origem_tipo, origem_id, origem_numero,
         parceiro_id, pagador, categoria_id, centro_custo_id,
         emissao, vencimento, competencia, valor, moeda_id, documento_fiscal,
-        observacoes, criado_por
+        observacoes, criado_por, operacao_id
      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,
-               COALESCE($11, CURRENT_DATE),$12,$13,$14,$15,$16,$17,$18)
+               COALESCE($11, CURRENT_DATE),$12,$13,$14,$15,$16,$17,$18,$19)
      RETURNING *`,
     [
       numero,
@@ -91,6 +92,7 @@ export async function criarContaReceber(cx, dados, usuario) {
       dados.documentoFiscal ?? null,
       dados.observacoes ?? null,
       usuario?.id ?? null,
+      dados.operacaoId ?? null,
     ]
   );
 

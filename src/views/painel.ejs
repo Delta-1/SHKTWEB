@@ -1,28 +1,6 @@
 <%- include('partials/topo') %>
 
 <%
-  const hora = new Date().getHours();
-  const cumprimento = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
-  const primeiroNome = usuario.nome.split(' ')[0];
-
-  // As seis etapas da operação, na ordem em que acontecem de verdade.
-  // O número não é enfeite: é a sequência que o sistema obriga a seguir.
-  const etapas = [
-    { n: 1, url: '/compras/novo',       ic: 'compras',      cor: 'var(--roxo-500)',
-      titulo: 'Comprar',   apoio: 'Pedido ao fornecedor',        perm: 'compras.criar' },
-    { n: 2, url: '/recebimentos/novo',  ic: 'recebimento',  cor: 'var(--azul-500)',
-      titulo: 'Receber',   apoio: 'Entrada no armazém',          perm: 'compras.criar' },
-    { n: 3, url: '/fumigacao/novo',     ic: 'fumigacao',    cor: 'var(--azul-cinza)',
-      titulo: 'Fumigar',   apoio: 'Expurgo do lote',             perm: 'fumigacao.criar' },
-    { n: 4, url: '/certificados/novo',  ic: 'certificado',  cor: 'var(--marca-500)',
-      titulo: 'Certificar', apoio: 'Certificado de fumigação',   perm: 'certificados.criar' },
-    { n: 5, url: '/vendas/novo',        ic: 'vendas',       cor: 'var(--ambar-500)',
-      titulo: 'Vender',    apoio: 'Pedido do cliente',           perm: 'vendas.criar' },
-    { n: 6, url: '/carregamentos/novo', ic: 'carregamento', cor: 'var(--marca-600)',
-      titulo: 'Carregar',  apoio: 'Expedição e baixa',           perm: 'carregamento.criar' },
-  ].filter((e) => pode(e.perm));
-
-  // Pendências: só entra na lista o que realmente está travando alguém.
   const pendencias = [];
   if (vencidos.length) pendencias.push({
     url: '/financeiro/pagar?status=ABERTO', ic: 'atencao', cor: 'var(--vermelho-500)',
@@ -42,7 +20,7 @@
   if (comercial.recebimentos_pendentes) pendencias.push({
     url: '/recebimentos?status=RASCUNHO', ic: 'recebimento', cor: 'var(--azul-500)',
     titulo: `${comercial.recebimentos_pendentes} recebimento(s) a confirmar`,
-    apoio: 'Lançados, mas ainda fora do estoque',
+    apoio: 'Lançados, mas a mercadoria ainda não entrou no estoque',
   });
   if (comercial.compras_aguardando + comercial.vendas_aguardando) pendencias.push({
     url: comercial.compras_aguardando ? '/compras?status=AGUARDANDO_APROVACAO' : '/vendas?status=AGUARDANDO_APROVACAO',
@@ -62,64 +40,109 @@
   });
 %>
 
-<!-- ------------------------------------------------------------ saudação -->
-<div class="saudacao mb-2">
-  <h2><%= cumprimento %>, <%= primeiroNome %>.</h2>
-  <p>
-    <% if (pendencias.length) { %>
-      Há <strong><%= pendencias.length %></strong> ponto(s) pedindo sua atenção hoje.
-    <% } else { %>
-      Nada travado. Escolha por onde começar.
-    <% } %>
-  </p>
+<div class="cabecalho-pagina">
+  <div>
+    <h1>Panorama do grupo</h1>
+    <div class="apoio">O que entrou e o que saiu, de cada operação, no período escolhido.</div>
+  </div>
+  <span class="espaco"></span>
+  <div class="txt-min txt-fraco nowrap"><%= f.data(de) %> a <%= f.data(ate) %></div>
 </div>
 
-<!-- ------------------------------------------------------ primeiros passos -->
-<% if (!primeirosPassos.completo) { %>
-  <div class="cartao">
-    <div class="cartao-topo">
-      <h2>Primeiros passos</h2>
-      <span class="sub"><%= primeirosPassos.feitos %> de <%= primeirosPassos.total %> concluídos</span>
-      <span class="pill <%= primeirosPassos.percentual > 60 ? 'ok' : 'atencao' %>">
-        <%= primeirosPassos.percentual %>%
-      </span>
-    </div>
-    <div class="cartao-corpo">
-      <div class="barra mb-2" style="height:10px">
-        <div class="parte" data-largura="<%= primeirosPassos.percentual %>%"></div>
-      </div>
-      <ul class="tarefas">
-        <% for (const p of primeirosPassos.passos) { %>
-          <li class="<%= p.feito ? 'feita' : '' %>">
-            <span class="marca-passo"><%= p.feito ? '✓' : '' %></span>
-            <span class="titulo">
-              <span class="nome"><%= p.titulo %></span>
-              <div class="apoio"><%= p.apoio %></div>
-            </span>
-            <% if (!p.feito) { %>
-              <a href="<%= p.url %>" class="btn pequeno primario"><%= p.acao %></a>
-            <% } %>
-          </li>
-        <% } %>
-      </ul>
-    </div>
-  </div>
-<% } %>
-
-<!-- --------------------------------------------------------- o que fazer -->
-<% if (etapas.length) { %>
-  <div class="secao-titulo">O que você vai fazer agora</div>
-  <div class="acoes-rapidas mb-2">
-    <% for (const e of etapas) { %>
-      <a class="acao" href="<%= e.url %>" style="--cor: <%= e.cor %>">
-        <span class="passo"><%= e.n %></span>
-        <span class="simbolo"><%- ic(e.ic) %></span>
-        <strong><%= e.titulo %></strong>
-        <span><%= e.apoio %></span>
-      </a>
+<!-- ------------------------------------------------------------- período -->
+<div class="periodo nao-imprimir">
+  <div class="atalhos">
+    <% for (const a of atalhosPeriodo) { %>
+      <a href="?de=<%= a.de %>&ate=<%= a.ate %>" class="<%= a.ativo ? 'ativo' : '' %>"><%= a.nome %></a>
     <% } %>
   </div>
-<% } %>
+  <form method="get">
+    <input type="date" name="de" value="<%= de %>" aria-label="Data inicial">
+    <span class="txt-fraco txt-min">até</span>
+    <input type="date" name="ate" value="<%= ate %>" aria-label="Data final">
+    <button type="submit" class="btn"><%- ic('buscar') %> Ver</button>
+  </form>
+</div>
+
+<!-- --------------------------------------------------- panorama por operação -->
+<div class="panorama mb-2">
+  <% for (const op of panorama.operacoes) { %>
+    <section class="operacao" style="--cor: <%= op.cor || 'var(--marca-500)' %>">
+      <header>
+        <span class="selo"></span>
+        <h2><%= op.nome %></h2>
+        <span class="tipo"><%= op.tipo === 'GRAOS' ? 'Grão' : op.tipo === 'TRANSPORTE' ? 'Frete' : 'Outra' %></span>
+      </header>
+
+      <% if (op.tipo === 'GRAOS') { %>
+        <div class="faixa-secao">Mercadoria no período</div>
+        <div class="fluxo">
+          <div class="lado entra">
+            <div class="rotulo"><%- ic('receber') %> Entrou</div>
+            <div class="numero"><%= f.toneladas(op.mercadoria.entrou_kg) %></div>
+            <div class="apoio"><%= op.mercadoria.entradas %> recebimento(s) confirmado(s)</div>
+          </div>
+          <div class="divisor-v"></div>
+          <div class="lado sai">
+            <div class="rotulo"><%- ic('pagar') %> Saiu</div>
+            <div class="numero"><%= f.toneladas(op.mercadoria.saiu_kg) %></div>
+            <div class="apoio"><%= op.mercadoria.saidas %> carregamento(s) expedido(s)</div>
+          </div>
+        </div>
+      <% } %>
+
+      <div class="faixa-secao">Dinheiro que passou pelo caixa</div>
+      <div class="fluxo">
+        <div class="lado entra">
+          <div class="rotulo"><%- ic('receber') %> Recebido</div>
+          <div class="numero">R$ <%= f.formatar(op.dinheiro.entrou, 2) %></div>
+          <div class="apoio">baixas de contas a receber</div>
+        </div>
+        <div class="divisor-v"></div>
+        <div class="lado sai">
+          <div class="rotulo"><%- ic('pagar') %> Pago</div>
+          <div class="numero">R$ <%= f.formatar(op.dinheiro.saiu, 2) %></div>
+          <div class="apoio">baixas de contas a pagar</div>
+        </div>
+      </div>
+
+      <div class="resultado-periodo">
+        <span class="rot">Resultado de caixa no período</span>
+        <span class="val <%= Number(op.dinheiro.resultado) < 0 ? 'negativo' : 'positivo' %>">
+          <%= Number(op.dinheiro.resultado) < 0 ? '−' : '' %>R$
+          <%= f.formatar(Math.abs(Number(op.dinheiro.resultado)), 2) %>
+        </span>
+      </div>
+
+      <div class="rodape-op">
+        <div class="peca">
+          <div class="rot">Ainda a receber</div>
+          <div class="val">R$ <%= f.formatar(op.aberto.receber, 2) %></div>
+          <% if (Number(op.aberto.receber_vencido) > 0) { %>
+            <div class="txt-min txt-erro">R$ <%= f.formatar(op.aberto.receber_vencido, 2) %> vencido</div>
+          <% } %>
+        </div>
+        <div class="peca">
+          <div class="rot">Ainda a pagar</div>
+          <div class="val <%= Number(op.aberto.pagar_vencido) > 0 ? 'risco' : '' %>">
+            R$ <%= f.formatar(op.aberto.pagar, 2) %>
+          </div>
+          <% if (Number(op.aberto.pagar_vencido) > 0) { %>
+            <div class="txt-min txt-erro">R$ <%= f.formatar(op.aberto.pagar_vencido, 2) %> vencido</div>
+          <% } %>
+        </div>
+        <% if (op.estoque) { %>
+          <span class="espaco"></span>
+          <div class="peca">
+            <div class="rot">Hoje no armazém</div>
+            <div class="val"><%= f.toneladas(op.estoque.fisico_kg) %></div>
+            <div class="txt-min txt-fraco"><%= f.toneladas(op.estoque.disponivel_kg) %> livres</div>
+          </div>
+        <% } %>
+      </div>
+    </section>
+  <% } %>
+</div>
 
 <!-- ------------------------------------------------------------ pendências -->
 <% if (pendencias.length) { %>
@@ -138,126 +161,112 @@
   </div>
 <% } %>
 
-<!-- ------------------------------------------------------- como está hoje -->
-<div class="secao-titulo">Como está hoje</div>
-<div class="grade grade-4 mb-2">
-  <a class="indicador destaque" href="/estoque">
-    <div class="rotulo">No armazém</div>
-    <div class="valor"><%= f.toneladas(estoque.fisico_kg) %></div>
-    <div class="apoio"><%= f.toneladas(estoque.disponivel_kg) %> livres para vender</div>
-  </a>
-  <a class="indicador" href="/fumigacao">
-    <div class="rotulo">Fumigado sem certificar</div>
-    <div class="valor"><%= f.toneladas(fumigado.saldo_kg) %></div>
-    <div class="apoio">pronto para virar certificado</div>
-  </a>
-  <a class="indicador <%= Number(financeiro.pagar_vencido) > 0 ? 'alerta' : '' %>" href="/financeiro/pagar">
-    <div class="rotulo">A pagar</div>
-    <div class="valor">R$ <%= f.formatar(financeiro.pagar, 2) %></div>
-    <div class="apoio">
-      <%= Number(financeiro.pagar_vencido) > 0
-            ? 'R$ ' + f.formatar(financeiro.pagar_vencido, 2) + ' vencido'
-            : 'nenhum título vencido' %>
+<!-- ------------------------------------------------------ primeiros passos -->
+<% if (!primeirosPassos.completo) { %>
+  <div class="cartao">
+    <div class="cartao-topo">
+      <h2>Primeiros passos</h2>
+      <span class="sub"><%= primeirosPassos.feitos %> de <%= primeirosPassos.total %> concluídos</span>
+      <span class="espaco" style="flex:1"></span>
+      <span class="pill <%= primeirosPassos.percentual > 60 ? 'ok' : 'atencao' %>">
+        <%= primeirosPassos.percentual %>%
+      </span>
     </div>
-  </a>
-  <a class="indicador" href="/financeiro/receber">
-    <div class="rotulo">A receber</div>
-    <div class="valor">R$ <%= f.formatar(financeiro.receber, 2) %></div>
-    <div class="apoio">
-      <%= Number(financeiro.receber_vencido) > 0
-            ? 'R$ ' + f.formatar(financeiro.receber_vencido, 2) + ' em atraso'
-            : 'em dia' %>
+    <div class="cartao-corpo">
+      <ul class="tarefas">
+        <% for (const p of primeirosPassos.passos) { %>
+          <li class="<%= p.feito ? 'feita' : '' %>">
+            <span class="marca-passo"><%= p.feito ? '✓' : '' %></span>
+            <span class="titulo">
+              <span class="nome"><%= p.titulo %></span>
+              <div class="apoio"><%= p.apoio %></div>
+            </span>
+            <% if (!p.feito) { %>
+              <a href="<%= p.url %>" class="btn pequeno primario"><%= p.acao %></a>
+            <% } %>
+          </li>
+        <% } %>
+      </ul>
     </div>
-  </a>
-</div>
-
-<% if (Number(comercial.a_receber_kg) > 0 || Number(comercial.a_embarcar_kg) > 0 || Number(exportacao.kg) > 0) { %>
-  <div class="grade grade-3 mb-2">
-    <a class="indicador" href="/compras?status=APROVADO">
-      <div class="rotulo">Comprado, falta chegar</div>
-      <div class="valor"><%= f.toneladas(comercial.a_receber_kg) %></div>
-      <div class="apoio">saldo em aberto com fornecedores</div>
-    </a>
-    <a class="indicador" href="/vendas?status=APROVADO">
-      <div class="rotulo">Vendido, falta embarcar</div>
-      <div class="valor"><%= f.toneladas(comercial.a_embarcar_kg) %></div>
-      <div class="apoio">reservado para clientes</div>
-    </a>
-    <a class="indicador" href="/carregamentos?status=EXPEDIDO&de=<%= de %>&ate=<%= ate %>">
-      <div class="rotulo">Expedido no período</div>
-      <div class="valor"><%= f.toneladas(exportacao.kg) %></div>
-      <div class="apoio"><%= exportacao.operacoes %> carregamento(s)</div>
-    </a>
   </div>
 <% } %>
 
-<details class="cartao nao-imprimir" style="margin-top:22px">
-  <summary style="padding:16px 20px;cursor:pointer;font-weight:700;font-size:0.95rem">
-    Ver números detalhados do período
-  </summary>
-  <div class="cartao-corpo" style="border-top:1px solid var(--linha)">
-    <form method="get" class="barra-acoes mb-2">
-      <div class="campo" style="width:180px">
-        <label for="de">Período de</label>
-        <input type="date" id="de" name="de" value="<%= de %>">
-      </div>
-      <div class="campo" style="width:180px">
-        <label for="ate">até</label>
-        <input type="date" id="ate" name="ate" value="<%= ate %>">
-      </div>
-      <button type="submit" class="btn" style="align-self:flex-end">Atualizar</button>
-    </form>
-
-    <div class="grade grade-4">
-      <div class="indicador">
-        <div class="rotulo">Reservado</div>
-        <div class="valor"><%= f.toneladas(estoque.reservado_kg) %></div>
-        <div class="apoio">comprometido em pedidos e ordens</div>
-      </div>
-      <div class="indicador">
-        <div class="rotulo">Total já fumigado</div>
-        <div class="valor"><%= f.toneladas(fumigado.total_kg) %></div>
-        <div class="apoio"><%= fumigado.lotes %> fumigação(ões) validada(s)</div>
-      </div>
-      <div class="indicador">
-        <div class="rotulo">Custo de fumigação</div>
-        <div class="valor">R$ <%= f.formatar(custoFumigacao.valor, 2) %></div>
-        <div class="apoio"><%= f.toneladas(custoFumigacao.kg) %> certificadas</div>
-      </div>
-      <div class="indicador <%= Number(resultado.receitas) - Number(resultado.despesas) < 0 ? 'atencao' : 'destaque' %>">
-        <div class="rotulo">Resultado do período</div>
-        <div class="valor">
-          <%= Number(resultado.receitas) - Number(resultado.despesas) < 0 ? '−' : '' %>R$
-          <%= f.formatar(Math.abs(Number(resultado.receitas) - Number(resultado.despesas)), 2) %>
-        </div>
-        <div class="apoio">receitas − despesas lançadas</div>
-      </div>
-    </div>
-
-    <% if (saldosContas.length) { %>
-      <div class="tabela-area mt-2">
-        <table class="tabela">
-          <thead><tr><th>Conta</th><th>Tipo</th><th class="num">Saldo</th></tr></thead>
-          <tbody>
-            <% for (const c of saldosContas) { %>
-              <tr>
-                <td><a href="/financeiro/contas/<%= c.id %>"><%= c.nome %></a></td>
-                <td class="txt-min txt-fraco"><%= c.tipo %></td>
-                <td class="num txt-forte <%= Number(c.saldo) < 0 ? 'txt-erro' : '' %>">
-                  <%= c.moeda_simbolo %> <%= f.formatar(c.saldo, 2) %>
-                </td>
-              </tr>
-            <% } %>
-          </tbody>
-        </table>
-      </div>
-    <% } %>
-
-    <p class="txt-min txt-fraco mt-2 mb-0">
-      Relatórios completos, com exportação para planilha, em
-      <a href="/relatorios">Relatórios e ajustes</a>.
-    </p>
+<!-- ------------------------------------------------------ extrato do período -->
+<div class="cartao">
+  <div class="cartao-topo">
+    <h2>Tudo que entrou e saiu</h2>
+    <span class="sub">no período escolhido, do mais recente para o mais antigo</span>
   </div>
-</details>
+
+  <% if (!movimento.length) { %>
+    <div class="vazio">
+      <%- ic('vazio', 'icone') %>
+      <p>
+        Nenhuma entrada ou saída neste período. Recebimento confirmado,
+        carregamento expedido e baixa de título aparecem aqui.
+      </p>
+      <% if (pode('compras.criar')) { %>
+        <a href="/recebimentos/novo" class="btn primario"><%- ic('recebimento') %> Registrar entrada</a>
+      <% } %>
+    </div>
+  <% } else { %>
+    <div class="tabela-area">
+      <table class="tabela responsiva">
+        <thead>
+          <tr>
+            <th style="width:110px">Data</th>
+            <th style="width:150px">Operação</th>
+            <th>O que foi</th>
+            <th style="width:120px">Documento</th>
+            <th style="width:80px">Sentido</th>
+            <th class="num" style="width:140px">Mercadoria</th>
+            <th class="num" style="width:150px">Dinheiro</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (const m of movimento) { %>
+            <% const entrada = m.sentido === 'ENTRADA'; %>
+            <tr>
+              <td data-rot="Data"><%= f.data(m.data) %></td>
+              <td data-rot="Operação">
+                <span class="pill neutro" style="border-left:3px solid <%= m.operacao_cor || 'var(--linha-forte)' %>">
+                  <%= m.operacao || 'sem operação' %>
+                </span>
+              </td>
+              <td data-rot="O que foi"><%= rotuloOrigem(m.origem) %></td>
+              <td data-rot="Documento" class="doc">
+                <a href="<%= caminhoOrigem(m.origem) %><%= m.documento_id %>"><%= m.documento_numero %></a>
+              </td>
+              <td data-rot="Sentido">
+                <span class="sentido <%= entrada ? 'entrada' : 'saida' %>">
+                  <%- ic(entrada ? 'receber' : 'pagar') %> <%= entrada ? 'Entrou' : 'Saiu' %>
+                </span>
+              </td>
+              <td data-rot="Mercadoria" class="num">
+                <%= m.quantidade_kg ? f.toneladas(m.quantidade_kg) : '—' %>
+              </td>
+              <td data-rot="Dinheiro" class="num txt-forte">
+                <%= m.valor ? 'R$ ' + f.formatar(m.valor, 2) : '—' %>
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="5" class="txt-dir">Total do período</td>
+            <td class="num">
+              <span class="txt-ok">+<%= f.toneladas(panorama.total.entrou_kg) %></span><br>
+              <span class="txt-atencao">−<%= f.toneladas(panorama.total.saiu_kg) %></span>
+            </td>
+            <td class="num">
+              <span class="txt-ok">+R$ <%= f.formatar(panorama.total.entrou, 2) %></span><br>
+              <span class="txt-atencao">−R$ <%= f.formatar(panorama.total.saiu, 2) %></span>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  <% } %>
+</div>
 
 <%- include('partials/fim') %>

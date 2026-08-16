@@ -37,9 +37,9 @@ export async function criar(dados, usuario, contexto = {}) {
           veiculo_id, placa, motorista_id, transportadora_id,
           documento_fiscal, documento_serie, documento_data,
           peso_bruto_kg, peso_tara_kg, peso_liquido_kg,
-          observacoes, conferente, status, criado_por
+          observacoes, conferente, status, criado_por, operacao_id
        ) VALUES ($1,COALESCE($2,CURRENT_DATE),$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,
-                 $14,$15,$16,$17,$18,'RASCUNHO',$19)
+                 $14,$15,$16,$17,$18,'RASCUNHO',$19,$20)
        RETURNING *`,
       [
         numero,
@@ -61,6 +61,7 @@ export async function criar(dados, usuario, contexto = {}) {
         dados.observacoes ?? null,
         dados.conferente ?? usuario.nome,
         usuario.id,
+        dados.operacaoId ?? null,
       ]
     );
     const rec = rows[0];
@@ -103,7 +104,8 @@ export async function atualizar(id, dados, usuario, contexto = {}) {
           motorista_id = $8, transportadora_id = $9,
           documento_fiscal = $10, documento_serie = $11, documento_data = $12,
           peso_bruto_kg = $13, peso_tara_kg = $14, peso_liquido_kg = $15,
-          observacoes = $16, conferente = $17, atualizado_por = $18
+          observacoes = $16, conferente = $17, atualizado_por = $18,
+          operacao_id = $20
         WHERE id = $19 RETURNING *`,
       [
         dados.data ?? null,
@@ -125,6 +127,7 @@ export async function atualizar(id, dados, usuario, contexto = {}) {
         dados.conferente ?? null,
         usuario.id,
         id,
+        dados.operacaoId ?? null,
       ]
     );
 
@@ -434,6 +437,7 @@ export const rotuloStatus = (s) => ROTULOS[s] || s;
 const SELECT_BASE = `
   SELECT r.*,
          f.razao_social AS fornecedor,
+         op.nome        AS operacao, op.cor AS operacao_cor,
          l.nome         AS local,
          pc.numero      AS pedido_numero,
          v.placa        AS veiculo_placa,
@@ -446,6 +450,7 @@ const SELECT_BASE = `
            WHERE i.recebimento_id = r.id AND i.divergencia IS NOT NULL) AS divergencias
     FROM recebimentos r
     JOIN parceiros f          ON f.id = r.fornecedor_id
+    LEFT JOIN operacoes op    ON op.id = r.operacao_id
     JOIN locais_estoque l     ON l.id = r.local_id
     LEFT JOIN pedidos_compra pc ON pc.id = r.pedido_compra_id
     LEFT JOIN veiculos v      ON v.id = r.veiculo_id

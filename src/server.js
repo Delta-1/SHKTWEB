@@ -10,6 +10,7 @@ import { injetarUsuario, exigirLogin } from './lib/auth.js';
 import { ErroNegocio } from './lib/erros.js';
 import * as formato from './lib/formato.js';
 import { icone, SPRITE } from './lib/icones.js';
+import { estatico } from './lib/estaticos.js';
 
 import rotasAuth from './routes/auth.js';
 import rotasPainel from './routes/painel.js';
@@ -67,7 +68,20 @@ export function criarApp() {
 
   app.use(express.urlencoded({ extended: true, limit: '2mb' }));
   app.use(express.json({ limit: '2mb' }));
-  app.use('/estatico', express.static(path.join(ROOT, 'src', 'public'), { maxAge: '7d' }));
+  app.use(
+    '/estatico',
+    express.static(path.join(ROOT, 'src', 'public'), {
+      // Endereco com impressao digital (?v=) e imutavel: pode ficar guardado
+      // para sempre. Sem marca, o navegador precisa reconferir.
+      setHeaders(res, _caminho, _stat) {
+        const versionado = res.req.query && res.req.query.v;
+        res.setHeader(
+          'Cache-Control',
+          versionado ? 'public, max-age=31536000, immutable' : 'public, max-age=0, must-revalidate'
+        );
+      },
+    })
+  );
 
   const PgStore = connectPgSimple(session);
   app.use(
@@ -92,6 +106,7 @@ export function criarApp() {
     res.locals.f = formato;
     res.locals.ic = icone;
     res.locals.sprite = SPRITE;
+    res.locals.estatico = estatico;
     res.locals.empresa = config.empresa;
     res.locals.caminho = req.path;
     res.locals.query = req.query;

@@ -1,102 +1,203 @@
 <%
-  // O menu é montado a partir das permissões: o operador só enxerga o que
-  // pode usar. A barreira real continua sendo o back-end.
-  //
-  // Agrupado em poucas seções, e a seção só abre a lista quando é nela que
-  // a pessoa está. Vinte links soltos na lateral não é navegação, é ruído.
-  const secoes = [
+  // ---------------------------------------------------------------------
+  // A moldura do sistema: barra de menus (tem tudo) e barra de ícones
+  // (tem o do dia a dia). Montadas a partir das permissões — o operador só
+  // enxerga o que pode usar. A barreira real continua sendo o back-end.
+  // ---------------------------------------------------------------------
+
+  const MENUS = [
     {
-      inicio: true,
-      url: '/', ic: 'painel', texto: 'Início', perm: 'dashboard.visualizar',
-    },
-    {
-      chave: 'comprar', ic: 'compras', texto: 'Comprar', perm: 'compras.visualizar',
-      marcador: typeof alertaCompras !== 'undefined' ? alertaCompras : 0,
+      nome: 'Movimento', ic: 'painel', perm: 'dashboard.visualizar',
       itens: [
-        { url: '/compras', texto: 'Pedidos de compra' },
-        { url: '/recebimentos', texto: 'Recebimentos' },
+        { url: '/', texto: 'Panorama do grupo', ic: 'painel', exato: true },
+        { divisor: true },
+        { grupo: 'Entradas' },
+        { url: '/recebimentos/novo', texto: 'Receber mercadoria', ic: 'recebimento', perm: 'compras.criar' },
+        { url: '/recebimentos', texto: 'Recebimentos lançados', ic: 'documento', perm: 'compras.visualizar' },
+        { grupo: 'Saídas' },
+        { url: '/carregamentos/novo', texto: 'Nova ordem de carregamento', ic: 'carregamento', perm: 'carregamento.criar' },
+        { url: '/carregamentos', texto: 'Carregamentos', ic: 'documento', perm: 'carregamento.visualizar' },
       ],
     },
     {
-      chave: 'guardar', ic: 'estoque', texto: 'Armazém', perm: 'estoque.visualizar',
-      marcador: typeof alertaFumigacao !== 'undefined' ? alertaFumigacao : 0,
+      nome: 'Compras', ic: 'compras', perm: 'compras.visualizar',
       itens: [
-        { url: '/estoque', texto: 'Posição de estoque' },
-        { url: '/fumigacao', texto: 'Fumigação', perm: 'fumigacao.visualizar' },
-        { url: '/certificados', texto: 'Certificados', perm: 'certificados.visualizar' },
+        { url: '/compras/novo', texto: 'Novo pedido de compra', ic: 'mais', perm: 'compras.criar' },
+        { url: '/compras', texto: 'Pedidos de compra', ic: 'compras', exato: true },
+        { divisor: true },
+        { url: '/recebimentos/novo', texto: 'Receber mercadoria', ic: 'mais', perm: 'compras.criar' },
+        { url: '/recebimentos', texto: 'Recebimentos', ic: 'recebimento', exato: true },
       ],
     },
     {
-      chave: 'vender', ic: 'vendas', texto: 'Vender', perm: 'vendas.visualizar',
-      marcador: typeof alertaVendas !== 'undefined' ? alertaVendas : 0,
+      nome: 'Armazém', ic: 'estoque', perm: 'estoque.visualizar',
       itens: [
-        { url: '/vendas', texto: 'Pedidos de venda' },
-        { url: '/carregamentos', texto: 'Carregamentos', perm: 'carregamento.visualizar' },
+        { url: '/estoque', texto: 'Posição de estoque', ic: 'estoque', exato: true },
+        { url: '/estoque/movimentos', texto: 'Movimentações', ic: 'documento' },
+        { url: '/estoque/ajuste', texto: 'Ajuste de estoque', ic: 'editar', perm: 'estoque.criar' },
+        { url: '/estoque/transferencia', texto: 'Transferência entre locais', ic: 'transferir', perm: 'estoque.criar' },
+        { divisor: true },
+        { grupo: 'Fumigação' },
+        { url: '/fumigacao/novo', texto: 'Nova fumigação', ic: 'mais', perm: 'fumigacao.criar' },
+        { url: '/fumigacao', texto: 'Fumigações', ic: 'fumigacao', exato: true, perm: 'fumigacao.visualizar' },
+        { url: '/certificados/novo', texto: 'Emitir certificado', ic: 'mais', perm: 'certificados.criar' },
+        { url: '/certificados', texto: 'Certificados', ic: 'certificado', exato: true, perm: 'certificados.visualizar' },
       ],
     },
     {
-      chave: 'dinheiro', ic: 'caixa', texto: 'Dinheiro', perm: 'financeiro.visualizar',
-      marcador: typeof alertaVencidos !== 'undefined' ? alertaVencidos : 0,
+      nome: 'Vendas', ic: 'vendas', perm: 'vendas.visualizar',
       itens: [
-        { url: '/financeiro/pagar', texto: 'Contas a pagar' },
-        { url: '/financeiro/receber', texto: 'Contas a receber' },
-        { url: '/financeiro/contas', texto: 'Caixa e bancos' },
+        { url: '/vendas/novo', texto: 'Novo pedido de venda', ic: 'mais', perm: 'vendas.criar' },
+        { url: '/vendas', texto: 'Pedidos de venda', ic: 'vendas', exato: true },
+        { divisor: true },
+        { url: '/carregamentos/novo', texto: 'Nova ordem de carregamento', ic: 'mais', perm: 'carregamento.criar' },
+        { url: '/carregamentos', texto: 'Carregamentos', ic: 'carregamento', exato: true, perm: 'carregamento.visualizar' },
       ],
     },
     {
-      chave: 'cadastros', ic: 'clientes', texto: 'Cadastros', perm: 'cadastros.visualizar',
+      nome: 'Financeiro', ic: 'caixa', perm: 'financeiro.visualizar',
       itens: [
-        { url: '/cadastros/clientes', texto: 'Clientes' },
-        { url: '/cadastros/fornecedores', texto: 'Fornecedores' },
-        { url: '/cadastros/produtos', texto: 'Produtos' },
-        { url: '/cadastros/lotes', texto: 'Lotes' },
-        { url: '/cadastros/fumigadoras', texto: 'Fumigadoras' },
-        { url: '/cadastros/transportadoras', texto: 'Transportadoras' },
-        { url: '/cadastros/veiculos', texto: 'Veículos' },
-        { url: '/cadastros/motoristas', texto: 'Motoristas' },
-        { url: '/cadastros/funcionarios', texto: 'Funcionários' },
-        { url: '/cadastros', texto: 'Tabelas de apoio', exato: true },
+        { url: '/financeiro/pagar', texto: 'Contas a pagar', ic: 'pagar' },
+        { url: '/financeiro/receber', texto: 'Contas a receber', ic: 'receber' },
+        { divisor: true },
+        { url: '/financeiro/contas', texto: 'Caixa e bancos', ic: 'caixa' },
+        { url: '/financeiro/transferencia', texto: 'Transferência entre contas', ic: 'transferir', perm: 'financeiro.criar' },
       ],
     },
     {
-      chave: 'gestao', ic: 'relatorios', texto: 'Relatórios e ajustes', perm: 'relatorios.visualizar',
+      nome: 'Cadastros', ic: 'clientes', perm: 'cadastros.visualizar',
       itens: [
-        { url: '/relatorios', texto: 'Relatórios' },
-        { url: '/auditoria', texto: 'Auditoria', perm: 'auditoria.visualizar' },
-        { url: '/admin', texto: 'Usuários e empresa', perm: 'admin.visualizar' },
+        { grupo: 'Quem' },
+        { url: '/cadastros/clientes', texto: 'Clientes', ic: 'clientes' },
+        { url: '/cadastros/fornecedores', texto: 'Fornecedores', ic: 'fornecedores' },
+        { url: '/cadastros/transportadoras', texto: 'Transportadoras', ic: 'carregamento' },
+        { url: '/cadastros/fumigadoras', texto: 'Fumigadoras', ic: 'fumigadora' },
+        { grupo: 'O quê' },
+        { url: '/cadastros/produtos', texto: 'Produtos', ic: 'produtos' },
+        { url: '/cadastros/lotes', texto: 'Lotes', ic: 'lotes' },
+        { url: '/cadastros/locais', texto: 'Locais de estoque', ic: 'estoque' },
+        { grupo: 'Frota e equipe' },
+        { url: '/cadastros/veiculos', texto: 'Veículos', ic: 'veiculos' },
+        { url: '/cadastros/motoristas', texto: 'Motoristas', ic: 'motoristas' },
+        { url: '/cadastros/funcionarios', texto: 'Funcionários', ic: 'funcionarios' },
+        { divisor: true },
+        { url: '/cadastros', texto: 'Tabelas de apoio', ic: 'admin', exato: true },
+      ],
+    },
+    {
+      nome: 'Relatórios', ic: 'relatorios', perm: 'relatorios.visualizar',
+      itens: [
+        { url: '/relatorios', texto: 'Todos os relatórios', ic: 'relatorios', exato: true },
+        { url: '/relatorios/dre', texto: 'DRE gerencial', ic: 'balanca' },
+        { url: '/relatorios/estoque', texto: 'Estoque', ic: 'estoque' },
+        { url: '/relatorios/carregamentos', texto: 'Carregamentos', ic: 'carregamento' },
+        { url: '/relatorios/financeiro', texto: 'Financeiro', ic: 'caixa' },
+      ],
+    },
+    {
+      nome: 'Sistema', ic: 'admin', perm: 'dashboard.visualizar',
+      itens: [
+        { url: '/inicio/empresa?avulso=1', texto: 'Dados da empresa', ic: 'fornecedores' },
+        { url: '/admin', texto: 'Usuários e perfis', ic: 'clientes', perm: 'admin.visualizar', exato: true },
+        { url: '/auditoria', texto: 'Auditoria', ic: 'auditoria', perm: 'auditoria.visualizar' },
+        { divisor: true },
+        { url: '/trocar-senha', texto: 'Trocar minha senha', ic: 'chave' },
+        { url: '/sair', texto: 'Sair do sistema', ic: 'sair' },
       ],
     },
   ];
 
-  const itemAtivo = (i) => (i.exato ? caminho === i.url : caminho.startsWith(i.url));
-%>
-<nav class="menu">
-  <% for (const s of secoes) { %>
-    <% if (!pode(s.perm)) continue; %>
+  // Barra de ícones: o caminho do dia, na ordem em que a operação acontece.
+  const FERRAMENTAS = [
+    { url: '/', ic: 'painel', texto: 'Panorama', cor: 'var(--tinta-3)', perm: 'dashboard.visualizar', exato: true },
+    { separador: true },
+    { url: '/compras/novo', ic: 'compras', texto: 'Comprar', cor: 'var(--roxo-500)', perm: 'compras.criar' },
+    { url: '/recebimentos/novo', ic: 'recebimento', texto: 'Receber', cor: 'var(--azul-500)', perm: 'compras.criar' },
+    { url: '/estoque', ic: 'estoque', texto: 'Estoque', cor: 'var(--azul-cinza)', perm: 'estoque.visualizar' },
+    { url: '/fumigacao/novo', ic: 'fumigacao', texto: 'Fumigar', cor: 'var(--azul-cinza)', perm: 'fumigacao.criar' },
+    { url: '/certificados/novo', ic: 'certificado', texto: 'Certificar', cor: 'var(--marca-500)', perm: 'certificados.criar' },
+    { url: '/vendas/novo', ic: 'vendas', texto: 'Vender', cor: 'var(--ambar-500)', perm: 'vendas.criar' },
+    { url: '/carregamentos/novo', ic: 'carregamento', texto: 'Carregar', cor: 'var(--marca-600)', perm: 'carregamento.criar' },
+    { separador: true },
+    { url: '/financeiro/pagar', ic: 'pagar', texto: 'A pagar', cor: 'var(--vermelho-500)', perm: 'financeiro.visualizar',
+      marcador: typeof alertaVencidos !== 'undefined' ? alertaVencidos : 0 },
+    { url: '/financeiro/receber', ic: 'receber', texto: 'A receber', cor: 'var(--marca-500)', perm: 'financeiro.visualizar' },
+    { url: '/relatorios', ic: 'relatorios', texto: 'Relatórios', cor: 'var(--tinta-3)', perm: 'relatorios.visualizar' },
+  ];
 
-    <% if (s.inicio) { %>
-      <div class="menu-secao">
-        <a href="<%= s.url %>" class="menu-cabeca <%= caminho === '/' ? 'ativo' : '' %>">
-          <%- ic(s.ic) %><span><%= s.texto %></span>
-        </a>
-      </div>
-    <% } else { %>
-      <% const visiveis = s.itens.filter((i) => !i.perm || pode(i.perm)); %>
-      <% if (!visiveis.length) continue; %>
-      <% const aberta = visiveis.some(itemAtivo); %>
-      <div class="menu-secao <%= aberta ? 'aberta' : '' %>">
-        <button type="button" class="menu-cabeca" data-secao aria-expanded="<%= aberta %>">
-          <%- ic(s.ic) %>
-          <span><%= s.texto %></span>
-          <% if (s.marcador) { %><span class="marcador"><%= s.marcador %></span><% } %>
-          <%- ic('avancar', 'seta') %>
+  const ativo = (i) => (i.exato ? caminho === i.url.split('?')[0] : caminho.startsWith(i.url.split('?')[0]));
+  const visiveis = (itens) => itens.filter((i) => i.divisor || i.grupo || !i.perm || pode(i.perm));
+%>
+
+<!-- --------------------------------------------------------- barra de menus -->
+<div class="barra-menu">
+  <a href="/" class="marca-app">
+    <img src="/estatico/img/logo.svg" alt="">
+    <div>
+      <strong>SHKT</strong>
+      <span>Grupo</span>
+    </div>
+  </a>
+
+  <button type="button" class="btn-icone abrir-menu nao-imprimir" data-abrir-menu
+          aria-label="Abrir menu" style="display:none"><%- ic('menu') %></button>
+
+  <nav class="menus">
+    <% for (const m of MENUS) { %>
+      <% if (!pode(m.perm)) continue; %>
+      <% const itens = visiveis(m.itens).filter((i) => !i.divisor && !i.grupo); %>
+      <% if (!itens.length) continue; %>
+      <% const contemAtivo = itens.some(ativo); %>
+      <div class="menu-raiz <%= contemAtivo ? 'tem-ativo' : '' %>">
+        <button type="button" data-menu aria-haspopup="true" aria-expanded="false">
+          <%= m.nome %><%- ic('baixo', 'seta-menu') %>
         </button>
-        <div class="menu-itens">
-          <% for (const i of visiveis) { %>
-            <a href="<%= i.url %>" class="<%= itemAtivo(i) ? 'ativo' : '' %>"><%= i.texto %></a>
+        <div class="menu-lista">
+          <% for (const i of visiveis(m.itens)) { %>
+            <% if (i.divisor) { %>
+              <div class="divisor"></div>
+            <% } else if (i.grupo) { %>
+              <div class="grupo"><%= i.grupo %></div>
+            <% } else { %>
+              <a href="<%= i.url %>" class="<%= ativo(i) ? 'ativo' : '' %>">
+                <%- ic(i.ic || 'documento') %><span><%= i.texto %></span>
+              </a>
+            <% } %>
           <% } %>
         </div>
       </div>
     <% } %>
+  </nav>
+
+  <div class="chrome-direita nao-imprimir">
+    <button class="btn-icone" data-tema aria-label="Alternar tema claro e escuro" title="Tema claro / escuro">
+      <%- ic('lua', 'ic-lua') %><%- ic('sol', 'ic-sol') %>
+    </button>
+    <a href="/sair" class="usuario-chip" title="<%= usuario.email %> · <%= usuario.perfil_nome %> — clique para sair">
+      <span class="avatar"><%= usuario.nome.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase() %></span>
+      <span><%= usuario.nome.split(' ')[0] %></span>
+    </a>
+  </div>
+</div>
+
+<!-- -------------------------------------------------------- barra de ícones -->
+<div class="barra-icones nao-imprimir">
+  <% for (const t of FERRAMENTAS) { %>
+    <% if (t.separador) { %>
+      <span class="separador"></span>
+    <% } else if (pode(t.perm)) { %>
+      <a href="<%= t.url %>" class="ferramenta <%= ativo(t) ? 'ativo' : '' %>" style="--cor: <%= t.cor %>">
+        <span class="quadro">
+          <%- ic(t.ic) %>
+          <% if (t.marcador) { %><span class="selo-numero"><%= t.marcador %></span><% } %>
+        </span>
+        <span><%= t.texto %></span>
+      </a>
+    <% } %>
   <% } %>
-</nav>
+  <span class="empurra"></span>
+  <a href="/sair" class="ferramenta" style="--cor: var(--tinta-4)">
+    <span class="quadro"><%- ic('sair') %></span>
+    <span>Sair</span>
+  </a>
+</div>

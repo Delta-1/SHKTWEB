@@ -68,6 +68,26 @@
           </select>
         </div>
 
+        <div class="campo c12">
+          <label>De qual operação é este documento?</label>
+          <div class="escolhas">
+            <% for (const o of ref.operacoes) { %>
+              <label class="escolha">
+                <input type="radio" name="operacao_id" value="<%= o.id %>"
+                       <%= String(r.operacao_id || (ref.operacoes[0] && ref.operacoes[0].id)) === String(o.id) ? 'checked' : '' %>>
+                <span class="simbolo" style="color:<%= o.cor %>"><%- ic(o.tipo === 'TRANSPORTE' ? 'carregamento' : 'estoque') %></span>
+                <span>
+                  <strong><%= o.nome %></strong>
+                  <span><%= o.tipo === 'TRANSPORTE' ? 'Frete e logística' : 'Grão: compra, armazena e exporta' %></span>
+                </span>
+              </label>
+            <% } %>
+          </div>
+          <span class="ajuda">
+            É o que separa o panorama das duas empresas na tela inicial.
+          </span>
+        </div>
+
         <div class="campo c4">
           <label for="data">Data <span class="obrigatorio">*</span></label>
           <input type="date" id="data" name="data" required value="<%= f.dataInput(r.data) %>"
