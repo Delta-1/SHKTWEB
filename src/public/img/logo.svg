@@ -1,23 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="SHKT">
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#1d9257"/>
-      <stop offset="1" stop-color="#0a4a2c"/>
-    </linearGradient>
-  </defs>
-  <rect width="64" height="64" rx="14" fill="url(#g)"/>
-  <!-- espiga estilizada: graos em duas colunas -->
-  <g fill="#f5d372">
-    <rect x="24" y="14" width="7" height="7" rx="2"/>
-    <rect x="33" y="14" width="7" height="7" rx="2"/>
-    <rect x="24" y="23" width="7" height="7" rx="2"/>
-    <rect x="33" y="23" width="7" height="7" rx="2"/>
-    <rect x="24" y="32" width="7" height="7" rx="2"/>
-    <rect x="33" y="32" width="7" height="7" rx="2"/>
+  <!-- Marca de carimbo: argila sobre papel. Sem degradê, sem brilho —
+       a mesma lógica do resto do sistema, que é tinta e régua. -->
+  <rect width="64" height="64" rx="5" fill="#b4552f"/>
+  <rect x="4.5" y="4.5" width="55" height="55" rx="2.5" fill="none"
+        stroke="#f6e6dc" stroke-opacity=".42"/>
+  <!-- espiga: grãos em duas fileiras, alternados -->
+  <g fill="#f6e6dc">
+    <rect x="26" y="13" width="5.5" height="8" rx="2.75"/>
+    <rect x="32.5" y="13" width="5.5" height="8" rx="2.75"/>
+    <rect x="26" y="22.5" width="5.5" height="8" rx="2.75"/>
+    <rect x="32.5" y="22.5" width="5.5" height="8" rx="2.75"/>
+    <rect x="26" y="32" width="5.5" height="8" rx="2.75"/>
+    <rect x="32.5" y="32" width="5.5" height="8" rx="2.75"/>
   </g>
-  <!-- folha -->
-  <path d="M24 41c-6 0-11-4-12-9 7-1 12 2 14 6z" fill="#7fd0a0"/>
-  <path d="M40 41c6 0 11-4 12-9-7-1-12 2-14 6z" fill="#7fd0a0"/>
-  <text x="32" y="57" font-family="Segoe UI, Arial, sans-serif" font-size="10"
-        font-weight="700" fill="#ffffff" text-anchor="middle" letter-spacing="1.5">SHKT</text>
+  <!-- colmo e folhas -->
+  <path d="M32 40v7" stroke="#f6e6dc" stroke-width="2" stroke-linecap="round"/>
+  <path d="M31 43c-4 .4-7-1.4-8.5-4.4 3.6-.8 7 .6 8.5 4.4z" fill="#f6e6dc" fill-opacity=".8"/>
+  <path d="M33 43c4 .4 7-1.4 8.5-4.4-3.6-.8-7 .6-8.5 4.4z" fill="#f6e6dc" fill-opacity=".8"/>
+  <!-- régua de base, como num carimbo de documento -->
+  <path d="M18 52h28" stroke="#f6e6dc" stroke-opacity=".55" stroke-width="1.5" stroke-linecap="round"/>
 </svg>

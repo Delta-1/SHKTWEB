@@ -20,7 +20,7 @@
  * HTML novo servido com CSS velho do cache, e a tela chega quebrada para
  * quem já tinha usado o sistema antes.
  */
-const VERSAO = 'shkt-estatico-v3';
+const VERSAO = 'shkt-estatico-v4';
 
 self.addEventListener('install', () => self.skipWaiting());
 
