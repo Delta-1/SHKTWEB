@@ -3,94 +3,89 @@
 <% const acao = novo ? '/vendas/novo' : `/vendas/${pedido.id}/editar`;
    const itens = pedido.lista_itens && pedido.lista_itens.length ? pedido.lista_itens : [null]; %>
 
-<form method="post" action="<%= acao %>" class="cartao" style="max-width:1100px">
+<form method="post" action="<%= acao %>" class="cartao" style="max-width:1000px" data-etapas>
   <div class="cartao-topo">
     <a href="<%= novo ? '/vendas' : '/vendas/' + pedido.id %>" class="btn pequeno"><%- ic('voltar') %> Voltar</a>
     <h2><%= novo ? 'Novo pedido de venda' : 'Editar pedido ' + pedido.numero %></h2>
   </div>
 
   <div class="cartao-corpo">
-    <fieldset>
-      <legend>Cliente e condições</legend>
+
+    <!-- ==================================================== etapa 1: cliente -->
+    <section class="etapa" data-rotulo="Cliente">
+      <h3>Para quem você está vendendo?</h3>
+      <p class="explica">
+        Ao aprovar, o sistema vai <strong>reservar</strong> a mercadoria para
+        este cliente. Ela continua no armazém, mas ninguém mais consegue vender
+        a mesma carga.
+      </p>
+
       <div class="campos">
-        <div class="campo c3">
-          <label for="data">Data <span class="obrigatorio">*</span></label>
-          <input type="date" id="data" name="data" required value="<%= f.dataInput(pedido.data) %>">
-        </div>
-        <div class="campo c6">
+        <div class="campo c8">
           <label for="cliente_id">Cliente <span class="obrigatorio">*</span></label>
-          <select id="cliente_id" name="cliente_id" required data-foco>
+          <select id="cliente_id" name="cliente_id" required data-foco data-resumo="Cliente">
             <option value="">Selecione...</option>
             <% for (const x of ref.clientes) { %>
               <option value="<%= x.id %>" <%= String(pedido.cliente_id) === String(x.id) ? 'selected' : '' %>><%= x.nome %></option>
             <% } %>
           </select>
+          <% if (!ref.clientes.length) { %>
+            <span class="ajuda txt-atencao">
+              Nenhum cliente cadastrado ainda.
+              <a href="/cadastros/clientes/novo">Cadastrar agora</a>.
+            </span>
+          <% } %>
         </div>
-        <div class="campo c3">
-          <label for="previsao_embarque">Previsão de embarque</label>
-          <input type="date" id="previsao_embarque" name="previsao_embarque"
-                 value="<%= f.dataInput(pedido.previsao_embarque) %>">
+        <div class="campo c4">
+          <label for="data">Data do pedido <span class="obrigatorio">*</span></label>
+          <input type="date" id="data" name="data" required value="<%= f.dataInput(pedido.data) %>"
+                 data-resumo="Data do pedido">
         </div>
 
+        <div class="campo c6">
+          <label for="destino">Destino</label>
+          <input type="text" id="destino" name="destino" maxlength="160"
+                 placeholder="Cidade, porto ou planta" value="<%= pedido.destino || '' %>"
+                 data-resumo="Destino">
+        </div>
         <div class="campo c3">
-          <label for="pais_destino_id">País de destino</label>
-          <select id="pais_destino_id" name="pais_destino_id">
+          <label for="pais_destino_id">País</label>
+          <select id="pais_destino_id" name="pais_destino_id" data-resumo="País de destino">
             <option value="">—</option>
             <% for (const x of ref.paises) { %>
               <option value="<%= x.id %>" <%= String(pedido.pais_destino_id) === String(x.id) ? 'selected' : '' %>><%= x.nome %></option>
             <% } %>
           </select>
         </div>
-        <div class="campo c5">
-          <label for="destino">Destino (cidade, porto, planta)</label>
-          <input type="text" id="destino" name="destino" maxlength="160" value="<%= pedido.destino || '' %>">
-        </div>
-        <div class="campo c2">
-          <label for="incoterm_id">Incoterm</label>
-          <select id="incoterm_id" name="incoterm_id">
-            <option value="">—</option>
-            <% for (const x of ref.incoterms) { %>
-              <option value="<%= x.id %>" <%= String(pedido.incoterm_id) === String(x.id) ? 'selected' : '' %>><%= x.codigo %></option>
-            <% } %>
-          </select>
-        </div>
-        <div class="campo c2">
-          <label for="moeda">Moeda</label>
-          <select id="moeda" name="moeda">
-            <% for (const x of ref.moedas) { %>
-              <option value="<%= x.codigo %>" <%= (pedido.moeda || 'BRL') === x.codigo ? 'selected' : '' %>><%= x.codigo %></option>
-            <% } %>
-          </select>
-        </div>
-
-        <div class="campo c2">
-          <label for="prazo_dias">Prazo (dias)</label>
-          <input type="number" id="prazo_dias" name="prazo_dias" min="0" max="3650"
-                 value="<%= pedido.prazo_dias ?? '' %>">
-        </div>
-        <div class="campo c10">
-          <label for="condicao_pagamento">Condição de pagamento</label>
-          <input type="text" id="condicao_pagamento" name="condicao_pagamento" maxlength="120"
-                 placeholder="Ex.: 30% antecipado, saldo contra documentos"
-                 value="<%= pedido.condicao_pagamento || '' %>">
+        <div class="campo c3">
+          <label for="previsao_embarque">Previsão de embarque</label>
+          <input type="date" id="previsao_embarque" name="previsao_embarque"
+                 value="<%= f.dataInput(pedido.previsao_embarque) %>" data-resumo="Previsão de embarque">
         </div>
       </div>
-    </fieldset>
+    </section>
 
-    <fieldset>
-      <legend>Itens vendidos</legend>
+    <!-- ===================================================== etapa 2: itens -->
+    <section class="etapa" data-rotulo="Mercadoria">
+      <h3>O que está sendo vendido</h3>
+      <p class="explica">
+        Escolha de qual armazém a mercadoria vai sair. Se faltar estoque
+        disponível em qualquer linha, o pedido inteiro não aprova — de
+        propósito.
+      </p>
+
       <div class="tabela-area">
         <table class="tabela" data-linhas="itens">
           <thead>
             <tr>
               <th style="width:24%">Produto</th>
-              <th style="width:16%">Sai do local</th>
+              <th style="width:18%">Sai do local</th>
               <th style="width:12%">Lote</th>
-              <th style="width:11%" class="num">Quantidade</th>
+              <th style="width:12%" class="num">Quantidade</th>
               <th style="width:9%">Unidade</th>
-              <th style="width:12%" class="num">Preço unit.</th>
-              <th style="width:12%" class="num">Total</th>
-              <th style="width:40px"></th>
+              <th style="width:13%" class="num">Preço unit.</th>
+              <th style="width:13%" class="num">Total</th>
+              <th style="width:48px"></th>
             </tr>
           </thead>
           <tbody>
@@ -122,7 +117,7 @@
                   </select>
                 </td>
                 <td><input type="text" inputmode="decimal" class="numerico" data-casas="3"
-                           name="item_quantidade" data-item-quantidade
+                           name="item_quantidade" data-item-quantidade placeholder="0,000"
                            value="<%= it && it.quantidade_origem ? f.formatar(it.quantidade_origem, 3) : '' %>"></td>
                 <td>
                   <select name="item_unidade_id" data-item-unidade>
@@ -133,7 +128,7 @@
                   </select>
                 </td>
                 <td><input type="text" inputmode="decimal" class="numerico" data-casas="2"
-                           name="item_preco" data-item-preco
+                           name="item_preco" data-item-preco placeholder="0,00"
                            value="<%= it && it.preco_unitario ? f.formatar(it.preco_unitario, 2) : '' %>"></td>
                 <td class="num txt-forte" data-item-total><%= it ? f.formatar(it.valor_total, 2) : '0,00' %></td>
                 <td class="acoes">
@@ -153,31 +148,89 @@
         </table>
       </div>
       <div class="mt-1">
-        <button type="button" class="btn pequeno" data-adicionar-linha="itens">
-          <%- ic('mais') %> Adicionar item
+        <button type="button" class="btn" data-adicionar-linha="itens">
+          <%- ic('mais') %> Adicionar mais um item
         </button>
       </div>
-      <p class="txt-min txt-fraco mt-1 mb-0">
-        Na aprovação, o sistema confere o estoque disponível de cada item e reserva a quantidade.
-        Se faltar em qualquer linha, a aprovação inteira é recusada.
-      </p>
-    </fieldset>
+    </section>
 
-    <fieldset>
-      <legend>Observações</legend>
-      <div class="campos">
-        <div class="campo c12">
-          <textarea name="observacoes" rows="3"
-                    placeholder="Exigências do cliente, documentação, janela de embarque..."><%= pedido.observacoes || '' %></textarea>
+    <!-- ================================================= etapa 3: conferir -->
+    <section class="etapa" data-rotulo="Conferir">
+      <h3>Confira antes de criar</h3>
+      <p class="explica">
+        Ainda dá para voltar e corrigir. Depois de <strong>aprovado</strong>,
+        preço e quantidade ficam travados.
+      </p>
+
+      <dl class="confere mb-2" data-confere></dl>
+
+      <div class="ficha mb-2" style="border-top:1px solid var(--linha);padding-top:16px">
+        <div class="item">
+          <div class="rot">Total do pedido</div>
+          <div class="val grande" data-confere-total>0,00</div>
         </div>
       </div>
-    </fieldset>
+
+      <fieldset>
+        <legend>Condições comerciais</legend>
+        <div class="campos">
+          <div class="campo c3">
+            <label for="moeda">Moeda</label>
+            <select id="moeda" name="moeda">
+              <% for (const x of ref.moedas) { %>
+                <option value="<%= x.codigo %>" <%= (pedido.moeda || 'BRL') === x.codigo ? 'selected' : '' %>><%= x.codigo %></option>
+              <% } %>
+            </select>
+          </div>
+          <div class="campo c3">
+            <label for="incoterm_id">Incoterm</label>
+            <select id="incoterm_id" name="incoterm_id">
+              <option value="">—</option>
+              <% for (const x of ref.incoterms) { %>
+                <option value="<%= x.id %>" <%= String(pedido.incoterm_id) === String(x.id) ? 'selected' : '' %>><%= x.codigo %></option>
+              <% } %>
+            </select>
+          </div>
+          <div class="campo c3">
+            <label for="prazo_dias">Prazo (dias)</label>
+            <input type="number" id="prazo_dias" name="prazo_dias" min="0" max="3650"
+                   placeholder="30" value="<%= pedido.prazo_dias ?? '' %>">
+            <span class="ajuda">Vira o vencimento do título a receber.</span>
+          </div>
+          <div class="campo c12">
+            <label for="condicao_pagamento">Condição de pagamento</label>
+            <input type="text" id="condicao_pagamento" name="condicao_pagamento" maxlength="120"
+                   placeholder="Ex.: 30% antecipado, saldo contra documentos"
+                   value="<%= pedido.condicao_pagamento || '' %>">
+          </div>
+          <div class="campo c12">
+            <label for="observacoes">Observações</label>
+            <textarea id="observacoes" name="observacoes" rows="3"
+                      placeholder="Exigências do cliente, documentação, janela de embarque..."><%= pedido.observacoes || '' %></textarea>
+          </div>
+        </div>
+      </fieldset>
+
+      <div class="ajuda-caixa">
+        <%- ic('info') %>
+        <div>
+          O pedido nasce como <strong>rascunho</strong>. Só a aprovação reserva
+          o estoque e gera o título a receber — e ela acontece na tela seguinte.
+        </div>
+      </div>
+    </section>
   </div>
 
   <div class="rodape-form">
     <a href="<%= novo ? '/vendas' : '/vendas/' + pedido.id %>" class="btn">Cancelar</a>
+    <button type="button" class="btn oculto" data-etapa-voltar><%- ic('voltar') %> Voltar</button>
     <span class="espaco"></span>
-    <button type="submit" class="btn primario"><%- ic('ok') %> <%= novo ? 'Criar pedido' : 'Salvar alterações' %></button>
+    <button type="button" class="btn primario grande" data-etapa-avancar>
+      Continuar <%- ic('avancar') %>
+    </button>
+    <button type="submit" class="btn primario grande oculto" data-etapa-gravar>
+      <%- ic('ok') %> <%= novo ? 'Criar pedido' : 'Salvar alterações' %>
+    </button>
   </div>
 </form>
 

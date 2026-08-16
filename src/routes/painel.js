@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { um, muitos } from '../db/index.js';
 import { exigir } from '../lib/auth.js';
 import { hojeISO } from '../lib/formato.js';
+import * as onboarding from '../services/onboarding.js';
 
 const router = Router();
 
@@ -51,6 +52,9 @@ router.get('/', exigir('dashboard.visualizar'), async (req, res, next) => {
           FROM vw_titulos t
          WHERE COALESCE(t.emissao, CURRENT_DATE) BETWEEN $1 AND $2`, [de, ate]),
     ]);
+
+    // Enquanto faltar configuração, a tela inicial mostra o que falta.
+    const primeirosPassos = await onboarding.resumo();
 
     // Fase 2: o que o comercial deixou em aberto
     const comercial = await um(
@@ -119,7 +123,7 @@ router.get('/', exigir('dashboard.visualizar'), async (req, res, next) => {
       ]);
 
     res.render('painel', {
-      titulo: 'Painel',
+      titulo: 'Início',
       de,
       ate,
       estoque,
@@ -135,6 +139,7 @@ router.get('/', exigir('dashboard.visualizar'), async (req, res, next) => {
       estoqueBaixo,
       carregamentosAbertos,
       comercial,
+      primeirosPassos,
       alertaFumigacao: semComunicado.length,
       alertaVencidos: financeiro.qtd_vencidos,
       alertaCompras: comercial.compras_aguardando + comercial.recebimentos_pendentes,

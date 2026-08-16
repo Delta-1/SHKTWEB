@@ -1,0 +1,66 @@
+<%- include('_moldura') %>
+
+<form method="post" action="/inicio/armazem">
+  <div class="onboard-corpo">
+    <h2>Onde a mercadoria fica e o que você movimenta</h2>
+    <p class="explica">
+      Duas informações e o sistema já consegue registrar a primeira entrada.
+      Dá para cadastrar quantos quiser depois, em <strong>Cadastros</strong>.
+    </p>
+
+    <div class="campos">
+      <div class="campo c12">
+        <label for="local">Nome do armazém, silo ou pátio</label>
+        <% if (atual.locais) { %>
+          <input type="text" id="local" name="local" maxlength="120"
+                 placeholder="Deixe em branco para não criar outro">
+          <span class="ajuda">
+            <%- ic('ok') %> Você já tem <strong><%= atual.locais %></strong> local(is) cadastrado(s) —
+            o primeiro é “<%= atual.local %>”. Preencha só se quiser adicionar mais um.
+          </span>
+        <% } else { %>
+          <input type="text" id="local" name="local" maxlength="120"
+                 placeholder="Ex.: Armazém Principal" data-foco>
+          <span class="ajuda">É para cá que a mercadoria comprada vai entrar.</span>
+        <% } %>
+      </div>
+
+      <div class="campo c12">
+        <label for="produto">Produto principal</label>
+        <% if (atual.produtos) { %>
+          <input type="text" id="produto" name="produto" maxlength="160"
+                 placeholder="Deixe em branco para não criar outro">
+          <span class="ajuda">
+            <%- ic('ok') %> Você já tem <strong><%= atual.produtos %></strong> produto(s) —
+            o primeiro é “<%= atual.produto %>”.
+          </span>
+        <% } else { %>
+          <input type="text" id="produto" name="produto" maxlength="160"
+                 placeholder="Ex.: Milho Amarelo Duro">
+          <span class="ajuda">
+            Criado em toneladas e já marcado como “exige fumigação”, que é o
+            caso do grão para exportação. Dá para mudar depois.
+          </span>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="ajuda-caixa mt-2">
+      <%- ic('info') %>
+      <div>
+        Todo estoque é guardado internamente em <strong>quilos</strong>, mesmo
+        quando você digita em toneladas ou sacas. Assim a conta nunca fecha
+        errado por causa de conversão.
+      </div>
+    </div>
+  </div>
+
+  <div class="onboard-rodape">
+    <a href="/inicio/empresa" class="btn"><%- ic('voltar') %> Voltar</a>
+    <span class="espaco"></span>
+    <a href="/inicio/pronto" class="btn fantasma">Pular</a>
+    <button type="submit" class="btn primario grande">Continuar <%- ic('avancar') %></button>
+  </div>
+</form>
+
+<%- include('_fim') %>

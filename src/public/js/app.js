@@ -187,6 +187,145 @@
     if (ev.target.form) recalcular(ev.target.form);
   });
 
+  // ------------------------------------------------------------- etapas
+  // Um formulário de vinte campos assusta. Três telas de sete, não.
+  // O HTML entrega o formulário inteiro; aqui ele vira passos, com o trilho
+  // no topo e conferência antes de gravar. Sem JS, o formulário fica inteiro
+  // na tela e funciona igual.
+  function montarEtapas(form) {
+    var etapas = form.querySelectorAll('.etapa');
+    if (etapas.length < 2) return;
+
+    form.classList.add('js-etapas');
+    var atual = 0;
+
+    // Trilho: uma bolinha por etapa, com o nome ao lado
+    var trilho = doc.createElement('div');
+    trilho.className = 'trilho-etapas';
+    for (var i = 0; i < etapas.length; i++) {
+      var marco = doc.createElement('div');
+      marco.className = 'marco';
+      marco.innerHTML =
+        '<span class="bolinha">' + (i + 1) + '</span>' +
+        '<span class="rotulo"></span>';
+      marco.querySelector('.rotulo').textContent = etapas[i].getAttribute('data-rotulo') || 'Passo ' + (i + 1);
+      trilho.appendChild(marco);
+    }
+    var corpo = form.querySelector('.cartao-corpo') || etapas[0].parentNode;
+    corpo.parentNode.insertBefore(trilho, corpo);
+
+    var marcos = trilho.querySelectorAll('.marco');
+    var voltar = form.querySelector('[data-etapa-voltar]');
+    var avancar = form.querySelector('[data-etapa-avancar]');
+    var gravar = form.querySelector('[data-etapa-gravar]');
+
+    function mostrar(indice) {
+      atual = indice;
+      for (var i = 0; i < etapas.length; i++) {
+        etapas[i].classList.toggle('ativa', i === indice);
+        marcos[i].classList.toggle('atual', i === indice);
+        marcos[i].classList.toggle('pronta', i < indice);
+        marcos[i].querySelector('.bolinha').textContent = i < indice ? '✓' : String(i + 1);
+      }
+      if (voltar) voltar.classList.toggle('oculto', indice === 0);
+      if (avancar) avancar.classList.toggle('oculto', indice === etapas.length - 1);
+      if (gravar) gravar.classList.toggle('oculto', indice !== etapas.length - 1);
+
+      if (indice === etapas.length - 1) preencherConferencia(form);
+
+      // Rolar para o topo do formulário: a etapa nova começa do começo
+      var caixa = form.getBoundingClientRect();
+      if (caixa.top < 0) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      var foco = etapas[indice].querySelector('input:not([type=hidden]), select, textarea');
+      if (foco && !('ontouchstart' in window)) setTimeout(function () { foco.focus(); }, 120);
+    }
+
+    // Só avança quando o que está na tela estiver preenchido corretamente.
+    // O navegador aponta o campo — não precisamos inventar mensagem.
+    function etapaValida() {
+      var campos = etapas[atual].querySelectorAll('input, select, textarea');
+      for (var i = 0; i < campos.length; i++) {
+        if (!campos[i].checkValidity()) {
+          campos[i].reportValidity();
+          return false;
+        }
+      }
+      return true;
+    }
+
+    if (avancar) {
+      avancar.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        if (etapaValida()) mostrar(Math.min(atual + 1, etapas.length - 1));
+      });
+    }
+    if (voltar) {
+      voltar.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        mostrar(Math.max(atual - 1, 0));
+      });
+    }
+
+    // Clicar numa etapa já concluída volta para ela
+    for (var m = 0; m < marcos.length; m++) {
+      (function (indice) {
+        marcos[indice].addEventListener('click', function () {
+          if (indice < atual) mostrar(indice);
+        });
+        marcos[indice].style.cursor = 'pointer';
+      })(m);
+    }
+
+    // Enter no meio do formulário avança em vez de gravar pela metade
+    form.addEventListener('keydown', function (ev) {
+      if (ev.key !== 'Enter' || ev.target.tagName === 'TEXTAREA') return;
+      if (atual === etapas.length - 1) return;
+      ev.preventDefault();
+      if (etapaValida()) mostrar(atual + 1);
+    });
+
+    mostrar(0);
+  }
+
+  // Conferência: o que vai ser gravado, escrito por extenso, antes de gravar.
+  function preencherConferencia(form) {
+    var alvo = form.querySelector('[data-confere]');
+    if (!alvo) return;
+
+    var campos = form.querySelectorAll('[data-resumo]');
+    var html = '';
+    for (var i = 0; i < campos.length; i++) {
+      var campo = campos[i];
+      var valor = campo.value;
+      if (campo.tagName === 'SELECT') {
+        valor = campo.selectedOptions[0] ? campo.selectedOptions[0].textContent.trim() : '';
+      }
+      if (!valor) continue;
+      html += '<div class="par"><dt></dt><dd></dd></div>';
+    }
+    alvo.innerHTML = html;
+
+    var pares = alvo.querySelectorAll('.par');
+    var p = 0;
+    for (var j = 0; j < campos.length; j++) {
+      var c = campos[j];
+      var v = c.value;
+      if (c.tagName === 'SELECT') {
+        v = c.selectedOptions[0] ? c.selectedOptions[0].textContent.trim() : '';
+      }
+      if (!v) continue;
+      pares[p].querySelector('dt').textContent = c.getAttribute('data-resumo');
+      pares[p].querySelector('dd').textContent = v;
+      p++;
+    }
+
+    // Total dos itens, quando o formulário tiver linhas
+    var total = form.querySelector('[data-total-linhas]');
+    var totalConf = form.querySelector('[data-confere-total]');
+    if (total && totalConf) totalConf.textContent = total.textContent;
+  }
+
   // ------------------------------------------------ linhas de item (pedidos)
   // Um pedido tem varias linhas. Adicionar e remover linha acontece na tela,
   // sem ida ao servidor: quem esta digitando um pedido de dez itens nao pode
@@ -393,6 +532,18 @@
 
     var tabelas = doc.querySelectorAll('table[data-linhas]');
     for (var t = 0; t < tabelas.length; t++) somarLinhas(tabelas[t]);
+
+    var comEtapas = doc.querySelectorAll('form[data-etapas]');
+    for (var e = 0; e < comEtapas.length; e++) montarEtapas(comEtapas[e]);
+
+    // Seções do menu que não são a atual abrem e fecham no clique
+    doc.addEventListener('click', function (ev) {
+      var cabeca = ev.target.closest('[data-secao]');
+      if (!cabeca) return;
+      var secao = cabeca.closest('.menu-secao');
+      var aberta = secao.classList.toggle('aberta');
+      cabeca.setAttribute('aria-expanded', aberta ? 'true' : 'false');
+    });
 
     // Barras de saldo crescem a partir do zero: o olho percebe a proporcao
     var barras = doc.querySelectorAll('.barra .parte[data-largura]');

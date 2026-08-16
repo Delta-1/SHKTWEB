@@ -1,0 +1,60 @@
+<%- include('_moldura') %>
+
+<form method="post" action="/inicio/empresa">
+  <input type="hidden" name="avulso" value="<%= avulso ? '1' : '0' %>">
+
+  <div class="onboard-corpo">
+    <h2>Os dados da sua empresa</h2>
+    <p class="explica">
+      É o que aparece no alto de todo documento que o sistema imprime —
+      pedido, romaneio, certificado. Preencha uma vez e não pense mais nisso.
+    </p>
+
+    <div class="campos">
+      <div class="campo c12">
+        <label for="nome">Razão social <span class="obrigatorio">*</span></label>
+        <input type="text" id="nome" name="nome" required maxlength="160"
+               value="<%= empresa.nome %>" data-foco>
+      </div>
+      <div class="campo c6">
+        <label for="cnpj">CNPJ</label>
+        <input type="text" id="cnpj" name="cnpj" maxlength="30"
+               placeholder="00.000.000/0001-00" value="<%= empresa.cnpj %>">
+      </div>
+      <div class="campo c6">
+        <label for="telefone">Telefone</label>
+        <input type="text" id="telefone" name="telefone" maxlength="40"
+               placeholder="(00) 00000-0000" value="<%= empresa.telefone %>">
+      </div>
+      <div class="campo c12">
+        <label for="endereco">Endereço</label>
+        <input type="text" id="endereco" name="endereco" maxlength="200"
+               placeholder="Rua, número, bairro" value="<%= empresa.endereco %>">
+      </div>
+      <div class="campo c6">
+        <label for="cidade">Cidade / UF</label>
+        <input type="text" id="cidade" name="cidade" maxlength="120"
+               placeholder="Foz do Iguaçu / PR" value="<%= empresa.cidade %>">
+      </div>
+      <div class="campo c6">
+        <label for="email">E-mail</label>
+        <input type="email" id="email" name="email" maxlength="160"
+               placeholder="contato@empresa.com.br" value="<%= empresa.email %>">
+      </div>
+    </div>
+  </div>
+
+  <div class="onboard-rodape">
+    <% if (avulso) { %>
+      <a href="/" class="btn">Voltar</a>
+    <% } else { %>
+      <a href="/inicio" class="btn"><%- ic('voltar') %> Voltar</a>
+    <% } %>
+    <span class="espaco"></span>
+    <button type="submit" class="btn primario grande">
+      <%= avulso ? 'Salvar' : 'Continuar' %> <%- ic('avancar') %>
+    </button>
+  </div>
+</form>
+
+<%- include('_fim') %>

@@ -7,10 +7,11 @@
  * operação. Um ERP que mostra número velho porque veio do cache é pior do que
  * um ERP fora do ar — o usuário toma decisão errada achando que está certo.
  */
-const VERSAO = 'shkt-estatico-v1';
+const VERSAO = 'shkt-estatico-v2';
 const ESTATICOS = [
   '/estatico/css/app.css',
   '/estatico/js/app.js',
+  '/estatico/fontes/plus-jakarta-sans.woff2',
   '/estatico/img/logo.svg',
   '/estatico/img/icone-192.png',
   '/estatico/img/icone-512.png',

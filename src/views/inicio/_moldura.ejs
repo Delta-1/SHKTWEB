@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title><%= titulo %> · ERP SHKT</title>
+  <link rel="icon" href="/estatico/img/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/estatico/css/app.css">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('shkt-tema');
+        if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'escuro' : 'claro';
+        if (t === 'escuro') document.documentElement.classList.add('escuro');
+      } catch (e) { /* sem storage */ }
+    })();
+  </script>
+</head>
+<body class="onboard-tela">
+<%- sprite %>
+
+<div class="onboard-caixa">
+  <div class="onboard-topo">
+    <img src="/estatico/img/logo.svg" alt="" class="logo">
+    <div class="quem">
+      <strong>ERP SHKT</strong>
+      <span>Primeiros passos</span>
+    </div>
+    <div class="contador">Passo <%= etapaAtual + 1 %> de <%= etapas.length %></div>
+  </div>
+  <div class="onboard-barra"><div style="width:<%= percentual %>%"></div></div>

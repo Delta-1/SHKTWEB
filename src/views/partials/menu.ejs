@@ -1,79 +1,102 @@
 <%
-  // Menu montado a partir das permissoes do usuario: o operador so enxerga
-  // o que ele pode usar. A barreira real continua sendo o back-end.
-  const grupos = [
+  // O menu é montado a partir das permissões: o operador só enxerga o que
+  // pode usar. A barreira real continua sendo o back-end.
+  //
+  // Agrupado em poucas seções, e a seção só abre a lista quando é nela que
+  // a pessoa está. Vinte links soltos na lateral não é navegação, é ruído.
+  const secoes = [
     {
-      nome: null,
-      itens: [{ url: '/', ic: 'painel', texto: 'Painel', perm: 'dashboard.visualizar', exato: true }],
+      inicio: true,
+      url: '/', ic: 'painel', texto: 'Início', perm: 'dashboard.visualizar',
     },
     {
-      nome: 'Operação',
+      chave: 'comprar', ic: 'compras', texto: 'Comprar', perm: 'compras.visualizar',
+      marcador: typeof alertaCompras !== 'undefined' ? alertaCompras : 0,
       itens: [
-        { url: '/estoque', ic: 'estoque', texto: 'Estoque', perm: 'estoque.visualizar' },
-        { url: '/fumigacao', ic: 'fumigacao', texto: 'Fumigação', perm: 'fumigacao.visualizar',
-          marcador: typeof alertaFumigacao !== 'undefined' ? alertaFumigacao : 0 },
-        { url: '/certificados', ic: 'certificado', texto: 'Certificados', perm: 'certificados.visualizar' },
-        { url: '/carregamentos', ic: 'carregamento', texto: 'Carregamentos', perm: 'carregamento.visualizar' },
+        { url: '/compras', texto: 'Pedidos de compra' },
+        { url: '/recebimentos', texto: 'Recebimentos' },
       ],
     },
     {
-      nome: 'Comercial',
+      chave: 'guardar', ic: 'estoque', texto: 'Armazém', perm: 'estoque.visualizar',
+      marcador: typeof alertaFumigacao !== 'undefined' ? alertaFumigacao : 0,
       itens: [
-        { url: '/compras', ic: 'compras', texto: 'Pedidos de compra', perm: 'compras.visualizar',
-          marcador: typeof alertaCompras !== 'undefined' ? alertaCompras : 0 },
-        { url: '/recebimentos', ic: 'recebimento', texto: 'Recebimentos', perm: 'compras.visualizar' },
-        { url: '/vendas', ic: 'vendas', texto: 'Pedidos de venda', perm: 'vendas.visualizar',
-          marcador: typeof alertaVendas !== 'undefined' ? alertaVendas : 0 },
+        { url: '/estoque', texto: 'Posição de estoque' },
+        { url: '/fumigacao', texto: 'Fumigação', perm: 'fumigacao.visualizar' },
+        { url: '/certificados', texto: 'Certificados', perm: 'certificados.visualizar' },
       ],
     },
     {
-      nome: 'Financeiro',
+      chave: 'vender', ic: 'vendas', texto: 'Vender', perm: 'vendas.visualizar',
+      marcador: typeof alertaVendas !== 'undefined' ? alertaVendas : 0,
       itens: [
-        { url: '/financeiro/pagar', ic: 'pagar', texto: 'Contas a pagar', perm: 'financeiro.visualizar',
-          marcador: typeof alertaVencidos !== 'undefined' ? alertaVencidos : 0 },
-        { url: '/financeiro/receber', ic: 'receber', texto: 'Contas a receber', perm: 'financeiro.visualizar' },
-        { url: '/financeiro/contas', ic: 'caixa', texto: 'Caixa e bancos', perm: 'financeiro.visualizar' },
+        { url: '/vendas', texto: 'Pedidos de venda' },
+        { url: '/carregamentos', texto: 'Carregamentos', perm: 'carregamento.visualizar' },
       ],
     },
     {
-      nome: 'Cadastros',
+      chave: 'dinheiro', ic: 'caixa', texto: 'Dinheiro', perm: 'financeiro.visualizar',
+      marcador: typeof alertaVencidos !== 'undefined' ? alertaVencidos : 0,
       itens: [
-        { url: '/cadastros/clientes', ic: 'clientes', texto: 'Clientes', perm: 'cadastros.visualizar' },
-        { url: '/cadastros/fornecedores', ic: 'fornecedores', texto: 'Fornecedores', perm: 'cadastros.visualizar' },
-        { url: '/cadastros/fumigadoras', ic: 'fumigadora', texto: 'Fumigadoras', perm: 'cadastros.visualizar' },
-        { url: '/cadastros/transportadoras', ic: 'carregamento', texto: 'Transportadoras', perm: 'cadastros.visualizar' },
-        { url: '/cadastros/produtos', ic: 'produtos', texto: 'Produtos', perm: 'cadastros.visualizar' },
-        { url: '/cadastros/lotes', ic: 'lotes', texto: 'Lotes', perm: 'cadastros.visualizar' },
-        { url: '/cadastros/veiculos', ic: 'veiculos', texto: 'Veículos', perm: 'cadastros.visualizar' },
-        { url: '/cadastros/motoristas', ic: 'motoristas', texto: 'Motoristas', perm: 'cadastros.visualizar' },
-        { url: '/cadastros/funcionarios', ic: 'funcionarios', texto: 'Funcionários', perm: 'cadastros.visualizar' },
-        { url: '/cadastros', ic: 'admin', texto: 'Tabelas de apoio', perm: 'cadastros.visualizar', exato: true },
+        { url: '/financeiro/pagar', texto: 'Contas a pagar' },
+        { url: '/financeiro/receber', texto: 'Contas a receber' },
+        { url: '/financeiro/contas', texto: 'Caixa e bancos' },
       ],
     },
     {
-      nome: 'Gestão',
+      chave: 'cadastros', ic: 'clientes', texto: 'Cadastros', perm: 'cadastros.visualizar',
       itens: [
-        { url: '/relatorios', ic: 'relatorios', texto: 'Relatórios', perm: 'relatorios.visualizar' },
-        { url: '/auditoria', ic: 'auditoria', texto: 'Auditoria', perm: 'auditoria.visualizar' },
-        { url: '/admin', ic: 'admin', texto: 'Administração', perm: 'admin.visualizar' },
+        { url: '/cadastros/clientes', texto: 'Clientes' },
+        { url: '/cadastros/fornecedores', texto: 'Fornecedores' },
+        { url: '/cadastros/produtos', texto: 'Produtos' },
+        { url: '/cadastros/lotes', texto: 'Lotes' },
+        { url: '/cadastros/fumigadoras', texto: 'Fumigadoras' },
+        { url: '/cadastros/transportadoras', texto: 'Transportadoras' },
+        { url: '/cadastros/veiculos', texto: 'Veículos' },
+        { url: '/cadastros/motoristas', texto: 'Motoristas' },
+        { url: '/cadastros/funcionarios', texto: 'Funcionários' },
+        { url: '/cadastros', texto: 'Tabelas de apoio', exato: true },
+      ],
+    },
+    {
+      chave: 'gestao', ic: 'relatorios', texto: 'Relatórios e ajustes', perm: 'relatorios.visualizar',
+      itens: [
+        { url: '/relatorios', texto: 'Relatórios' },
+        { url: '/auditoria', texto: 'Auditoria', perm: 'auditoria.visualizar' },
+        { url: '/admin', texto: 'Usuários e empresa', perm: 'admin.visualizar' },
       ],
     },
   ];
 
-  const ativo = (item) => item.exato ? caminho === item.url : caminho.startsWith(item.url);
+  const itemAtivo = (i) => (i.exato ? caminho === i.url : caminho.startsWith(i.url));
 %>
 <nav class="menu">
-  <% for (const grupo of grupos) { %>
-    <% const visiveis = grupo.itens.filter(i => pode(i.perm)); %>
-    <% if (visiveis.length) { %>
-      <% if (grupo.nome) { %><div class="menu-grupo"><%= grupo.nome %></div><% } %>
-      <% for (const item of visiveis) { %>
-        <a href="<%= item.url %>" class="<%= ativo(item) ? 'ativo' : '' %>">
-          <%- ic(item.ic) %>
-          <span><%= item.texto %></span>
-          <% if (item.marcador) { %><span class="marcador"><%= item.marcador %></span><% } %>
+  <% for (const s of secoes) { %>
+    <% if (!pode(s.perm)) continue; %>
+
+    <% if (s.inicio) { %>
+      <div class="menu-secao">
+        <a href="<%= s.url %>" class="menu-cabeca <%= caminho === '/' ? 'ativo' : '' %>">
+          <%- ic(s.ic) %><span><%= s.texto %></span>
         </a>
-      <% } %>
+      </div>
+    <% } else { %>
+      <% const visiveis = s.itens.filter((i) => !i.perm || pode(i.perm)); %>
+      <% if (!visiveis.length) continue; %>
+      <% const aberta = visiveis.some(itemAtivo); %>
+      <div class="menu-secao <%= aberta ? 'aberta' : '' %>">
+        <button type="button" class="menu-cabeca" data-secao aria-expanded="<%= aberta %>">
+          <%- ic(s.ic) %>
+          <span><%= s.texto %></span>
+          <% if (s.marcador) { %><span class="marcador"><%= s.marcador %></span><% } %>
+          <%- ic('avancar', 'seta') %>
+        </button>
+        <div class="menu-itens">
+          <% for (const i of visiveis) { %>
+            <a href="<%= i.url %>" class="<%= itemAtivo(i) ? 'ativo' : '' %>"><%= i.texto %></a>
+          <% } %>
+        </div>
+      </div>
     <% } %>
   <% } %>
 </nav>

@@ -18,6 +18,7 @@ import rotasEstoque from './routes/estoque.js';
 import rotasFumigacao from './routes/fumigacao.js';
 import rotasCertificados from './routes/certificados.js';
 import rotasCarregamento from './routes/carregamento.js';
+import rotasInicio from './routes/inicio.js';
 import rotasCompras from './routes/compras.js';
 import rotasRecebimentos from './routes/recebimentos.js';
 import rotasVendas from './routes/vendas.js';
@@ -25,6 +26,37 @@ import rotasFinanceiro from './routes/financeiro.js';
 import rotasRelatorios from './routes/relatorios.js';
 import rotasAuditoria from './routes/auditoria.js';
 import rotasAdmin from './routes/admin.js';
+
+/**
+ * Enquanto o assistente de primeiro acesso não tiver sido encerrado, quem
+ * entra cai nele em vez de num sistema vazio. Vale só para navegação normal:
+ * POST, requisição de dados e troca de senha passam direto.
+ *
+ * O estado só muda uma vez na vida da instalação, então basta lembrar dele
+ * em memória — depois de concluído, nenhuma consulta a mais acontece.
+ */
+let assistenteEncerrado = false;
+
+async function levarAoAssistente(req, res, next) {
+  if (assistenteEncerrado) return next();
+  if (req.method !== 'GET' || !req.accepts('html')) return next();
+  if (req.path.startsWith('/inicio') || req.path === '/sair' || req.path === '/trocar-senha') {
+    return next();
+  }
+
+  try {
+    const { assistenteConcluido } = await import('./services/onboarding.js');
+    if (await assistenteConcluido()) {
+      assistenteEncerrado = true;
+      return next();
+    }
+    return res.redirect('/inicio');
+  } catch {
+    // Banco indisponível não pode virar tela branca: segue o fluxo normal e
+    // o erro aparece na própria página, com mensagem.
+    return next();
+  }
+}
 
 export function criarApp() {
   const app = express();
@@ -99,7 +131,9 @@ export function criarApp() {
   app.use('/', rotasAuth);
 
   // Rotas protegidas
-  app.use('/', exigirLogin, rotasPainel);
+  app.use('/inicio', exigirLogin, rotasInicio);
+  app.use(exigirLogin, levarAoAssistente);
+  app.use('/', rotasPainel);
   app.use('/cadastros', exigirLogin, rotasCadastros);
   app.use('/estoque', exigirLogin, rotasEstoque);
   app.use('/fumigacao', exigirLogin, rotasFumigacao);

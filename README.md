@@ -40,12 +40,23 @@ armazém é o *recebimento*; quem tira é a *expedição* do carregamento.
 As próximas fases (RH, Abastecimento, Viagens, Manutenção, Impostos) estão
 descritas em [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
-### Aparência
+### Como o sistema se apresenta
 
-Tema claro e escuro, alternável no cabeçalho e lembrado por usuário. Telas
-pensadas para uso no celular no pátio: tabelas viram fichas empilhadas, botões
-com área de toque grande, e o sistema pode ser instalado como aplicativo
-(PWA).
+Quem abre o sistema não vê um painel de doze números: vê **o que fazer agora**,
+nas seis etapas da operação, na ordem em que elas acontecem. Abaixo, só o que
+está travando o dia. Os números ficam mais embaixo, para quem quiser.
+
+- **Assistente de primeiro acesso** — quatro telas curtas que explicam o fluxo
+  e recolhem o mínimo para sair do zero. Dá para pular.
+- **Primeiros passos** — checklist na tela inicial que se marca sozinho
+  conforme os cadastros existem de verdade, e some quando termina.
+- **Formulários em etapas** — pedido de compra, recebimento e pedido de venda
+  são divididos em três passos, com conferência por escrito antes de gravar.
+  Sem JavaScript o formulário aparece inteiro e funciona igual.
+- **Tema claro e escuro**, alternável no cabeçalho e lembrado por usuário.
+- Pensado para o celular no pátio: tabelas viram fichas empilhadas, botões com
+  área de toque grande, fonte hospedada junto (não depende de CDN) e
+  instalação como aplicativo (PWA).
 
 ---
 

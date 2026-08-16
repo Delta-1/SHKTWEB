@@ -34,6 +34,26 @@ outro.
 
 ---
 
+## Primeiro acesso
+
+Na primeira entrada o sistema abre um **assistente de quatro telas**: explica o
+fluxo, pede os dados da empresa (que vão no cabeçalho dos documentos) e o nome
+do armazém e do produto principal. Nada é obrigatório — o botão "Pular por
+agora" existe.
+
+O que ficar faltando aparece como **Primeiros passos** na tela inicial. A lista
+se marca sozinha conforme os cadastros passam a existir, e some quando termina.
+
+## A tela inicial
+
+Ela não é um relatório. Ela responde três perguntas, nesta ordem:
+
+1. **O que você vai fazer agora?** — as seis etapas da operação, numeradas.
+2. **O que precisa de atenção?** — só o que está travando alguém hoje.
+3. **Como está hoje?** — estoque, saldo fumigado, a pagar e a receber.
+
+Os números detalhados do período ficam recolhidos no fim da página.
+
 ## O fluxo do dia a dia
 
 ### 1. Comprar

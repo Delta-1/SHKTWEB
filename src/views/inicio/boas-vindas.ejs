@@ -1,0 +1,57 @@
+<%- include('_moldura') %>
+
+<div class="onboard-corpo">
+  <h2>Bem-vindo, <%= usuario.nome.split(' ')[0] %>.</h2>
+  <p class="explica">
+    Este sistema acompanha o grão do momento em que ele é comprado até o
+    momento em que sai do armazém — e o dinheiro junto. São seis etapas,
+    sempre na mesma ordem:
+  </p>
+
+  <ul class="explicativa">
+    <li style="--cor: var(--roxo-500)">
+      <span class="simbolo"><%- ic('compras') %></span>
+      <div>
+        <strong>1. Comprar &nbsp;→&nbsp; 2. Receber</strong>
+        <span>O pedido é o combinado com o fornecedor. O grão só entra no
+          estoque quando o caminhão chega e você confirma o recebimento.</span>
+      </div>
+    </li>
+    <li style="--cor: var(--azul-500)">
+      <span class="simbolo"><%- ic('fumigacao') %></span>
+      <div>
+        <strong>3. Fumigar &nbsp;→&nbsp; 4. Certificar</strong>
+        <span>Sem o número do Comunicado, o sistema não deixa validar a
+          fumigação — e sem fumigação validada não sai certificado.</span>
+      </div>
+    </li>
+    <li style="--cor: var(--marca-500)">
+      <span class="simbolo"><%- ic('carregamento') %></span>
+      <div>
+        <strong>5. Vender &nbsp;→&nbsp; 6. Carregar</strong>
+        <span>Aprovar a venda reserva a mercadoria para aquele cliente.
+          A baixa no estoque acontece uma vez só, na expedição.</span>
+      </div>
+    </li>
+  </ul>
+
+  <div class="ajuda-caixa mt-2">
+    <%- ic('info') %>
+    <div>
+      Cada conta a pagar e a receber nasce sozinha do documento que a originou.
+      <strong>Você não digita financeiro duas vezes.</strong>
+    </div>
+  </div>
+</div>
+
+<div class="onboard-rodape">
+  <form method="post" action="/inicio/pular">
+    <button type="submit" class="btn fantasma">Pular por agora</button>
+  </form>
+  <span class="espaco"></span>
+  <a href="/inicio/empresa" class="btn primario grande">
+    Começar <%- ic('avancar') %>
+  </a>
+</div>
+
+<%- include('_fim') %>

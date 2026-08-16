@@ -1,0 +1,45 @@
+<%- include('_moldura') %>
+
+<div class="onboard-corpo">
+  <h2>Pronto para trabalhar</h2>
+  <p class="explica">
+    O resto você faz conforme precisar. Esta lista continua na tela inicial e
+    some sozinha quando estiver toda marcada — nada aqui é obrigatório.
+  </p>
+
+  <ul class="tarefas">
+    <% for (const p of resumo.passos) { %>
+      <li class="<%= p.feito ? 'feita' : '' %>">
+        <span class="marca-passo"><%= p.feito ? '✓' : '' %></span>
+        <span class="titulo">
+          <span class="nome"><%= p.titulo %></span>
+          <div class="apoio"><%= p.apoio %></div>
+        </span>
+        <% if (!p.feito) { %>
+          <a href="<%= p.url %>" class="btn pequeno"><%= p.acao %></a>
+        <% } %>
+      </li>
+    <% } %>
+  </ul>
+
+  <div class="ajuda-caixa mt-2">
+    <%- ic('atencao') %>
+    <div>
+      Antes de sair usando: <strong>troque a senha do administrador</strong> se
+      ainda não trocou, e crie um acesso para cada pessoa. Tudo o que acontece
+      no sistema fica registrado com o nome de quem fez.
+    </div>
+  </div>
+</div>
+
+<div class="onboard-rodape">
+  <a href="/inicio/armazem" class="btn"><%- ic('voltar') %> Voltar</a>
+  <span class="espaco"></span>
+  <form method="post" action="/inicio/concluir">
+    <button type="submit" class="btn primario grande">
+      <%- ic('ok') %> Ir para o sistema
+    </button>
+  </form>
+</div>
+
+<%- include('_fim') %>
