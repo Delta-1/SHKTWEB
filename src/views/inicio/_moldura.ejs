@@ -14,7 +14,7 @@
         if (t === 'escuro') document.documentElement.classList.add('escuro');
         var f = localStorage.getItem('shkt-fonte');
         if (f === 'grande' || f === 'muito-grande') document.documentElement.classList.add('fonte-' + f);
-        if (localStorage.getItem('shkt-contraste') === 'sim') document.documentElement.classList.add('contraste-alto');
+        if (localStorage.getItem('shkt-contraste') === 'alto') document.documentElement.classList.add('contraste-alto');
       } catch (e) { /* sem storage */ }
     })();
   </script>
