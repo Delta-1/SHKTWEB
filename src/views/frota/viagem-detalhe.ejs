@@ -1,0 +1,58 @@
+<%- include('../partials/topo') %>
+<% const v = viagem; %>
+
+<div class="cabecalho-pagina">
+  <div><a href="/frota" class="txt-min">← SHKT Transportes</a><h1>Viagem <%= v.numero %></h1>
+    <div class="apoio"><strong><%= v.origem %> → <%= v.destino %></strong> · <%= f.data(v.data_saida_prevista) %></div></div>
+  <span class="espaco"></span><span class="pill <%= f.classeStatus(v.status) %>"><%= f.rotuloStatus(v.status) %></span>
+</div>
+
+<div class="grade grade-4 mb-2">
+  <div class="indicador destaque"><div class="rotulo">Frete previsto</div><div class="valor">R$ <%= f.formatar(v.receita_prevista, 2) %></div>
+    <% if (v.conta_receber_numero) { %><div class="apoio"><a href="/financeiro/receber/<%= v.conta_receber_id %>">CR <%= v.conta_receber_numero %></a> · <%= f.rotuloStatus(v.conta_receber_status) %></div><% } %></div>
+  <div class="indicador"><div class="rotulo">Custos confirmados</div><div class="valor">R$ <%= f.formatar(v.custo_direto, 2) %></div><div class="apoio">combustível + despesas + manutenção</div></div>
+  <div class="indicador <%= Number(v.margem_prevista) < 0 ? 'erro' : 'destaque' %>"><div class="rotulo">Margem prevista</div><div class="valor">R$ <%= f.formatar(v.margem_prevista, 2) %></div><div class="apoio">atualiza conforme os custos são confirmados</div></div>
+  <div class="indicador"><div class="rotulo">Consumo</div><div class="valor"><%= v.km_litro ? f.formatar(v.km_litro, 2) + ' km/l' : '—' %></div><div class="apoio"><%= v.distancia_km ? f.formatar(v.distancia_km, 1) + ' km' : 'aguardando km final' %> · <%= f.formatar(v.litros, 1) %> l</div></div>
+</div>
+
+<div class="grade grade-2 mb-2">
+  <div class="cartao"><div class="cartao-topo"><h2>Rota e equipe</h2>
+    <% if (['RASCUNHO','PROGRAMADA'].includes(v.status) && pode('frota.editar')) { %><a href="/frota/viagens/<%= v.id %>/editar" class="btn pequeno">Editar</a><% } %></div>
+    <div class="cartao-corpo"><dl class="detalhes">
+      <div><dt>Operação</dt><dd><span class="selo-operacao" style="--cor:<%= v.operacao_cor %>"></span><%= v.operacao %></dd></div>
+      <div><dt>Veículo</dt><dd><span class="mono"><%= v.placa %></span><%= v.marca_modelo ? ' · ' + v.marca_modelo : '' %></dd></div>
+      <div><dt>Motorista</dt><dd><%= v.motorista %></dd></div><div><dt>Cliente</dt><dd><%= v.cliente || 'Viagem interna' %></dd></div>
+      <div><dt>Saída prevista</dt><dd><%= f.data(v.data_saida_prevista) %></dd></div><div><dt>Km inicial / final</dt><dd><%= v.km_inicial != null ? f.formatar(v.km_inicial, 1) : '—' %> / <%= v.km_final != null ? f.formatar(v.km_final, 1) : '—' %></dd></div>
+    </dl></div></div>
+
+  <div class="cartao"><div class="cartao-topo"><h2>Próximo passo</h2></div><div class="cartao-corpo">
+    <% if (v.status === 'RASCUNHO') { %><p>Confira rota, veículo, motorista e frete. Depois programe a viagem.</p>
+      <% if (pode('frota.aprovar')) { %><form method="post" action="/frota/viagens/<%= v.id %>/programar"><button class="btn primario grande" type="submit" data-confirmar="Programar esta viagem e gerar o Contas a Receber do frete?"><%- ic('ok') %> Programar viagem</button></form><% } %>
+    <% } else if (v.status === 'PROGRAMADA') { %><p>Quando o caminhão sair, informe a hora e a quilometragem inicial.</p>
+      <% if (pode('frota.aprovar')) { %><form method="post" action="/frota/viagens/<%= v.id %>/iniciar" class="campos"><div class="campo c6"><label>Saída</label><input type="datetime-local" name="data_saida"></div><div class="campo c6"><label>Km inicial</label><input type="text" inputmode="decimal" class="numerico" data-casas="1" name="km_inicial" value="<%= v.km_inicial != null ? f.formatar(v.km_inicial,1) : '' %>"></div><div class="campo c12"><button class="btn primario grande" type="submit"><%- ic('carregamento') %> Iniciar viagem</button></div></form><% } %>
+    <% } else if (['EM_ANDAMENTO','AGUARDANDO_ACERTO'].includes(v.status)) { %><p>Registre combustível e despesas. Ao voltar, feche com a quilometragem final.</p>
+      <% if (pode('frota.aprovar')) { %><form method="post" action="/frota/viagens/<%= v.id %>/concluir" class="campos"><div class="campo c6"><label>Retorno</label><input type="datetime-local" name="data_retorno"></div><div class="campo c6"><label>Km final <span class="obrigatorio">*</span></label><input required type="text" inputmode="decimal" class="numerico" data-casas="1" name="km_final"></div><div class="campo c12"><button class="btn primario grande" type="submit"><%- ic('ok') %> Concluir viagem</button></div></form><% } %>
+    <% } else if (v.status === 'CONCLUIDA') { %><div class="aviso ok"><%- ic('ok') %><div><strong>Viagem concluída</strong>O resultado acima já reúne todos os lançamentos confirmados.</div></div>
+    <% } else { %><div class="aviso erro"><%- ic('erro') %><div><strong>Viagem cancelada</strong><%= v.motivo_cancelamento %></div></div><% } %>
+  </div></div>
+</div>
+
+<div class="cartao mb-2"><div class="cartao-topo"><h2>Combustível</h2><span class="sub">R$ <%= f.formatar(v.combustivel,2) %> confirmados</span><span class="espaco"></span>
+  <% if (pode('frota.criar') && v.status !== 'CANCELADA') { %><a href="/frota/viagens/<%= v.id %>/abastecimentos/novo" class="btn primario pequeno">+ Abastecimento</a><% } %></div>
+  <% if (!v.abastecimentos.length) { %><div class="vazio compacto"><p>Nenhum abastecimento nesta viagem.</p></div><% } else { %><div class="tabela-area"><table class="tabela responsiva"><thead><tr><th>Nº</th><th>Data</th><th>Combustível</th><th class="num">Litros</th><th class="num">Preço/l</th><th class="num">Total</th><th>Financeiro</th><th>Situação</th><th></th></tr></thead><tbody><% for (const a of v.abastecimentos) { %><tr>
+    <td data-rot="Nº" class="doc"><%= a.numero %></td><td data-rot="Data"><%= f.data(a.data) %></td><td data-rot="Combustível"><%= a.combustivel %><div class="txt-min txt-fraco"><%= a.fornecedor || 'Sem posto informado' %></div></td><td data-rot="Litros" class="num"><%= f.formatar(a.quantidade_litros,3) %></td><td data-rot="Preço/l" class="num">R$ <%= f.formatar(a.preco_litro,2) %></td><td data-rot="Total" class="num txt-forte">R$ <%= f.formatar(a.valor_total,2) %></td><td data-rot="Financeiro"><% if (a.conta_pagar_numero) { %><a href="/financeiro/pagar/<%= a.conta_pagar_id %>"><%= a.conta_pagar_numero %></a><% } else { %>—<% } %></td><td data-rot="Situação"><span class="pill <%= f.classeStatus(a.status) %>"><%= f.rotuloStatus(a.status) %></span></td><td class="acoes"><% if (a.status === 'RASCUNHO' && pode('frota.aprovar')) { %><form method="post" action="/frota/abastecimentos/<%= a.id %>/confirmar"><button class="btn pequeno primario" type="submit" data-confirmar="Confirmar e gerar o Contas a Pagar?">Confirmar</button></form><% } %></td>
+  </tr><% } %></tbody></table></div><% } %>
+</div>
+
+<div class="grade grade-2 mb-2">
+  <div class="cartao"><div class="cartao-topo"><h2>Despesas da viagem</h2><span class="sub">R$ <%= f.formatar(v.outras_despesas,2) %></span><span class="espaco"></span><% if (pode('frota.criar') && v.status !== 'CANCELADA') { %><a href="/frota/viagens/<%= v.id %>/despesas/nova" class="btn pequeno">+ Despesa</a><% } %></div>
+    <% if (!v.despesas.length) { %><div class="vazio compacto"><p>Nenhuma despesa.</p></div><% } else { %><div class="lista-simples"><% for (const d of v.despesas) { %><div class="linha-simples"><div><strong><%= d.descricao %></strong><span><%= f.data(d.data) %> · <%= f.rotuloStatus(d.status) %></span></div><span class="valor">R$ <%= f.formatar(d.valor,2) %></span><% if (d.status === 'RASCUNHO' && pode('frota.aprovar')) { %><form method="post" action="/frota/despesas/<%= d.id %>/confirmar"><button class="btn pequeno primario" type="submit">Confirmar</button></form><% } %></div><% } %></div><% } %>
+  </div>
+  <div class="cartao"><div class="cartao-topo"><h2>Manutenção ligada</h2><span class="sub">R$ <%= f.formatar(v.manutencao,2) %></span><span class="espaco"></span><% if (pode('frota.criar') && v.status !== 'CANCELADA') { %><a href="/frota/manutencoes/nova?viagem=<%= v.id %>" class="btn pequeno">+ Manutenção</a><% } %></div>
+    <% if (!v.manutencoes.length) { %><div class="vazio compacto"><p>Nenhuma manutenção ligada.</p></div><% } else { %><div class="lista-simples"><% for (const m of v.manutencoes) { %><div class="linha-simples"><div><strong><%= m.numero %> · <%= m.descricao %></strong><span><%= f.data(m.data) %> · <%= f.rotuloStatus(m.status) %></span></div><span class="valor">R$ <%= f.formatar(m.valor_total,2) %></span><% if (m.status === 'RASCUNHO' && pode('frota.aprovar')) { %><form method="post" action="/frota/manutencoes/<%= m.id %>/aprovar"><button class="btn pequeno primario" type="submit">Aprovar</button></form><% } %></div><% } %></div><% } %>
+  </div>
+</div>
+
+<% if (!['CONCLUIDA','CANCELADA'].includes(v.status) && pode('frota.cancelar')) { %><div class="zona-perigo"><button type="button" class="btn perigo" data-modal="#cancelar-viagem">Cancelar viagem</button></div><dialog id="cancelar-viagem" class="modal"><form method="post" action="/frota/viagens/<%= v.id %>/cancelar"><div class="modal-topo"><h2>Cancelar viagem</h2><button type="button" class="btn-icone" data-fechar-modal>×</button></div><div class="modal-corpo"><p>O histórico será preservado. Informe por que a viagem não acontecerá.</p><div class="campo"><label>Motivo</label><textarea name="motivo" required minlength="5" rows="3"></textarea></div></div><div class="modal-rodape"><button type="button" class="btn" data-fechar-modal>Voltar</button><button type="submit" class="btn perigo">Confirmar cancelamento</button></div></form></dialog><% } %>
+
+<%- include('../partials/fim') %>

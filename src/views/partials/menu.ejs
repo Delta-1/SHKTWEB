@@ -65,6 +65,18 @@
       ],
     },
     {
+      nome: 'Transportadora', ic: 'carregamento', perm: 'frota.visualizar',
+      itens: [
+        { url: '/frota/viagens/nova', texto: 'Programar nova viagem', ic: 'mais', perm: 'frota.criar' },
+        { url: '/frota', texto: 'Viagens e resultados', ic: 'carregamento', exato: true },
+        { divisor: true },
+        { url: '/frota/manutencoes/nova', texto: 'Nova ordem de manutenção', ic: 'editar', perm: 'frota.criar' },
+        { url: '/frota/manutencoes', texto: 'Manutenções da frota', ic: 'documento' },
+        { url: '/cadastros/veiculos', texto: 'Veículos', ic: 'veiculos', perm: 'cadastros.visualizar' },
+        { url: '/cadastros/motoristas', texto: 'Motoristas', ic: 'motoristas', perm: 'cadastros.visualizar' },
+      ],
+    },
+    {
       nome: 'Cadastros', ic: 'clientes', perm: 'cadastros.visualizar',
       itens: [
         { grupo: 'Quem' },
@@ -118,6 +130,7 @@
     { url: '/certificados/novo', ic: 'certificado', texto: 'Certificar', cor: 'var(--marca-500)', perm: 'certificados.criar' },
     { url: '/vendas/novo', ic: 'vendas', texto: 'Vender', cor: 'var(--ambar-500)', perm: 'vendas.criar' },
     { url: '/carregamentos/novo', ic: 'carregamento', texto: 'Carregar', cor: 'var(--marca-600)', perm: 'carregamento.criar' },
+    { url: '/frota', ic: 'carregamento', texto: 'Viagens', cor: 'var(--calmo)', perm: 'frota.visualizar', exato: true },
     { separador: true },
     { url: '/financeiro/pagar', ic: 'pagar', texto: 'A pagar', cor: 'var(--vermelho-500)', perm: 'financeiro.visualizar',
       marcador: typeof alertaVencidos !== 'undefined' ? alertaVencidos : 0 },
@@ -170,6 +183,10 @@
   </nav>
 
   <div class="chrome-direita nao-imprimir">
+    <button class="btn-icone" type="button" data-modal="#preferencias-leitura"
+            aria-label="Preferências de leitura" title="Aumentar letras e contraste">
+      <%- ic('info') %>
+    </button>
     <button class="btn-icone" data-tema aria-label="Alternar tema claro e escuro" title="Tema claro / escuro">
       <%- ic('lua', 'ic-lua') %><%- ic('sol', 'ic-sol') %>
     </button>
@@ -179,6 +196,31 @@
     </a>
   </div>
 </div>
+
+<dialog id="preferencias-leitura" class="modal preferencias-dialogo">
+  <div class="modal-topo">
+    <div><h2>Como prefere enxergar a tela?</h2><div class="txt-min txt-fraco">A escolha fica salva neste aparelho.</div></div>
+    <button type="button" class="btn-icone" data-fechar-modal aria-label="Fechar">×</button>
+  </div>
+  <div class="modal-corpo">
+    <div class="preferencia-grupo">
+      <strong>Tamanho das letras</strong>
+      <div class="preferencias-opcoes" role="group" aria-label="Tamanho das letras">
+        <button type="button" class="btn" data-fonte="normal">Normal</button>
+        <button type="button" class="btn" data-fonte="grande">Grande</button>
+        <button type="button" class="btn" data-fonte="muito-grande">Bem grande</button>
+      </div>
+    </div>
+    <label class="preferencia-chave">
+      <input type="checkbox" data-contraste>
+      <span><strong>Contraste mais forte</strong><small>Deixa fundo, letras e linhas mais fáceis de distinguir.</small></span>
+    </label>
+  </div>
+  <div class="modal-rodape">
+    <button type="button" class="btn" data-preferencias-resetar>Voltar ao padrão</button>
+    <button type="button" class="btn primario" data-fechar-modal>Pronto</button>
+  </div>
+</dialog>
 
 <!-- -------------------------------------------------------- barra de ícones -->
 <div class="barra-icones nao-imprimir">

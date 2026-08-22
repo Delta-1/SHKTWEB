@@ -5,8 +5,9 @@ Sistema de gestão web da **SHKT INDÚSTRIA IMPORTAÇÃO & EXPORTAÇÃO LTDA**.
 Funciona inteiramente no navegador — notebook, tablet ou celular, de qualquer
 lugar, com login e senha. Não há programa para instalar na máquina do usuário.
 
-**Estado atual: FASES 1 e 2 concluídas e testadas.** O ciclo comercial e
-operacional está fechado ponta a ponta:
+**Estado atual: FASES 1 e 2 concluídas, com o núcleo da SHKT Transportes
+entregue e testado.** O ciclo comercial e operacional está fechado ponta a
+ponta:
 
 ```
 Compra → Recebimento → Estoque → Fumigação → Certificado
@@ -33,11 +34,12 @@ armazém é o *recebimento*; quem tira é a *expedição* do carregamento.
 | **Certificados** | Emissão a partir do saldo fumigado; ao validar, gera o Contas a Pagar automaticamente. |
 | **Carregamento** | Programação com reserva de estoque, expedição com baixa física, vínculo opcional ao pedido de venda, documentos (DANFE, MIC-DTA, CRT) e romaneio impresso. |
 | **Financeiro** | Contas a pagar e receber, baixas parciais, estornos, caixa e bancos com extrato. |
+| **SHKT Transportes** | Viagem numerada com rota, veículo, motorista e frete; abastecimento, despesas e manutenção; receita, custo direto, margem e km/l por viagem. |
 | **Relatórios** | Estoque, fumigação, certificados, carregamentos, financeiro, fluxo de caixa e DRE gerencial — com impressão e exportação para planilha. |
 | **Auditoria** | Registro imutável de quem fez o quê, quando, com valor anterior e posterior. |
 | **Administração** | Usuários, perfis de permissão por módulo/ação e parâmetros da empresa. |
 
-As próximas fases (RH, Abastecimento, Viagens, Manutenção, Impostos) estão
+As próximas fases (RH, acerto completo de viagens e Impostos) estão
 descritas em [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ### Como o sistema se apresenta
@@ -53,7 +55,8 @@ está travando o dia. Os números ficam mais embaixo, para quem quiser.
 - **Formulários em etapas** — pedido de compra, recebimento e pedido de venda
   são divididos em três passos, com conferência por escrito antes de gravar.
   Sem JavaScript o formulário aparece inteiro e funciona igual.
-- **Tema claro e escuro**, alternável no cabeçalho e lembrado por usuário.
+- **Tema claro e escuro, letras grandes e alto contraste**, ajustáveis no
+  cabeçalho e lembrados neste aparelho.
 - Pensado para o celular no pátio: tabelas viram fichas empilhadas, botões com
   área de toque grande, fonte hospedada junto (não depende de CDN) e
   instalação como aplicativo (PWA).
@@ -91,7 +94,7 @@ npm start
 | | |
 |---|---|
 | E-mail | valor de `ADMIN_EMAIL` (padrão `admin@shkt.com.br`) |
-| Senha | valor de `ADMIN_SENHA` |
+| Senha | valor obrigatório de `ADMIN_SENHA` definido antes do primeiro seed |
 
 O sistema **obriga a troca da senha** no primeiro login. Depois, crie um usuário
 para cada pessoa em **Administração → Usuários**: a auditoria só tem valor se
@@ -106,6 +109,7 @@ com Docker. O caminho mais simples:
 
 1. **Contrate um servidor** (VPS de 2 GB já roda com folga) ou use um provedor
    gerenciado (Render, Railway, Fly.io) apontando para um PostgreSQL gerenciado.
+   Para Supabase, siga também **[docs/SUPABASE.md](docs/SUPABASE.md)**.
 2. **Aponte um domínio** para o servidor, por exemplo `erp.shkt.com.br`.
 3. **Coloque um HTTPS na frente** — nginx com Certbot, Caddy ou Cloudflare.
    Sem HTTPS, senha e sessão trafegam abertas.
@@ -173,7 +177,7 @@ O histórico das rotinas fica em `backups/backups.log`.
 npm test
 ```
 
-São 26 testes automatizados que rodam contra um banco de teste separado
+São 50 testes automatizados que rodam contra um banco de teste separado
 (`shkt_erp_test`) e provam as regras que não podem falhar:
 
 - o roteiro de aceite completo da Fase 1 (600 t → fumigação 500 t → certificado
@@ -186,6 +190,8 @@ São 26 testes automatizados que rodam contra um banco de teste separado
 - numeração documental sem duplicidade sob concorrência;
 - cancelamentos e estornos devolvem saldos e preservam o histórico;
 - auditoria e movimentos de estoque são imutáveis.
+- viagem, frete e abastecimento geram receita/custo uma única vez e calculam
+  margem e consumo corretamente.
 
 ---
 

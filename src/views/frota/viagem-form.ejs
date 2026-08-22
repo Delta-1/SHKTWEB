@@ -1,0 +1,60 @@
+<%- include('../partials/topo') %>
+<% const v = viagem; const acao = novo ? '/frota/viagens/nova' : `/frota/viagens/${v.id}/editar`; %>
+
+<form method="post" action="<%= acao %>" class="cartao" style="max-width:1050px" data-etapas>
+  <div class="cartao-topo"><a href="<%= novo ? '/frota' : '/frota/viagens/' + v.id %>" class="btn pequeno"><%- ic('voltar') %> Voltar</a>
+    <h2><%= novo ? 'Nova viagem' : 'Editar viagem ' + v.numero %></h2></div>
+  <div class="cartao-corpo">
+    <section class="etapa" data-rotulo="Rota">
+      <h3>Para onde vai?</h3><p class="explica">Comece pela rota e pela data. É o que identifica a viagem para toda a equipe.</p>
+      <div class="campos">
+        <div class="campo c4"><label for="operacao_id">Operação <span class="obrigatorio">*</span></label>
+          <select id="operacao_id" name="operacao_id" required data-foco data-resumo="Operação"><% for (const o of ref.operacoes) { %>
+            <option value="<%= o.id %>" <%= String(v.operacao_id) === String(o.id) ? 'selected' : '' %>><%= o.nome %></option><% } %></select></div>
+        <div class="campo c4"><label for="data_saida_prevista">Saída prevista <span class="obrigatorio">*</span></label>
+          <input type="date" id="data_saida_prevista" name="data_saida_prevista" required value="<%= f.dataInput(v.data_saida_prevista) %>" data-resumo="Saída prevista"></div>
+        <div class="campo c4"><label for="carregamento_id">Carregamento relacionado</label>
+          <select id="carregamento_id" name="carregamento_id"><option value="">Nenhum / frete avulso</option><% for (const c of carregamentos) { %>
+            <option value="<%= c.id %>" <%= String(v.carregamento_id) === String(c.id) ? 'selected' : '' %>><%= c.numero %> · <%= c.destino || c.placa || 'sem destino' %></option><% } %></select></div>
+        <div class="campo c6"><label for="origem">Origem <span class="obrigatorio">*</span></label>
+          <input id="origem" name="origem" required maxlength="180" value="<%= v.origem || '' %>" placeholder="Ex.: Brasileia - AC" data-resumo="Origem"></div>
+        <div class="campo c6"><label for="destino">Destino <span class="obrigatorio">*</span></label>
+          <input id="destino" name="destino" required maxlength="180" value="<%= v.destino || '' %>" placeholder="Ex.: Puerto Maldonado - Peru" data-resumo="Destino"></div>
+      </div>
+    </section>
+
+    <section class="etapa" data-rotulo="Caminhão">
+      <h3>Quem vai e com qual veículo?</h3><p class="explica">Escolha dos cadastros; placa e nome não precisam ser digitados outra vez.</p>
+      <div class="campos">
+        <div class="campo c6"><label for="veiculo_id">Veículo <span class="obrigatorio">*</span></label><select id="veiculo_id" name="veiculo_id" required data-resumo="Veículo"><option value="">Selecione...</option><% for (const x of ref.veiculos) { %>
+          <option value="<%= x.id %>" <%= String(v.veiculo_id) === String(x.id) ? 'selected' : '' %>><%= x.placa %><%= x.marca_modelo ? ' — ' + x.marca_modelo : '' %></option><% } %></select></div>
+        <div class="campo c6"><label for="motorista_id">Motorista <span class="obrigatorio">*</span></label><select id="motorista_id" name="motorista_id" required data-resumo="Motorista"><option value="">Selecione...</option><% for (const x of ref.motoristas) { %>
+          <option value="<%= x.id %>" <%= String(v.motorista_id) === String(x.id) ? 'selected' : '' %>><%= x.nome %></option><% } %></select></div>
+        <div class="campo c4"><label for="km_inicial">Quilometragem inicial</label><input type="text" inputmode="decimal" class="numerico" data-casas="1" id="km_inicial" name="km_inicial" value="<%= v.km_inicial != null ? f.formatar(v.km_inicial, 1) : '' %>" data-resumo="Km inicial"></div>
+        <div class="campo c8"><label for="cliente_id">Cliente do frete</label><select id="cliente_id" name="cliente_id" data-resumo="Cliente"><option value="">Viagem interna / sem cobrança</option><% for (const x of ref.clientes) { %>
+          <option value="<%= x.id %>" <%= String(v.cliente_id) === String(x.id) ? 'selected' : '' %>><%= x.nome %></option><% } %></select></div>
+      </div>
+    </section>
+
+    <section class="etapa" data-rotulo="Conferir">
+      <h3>Frete e conferência</h3><p class="explica">Ao programar depois, o valor do frete entra sozinho no Contas a Receber.</p>
+      <div class="campos">
+        <div class="campo c4"><label for="valor_frete">Valor do frete</label><input type="text" inputmode="decimal" class="numerico" data-casas="2" id="valor_frete" name="valor_frete" value="<%= f.formatar(v.valor_frete || 0, 2) %>" data-resumo="Valor do frete"></div>
+        <div class="campo c3"><label for="moeda_id">Moeda <span class="obrigatorio">*</span></label><select id="moeda_id" name="moeda_id" required data-resumo="Moeda"><% for (const x of ref.moedas) { %>
+          <option value="<%= x.id %>" <%= String(v.moeda_id) === String(x.id) ? 'selected' : '' %>><%= x.codigo %> — <%= x.nome %></option><% } %></select></div>
+        <div class="campo c5"><label for="vencimento_frete">Vencimento do frete</label><input type="date" id="vencimento_frete" name="vencimento_frete" value="<%= f.dataInput(v.vencimento_frete) %>" data-resumo="Vencimento"></div>
+        <div class="campo c6"><label for="centro_custo_id">Centro de custo</label><select id="centro_custo_id" name="centro_custo_id"><option value="">—</option><% for (const x of ref.centrosCusto) { %>
+          <option value="<%= x.id %>" <%= String(v.centro_custo_id) === String(x.id) ? 'selected' : '' %>><%= x.nome %></option><% } %></select></div>
+        <div class="campo c6"><label for="condicao_pagamento">Condição de pagamento</label><input id="condicao_pagamento" name="condicao_pagamento" maxlength="120" value="<%= v.condicao_pagamento || '' %>" placeholder="Ex.: 15 dias após entrega"></div>
+        <div class="campo c12"><label for="observacoes">Observações</label><textarea id="observacoes" name="observacoes" rows="3"><%= v.observacoes || '' %></textarea></div>
+      </div>
+      <div class="resumo-confere" data-confere></div>
+      <div class="ajuda-caixa mt-2"><%- ic('info') %><div><strong>Nada financeiro acontece ao salvar.</strong> Primeiro a viagem fica em rascunho para conferência. Só o botão “Programar viagem” gera o Contas a Receber.</div></div>
+    </section>
+  </div>
+  <div class="rodape-form"><button type="button" class="btn oculto" data-etapa-voltar><%- ic('voltar') %> Voltar</button><span class="espaco"></span>
+    <button type="button" class="btn primario grande" data-etapa-avancar>Continuar <%- ic('avancar') %></button>
+    <button type="submit" class="btn primario grande oculto" data-etapa-gravar><%- ic('ok') %> Salvar viagem</button></div>
+</form>
+
+<%- include('../partials/fim') %>

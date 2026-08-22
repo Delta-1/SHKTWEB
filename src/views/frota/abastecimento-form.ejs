@@ -1,0 +1,17 @@
+<%- include('../partials/topo') %>
+<form method="post" action="/frota/viagens/<%= viagem.id %>/abastecimentos/novo" class="cartao" style="max-width:900px">
+  <input type="hidden" name="operacao_id" value="<%= registro.operacao_id %>"><input type="hidden" name="veiculo_id" value="<%= registro.veiculo_id %>"><input type="hidden" name="motorista_id" value="<%= registro.motorista_id || '' %>">
+  <div class="cartao-topo"><a href="/frota/viagens/<%= viagem.id %>" class="btn pequeno"><%- ic('voltar') %> Voltar</a><h2>Abastecimento · viagem <%= viagem.numero %></h2></div>
+  <div class="cartao-corpo"><div class="chamada-rota"><strong><%= viagem.placa %></strong><span><%= viagem.origem %> → <%= viagem.destino %></span></div><div class="campos mt-2">
+    <div class="campo c3"><label for="data">Data <span class="obrigatorio">*</span></label><input type="date" id="data" name="data" required value="<%= f.dataInput(registro.data) %>" data-foco></div>
+    <div class="campo c5"><label for="combustivel_id">Combustível <span class="obrigatorio">*</span></label><select id="combustivel_id" name="combustivel_id" required><% for (const x of ref.combustiveis) { %><option value="<%= x.id %>" <%= String(registro.combustivel_id) === String(x.id) ? 'selected' : '' %>><%= x.nome %></option><% } %></select></div>
+    <div class="campo c4"><label for="fornecedor_id">Posto / fornecedor</label><select id="fornecedor_id" name="fornecedor_id"><option value="">—</option><% for (const x of ref.fornecedores) { %><option value="<%= x.id %>"><%= x.nome %></option><% } %></select></div>
+    <div class="campo c4"><label for="quantidade_litros">Quantidade (litros) <span class="obrigatorio">*</span></label><input type="text" inputmode="decimal" class="numerico" data-casas="3" id="quantidade_litros" name="quantidade_litros" required></div>
+    <div class="campo c4"><label for="preco_litro">Preço por litro <span class="obrigatorio">*</span></label><input type="text" inputmode="decimal" class="numerico" data-casas="2" id="preco_litro" name="preco_litro" required></div>
+    <div class="campo c4"><label for="quilometragem">Quilometragem</label><input type="text" inputmode="decimal" class="numerico" data-casas="1" id="quilometragem" name="quilometragem"></div>
+    <div class="campo c6"><label for="centro_custo_id">Centro de custo</label><select id="centro_custo_id" name="centro_custo_id"><option value="">—</option><% for (const x of ref.centrosCusto) { %><option value="<%= x.id %>" <%= String(registro.centro_custo_id) === String(x.id) ? 'selected' : '' %>><%= x.nome %></option><% } %></select></div>
+    <div class="campo c6"><label for="observacoes">Observações</label><textarea id="observacoes" name="observacoes" rows="2"></textarea></div>
+  </div><div class="ajuda-caixa mt-2"><%- ic('info') %><div>Primeiro fica como rascunho. Na tela da viagem você confere e confirma; só então o Contas a Pagar é criado.</div></div></div>
+  <div class="rodape-form"><a href="/frota/viagens/<%= viagem.id %>" class="btn">Cancelar</a><span class="espaco"></span><button type="submit" class="btn primario grande">Salvar abastecimento</button></div>
+</form>
+<%- include('../partials/fim') %>

@@ -35,6 +35,7 @@ export async function prepararBanco() {
 export async function limparOperacional() {
   await query(`
     TRUNCATE TABLE
+      abastecimentos, viagem_despesas, ordens_manutencao, viagens,
       caixa_movimentos, caixa_transferencias, financeiro_baixas,
       contas_pagar, contas_receber,
       recebimento_itens, recebimentos,
@@ -51,6 +52,8 @@ export async function limparOperacional() {
 
 /** Remove tambem os cadastros criados pelos testes. */
 export async function limparCadastrosDeTeste() {
+  await query(`DELETE FROM motoristas WHERE nome LIKE 'TESTE-%'`);
+  await query(`DELETE FROM veiculos WHERE placa LIKE 'TST%'`);
   await query(`DELETE FROM parceiros WHERE codigo LIKE 'TESTE-%'`);
   await query(`DELETE FROM produtos WHERE codigo LIKE 'TESTE-%'`);
   await query(`DELETE FROM locais_estoque WHERE codigo LIKE 'TESTE-%'`);

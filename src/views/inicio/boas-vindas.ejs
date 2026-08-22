@@ -4,8 +4,9 @@
   <h2>Bem-vindo, <%= usuario.nome.split(' ')[0] %>.</h2>
   <p class="explica">
     Este sistema acompanha o grão do momento em que ele é comprado até o
-    momento em que sai do armazém — e o dinheiro junto. São seis etapas,
-    sempre na mesma ordem:
+    momento em que sai do armazém — e o dinheiro junto. A transportadora
+    acompanha cada viagem, seu frete e seus custos. O fluxo dos grãos tem
+    seis etapas, sempre na mesma ordem:
   </p>
 
   <ul class="explicativa">
@@ -33,7 +34,30 @@
           A baixa no estoque acontece uma vez só, na expedição.</span>
       </div>
     </li>
+    <li style="--cor: var(--calmo)">
+      <span class="simbolo"><%- ic('carregamento') %></span>
+      <div>
+        <strong>SHKT Transportes: programar → viajar → acertar</strong>
+        <span>O frete gera a conta a receber. Combustível, despesas e
+          manutenção entram no custo da viagem sem digitação repetida.</span>
+      </div>
+    </li>
   </ul>
+
+  <div class="cartao mt-2">
+    <div class="cartao-topo"><h3>Deixe a leitura confortável</h3></div>
+    <div class="cartao-corpo preferencia-grupo">
+      <div class="preferencias-opcoes" role="group" aria-label="Tamanho das letras">
+        <button type="button" class="btn" data-fonte="normal">Normal</button>
+        <button type="button" class="btn" data-fonte="grande">Grande</button>
+        <button type="button" class="btn" data-fonte="muito-grande">Bem grande</button>
+      </div>
+      <label class="preferencia-chave">
+        <input type="checkbox" data-contraste>
+        <span><strong>Contraste mais forte</strong><small>Você pode mudar isso depois no botão de leitura.</small></span>
+      </label>
+    </div>
+  </div>
 
   <div class="ajuda-caixa mt-2">
     <%- ic('info') %>

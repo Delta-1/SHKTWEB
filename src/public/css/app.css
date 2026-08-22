@@ -177,7 +177,7 @@ html, body {
   margin: 0;
   padding: 0;
   font-family: var(--fonte);
-  font-size: 16px;
+  font-size: var(--fonte-base, 16px);
   line-height: 1.55;
   color: var(--tinta);
   background: var(--fundo);
@@ -186,6 +186,20 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 body { transition: background-color var(--transicao), color var(--transicao); }
+
+html.fonte-grande { --fonte-base: 18px; }
+html.fonte-muito-grande { --fonte-base: 20px; }
+
+html.contraste-alto:not(.escuro) {
+  --fundo: #e8e5dc; --papel: #ffffff; --papel-2: #f2f0e8; --papel-3: #e7e3d8;
+  --tinta: #000000; --tinta-2: #24211c; --tinta-3: #4f493f; --tinta-4: #6b6255;
+  --linha: #b7ae9d; --linha-forte: #756b5c; --chrome-linha: #8f8574;
+}
+html.contraste-alto.escuro {
+  --fundo: #090909; --papel: #111111; --papel-2: #1a1a1a; --papel-3: #242424;
+  --tinta: #ffffff; --tinta-2: #f0ede4; --tinta-3: #d4cec0; --tinta-4: #aea696;
+  --linha: #565656; --linha-forte: #8a8a8a; --chrome-linha: #727272;
+}
 
 a { color: var(--argila); text-decoration: none; font-weight: 500; }
 a:hover { color: var(--argila-viva); text-decoration: underline; text-underline-offset: 3px; }
@@ -1328,6 +1342,47 @@ dialog.modal .modal-rodape {
   }
   table.tabela.responsiva td:empty { display: none; }
   table.tabela.responsiva td.acoes { justify-content: flex-end; padding-top: 12px; }
+}
+
+/* ===================================================== tarefas e transporte */
+.acoes-grandes { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:14px; }
+.acao-grande { display:flex; align-items:center; gap:15px; min-height:88px; padding:16px 18px; color:var(--tinta); background:var(--papel); border:1px solid var(--linha-forte); border-left:4px solid var(--cor,var(--argila)); border-radius:var(--raio-g); text-decoration:none; transition:background var(--transicao), transform var(--transicao); }
+.acao-grande:hover { background:var(--papel-2); transform:translateY(-1px); text-decoration:none; color:var(--tinta); }
+.acao-grande .simbolo { width:46px; height:46px; display:grid; place-items:center; color:var(--cor); background:var(--papel-2); border:1px solid var(--linha); }
+.acao-grande .simbolo .ic { width:25px; height:25px; }
+.acao-grande > span:nth-child(2) { display:flex; flex-direction:column; flex:1; }
+.acao-grande strong { font-family:var(--serif); font-size:1.12rem; }
+.acao-grande small { color:var(--tinta-3); font-weight:400; margin-top:2px; }
+.acao-grande .seta { color:var(--tinta-4); }
+
+.chamada-rota { display:flex; align-items:center; gap:14px; padding:13px 16px; background:var(--papel-2); border:1px solid var(--linha); }
+.chamada-rota strong { font-family:var(--mono); font-size:1.05rem; }
+.chamada-rota span { color:var(--tinta-2); }
+.selo-operacao { display:inline-block; width:9px; height:9px; margin-right:7px; background:var(--cor,var(--argila)); }
+
+.lista-simples { display:flex; flex-direction:column; }
+.linha-simples { display:flex; align-items:center; gap:12px; padding:13px 16px; border-bottom:1px solid var(--linha); }
+.linha-simples:last-child { border-bottom:0; }
+.linha-simples > div { display:flex; flex-direction:column; flex:1; min-width:0; }
+.linha-simples > div span { color:var(--tinta-3); font-size:.78rem; }
+.linha-simples .valor { font-family:var(--mono); font-weight:500; white-space:nowrap; }
+.vazio.compacto { padding:22px; }
+.zona-perigo { display:flex; justify-content:flex-end; padding:12px 0; }
+
+dialog.preferencias-dialogo { width:min(520px,calc(100vw - 28px)); }
+.preferencia-grupo { display:flex; flex-direction:column; gap:10px; }
+.preferencias-opcoes { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.preferencias-opcoes .btn[aria-pressed="true"] { border-color:var(--argila); color:var(--argila); background:var(--argila-leve); }
+.preferencia-chave { display:flex; gap:12px; align-items:flex-start; margin-top:22px; padding:14px; border:1px solid var(--linha); background:var(--papel-2); cursor:pointer; }
+.preferencia-chave input { width:22px; height:22px; margin:2px 0 0; }
+.preferencia-chave span { display:flex; flex-direction:column; }
+.preferencia-chave small { color:var(--tinta-3); margin-top:2px; }
+
+@media (max-width:640px) {
+  .acoes-grandes { grid-template-columns:1fr; }
+  .acao-grande { min-height:82px; }
+  .preferencias-opcoes { grid-template-columns:1fr; }
+  .linha-simples { align-items:flex-start; flex-wrap:wrap; }
 }
 
 /* --------------------------------------------------------------- Impressão */

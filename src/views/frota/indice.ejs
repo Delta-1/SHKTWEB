@@ -1,0 +1,101 @@
+<%- include('../partials/topo') %>
+
+<div class="cabecalho-pagina">
+  <div>
+    <h1>SHKT Transportes</h1>
+    <div class="apoio">Viagens, combustível, custos e resultado no mesmo lugar.</div>
+  </div>
+  <span class="espaco"></span>
+  <% if (pode('frota.criar')) { %>
+    <a href="/frota/viagens/nova" class="btn primario grande"><%- ic('carregamento') %> Nova viagem</a>
+  <% } %>
+</div>
+
+<div class="acoes-grandes mb-2">
+  <% if (pode('frota.criar')) { %>
+    <a href="/frota/viagens/nova" class="acao-grande" style="--cor:var(--calmo)">
+      <span class="simbolo"><%- ic('carregamento') %></span>
+      <span><strong>Programar uma viagem</strong><small>Cliente, rota, caminhão e motorista</small></span>
+      <%- ic('avancar', 'seta') %>
+    </a>
+    <a href="/frota/manutencoes" class="acao-grande" style="--cor:var(--atencao)">
+      <span class="simbolo"><%- ic('editar') %></span>
+      <span><strong>Cuidar da manutenção</strong><small>Ordens, peças, oficina e custos</small></span>
+      <%- ic('avancar', 'seta') %>
+    </a>
+  <% } %>
+</div>
+
+<div class="grade grade-4 mb-2">
+  <div class="indicador <%= indicadores.em_andamento ? 'atencao' : '' %>">
+    <div class="rotulo">Na estrada agora</div>
+    <div class="valor"><%= indicadores.em_andamento %></div>
+    <div class="apoio"><%= indicadores.abertas %> viagem(ns) em aberto</div>
+  </div>
+  <div class="indicador">
+    <div class="rotulo">Receita prevista no mês</div>
+    <div class="valor">R$ <%= f.formatar(indicadores.receita, 2) %></div>
+  </div>
+  <div class="indicador">
+    <div class="rotulo">Custos diretos no mês</div>
+    <div class="valor">R$ <%= f.formatar(indicadores.custo, 2) %></div>
+  </div>
+  <div class="indicador <%= Number(indicadores.margem) < 0 ? 'erro' : 'destaque' %>">
+    <div class="rotulo">Margem prevista</div>
+    <div class="valor">R$ <%= f.formatar(indicadores.margem, 2) %></div>
+    <div class="apoio">frete menos custos confirmados</div>
+  </div>
+</div>
+
+<div class="cartao">
+  <div class="cartao-topo">
+    <h2>Viagens</h2>
+    <span class="sub">abra uma linha para ver combustível, despesas e resultado</span>
+  </div>
+
+  <form method="get" class="filtros">
+    <div class="campo largo"><label for="busca">Buscar</label>
+      <input type="search" id="busca" name="busca" value="<%= filtros.busca || '' %>"
+             placeholder="Número, rota, placa ou cliente"></div>
+    <div class="campo"><label for="status">Situação</label>
+      <select id="status" name="status">
+        <option value="">Todas</option>
+        <% for (const s of ['RASCUNHO','PROGRAMADA','EM_ANDAMENTO','AGUARDANDO_ACERTO','CONCLUIDA','CANCELADA']) { %>
+          <option value="<%= s %>" <%= filtros.status === s ? 'selected' : '' %>><%= f.rotuloStatus(s) %></option>
+        <% } %>
+      </select></div>
+    <div class="campo"><label for="veiculo">Veículo</label>
+      <select id="veiculo" name="veiculo"><option value="">Todos</option>
+        <% for (const v of ref.veiculos) { %><option value="<%= v.id %>" <%= String(filtros.veiculoId) === String(v.id) ? 'selected' : '' %>><%= v.placa %></option><% } %>
+      </select></div>
+    <div class="campo"><label for="de">De</label><input type="date" id="de" name="de" value="<%= filtros.de || '' %>"></div>
+    <div class="campo"><label for="ate">Até</label><input type="date" id="ate" name="ate" value="<%= filtros.ate || '' %>"></div>
+    <button type="submit" class="btn">Filtrar</button><a href="/frota" class="btn">Limpar</a>
+  </form>
+
+  <% if (!lista.length) { %>
+    <div class="vazio"><%- ic('carregamento', 'icone') %><p>Nenhuma viagem encontrada.</p>
+      <% if (pode('frota.criar')) { %><a href="/frota/viagens/nova" class="btn primario">Criar a primeira viagem</a><% } %>
+    </div>
+  <% } else { %>
+    <div class="tabela-area"><table class="tabela responsiva"><thead><tr>
+      <th>Nº</th><th>Saída</th><th>Rota</th><th>Veículo / motorista</th><th>Cliente</th>
+      <th class="num">Frete</th><th class="num">Custo</th><th class="num">Margem</th><th>Situação</th><th></th>
+    </tr></thead><tbody>
+      <% for (const v of lista) { %><tr class="<%= v.status === 'CANCELADA' ? 'linha-cancelada' : '' %>">
+        <td data-rot="Nº" class="doc"><a href="/frota/viagens/<%= v.id %>"><%= v.numero %></a></td>
+        <td data-rot="Saída" class="nowrap"><%= f.data(v.data_saida_prevista) %></td>
+        <td data-rot="Rota"><strong><%= v.origem %> → <%= v.destino %></strong></td>
+        <td data-rot="Veículo"><span class="mono"><%= v.placa %></span><div class="txt-min txt-fraco"><%= v.motorista %></div></td>
+        <td data-rot="Cliente"><%= v.cliente || 'Viagem interna' %></td>
+        <td data-rot="Frete" class="num">R$ <%= f.formatar(v.receita_prevista, 2) %></td>
+        <td data-rot="Custo" class="num">R$ <%= f.formatar(v.custo_direto, 2) %></td>
+        <td data-rot="Margem" class="num txt-forte <%= Number(v.margem_prevista) < 0 ? 'txt-erro' : 'txt-ok' %>">R$ <%= f.formatar(v.margem_prevista, 2) %></td>
+        <td data-rot="Situação"><span class="pill <%= f.classeStatus(v.status) %>"><%= f.rotuloStatus(v.status) %></span></td>
+        <td class="acoes"><a href="/frota/viagens/<%= v.id %>" class="btn pequeno">Abrir</a></td>
+      </tr><% } %>
+    </tbody></table></div>
+  <% } %>
+</div>
+
+<%- include('../partials/fim') %>

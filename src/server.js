@@ -23,6 +23,7 @@ import rotasInicio from './routes/inicio.js';
 import rotasCompras from './routes/compras.js';
 import rotasRecebimentos from './routes/recebimentos.js';
 import rotasVendas from './routes/vendas.js';
+import rotasFrota from './routes/frota.js';
 import rotasFinanceiro from './routes/financeiro.js';
 import rotasRelatorios from './routes/relatorios.js';
 import rotasAuditoria from './routes/auditoria.js';
@@ -157,6 +158,7 @@ export function criarApp() {
   app.use('/compras', exigirLogin, rotasCompras);
   app.use('/recebimentos', exigirLogin, rotasRecebimentos);
   app.use('/vendas', exigirLogin, rotasVendas);
+  app.use('/frota', exigirLogin, rotasFrota);
   app.use('/financeiro', exigirLogin, rotasFinanceiro);
   app.use('/relatorios', exigirLogin, rotasRelatorios);
   app.use('/auditoria', exigirLogin, rotasAuditoria);

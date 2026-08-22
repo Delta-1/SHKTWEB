@@ -22,6 +22,57 @@
     if (cor) cor.setAttribute('content', escuro ? '#09090b' : '#ffffff');
   });
 
+  // ---------------------------------------------- preferencias de leitura
+  // Letras e contraste podem ser ajustados sem depender do cadastro do
+  // usuario: a preferencia fica neste aparelho, inclusive na tela inicial.
+  function guardarPreferencia(chave, valor) {
+    try { localStorage.setItem(chave, valor); } catch (e) { /* sem storage */ }
+  }
+
+  function aplicarFonte(tamanho) {
+    raiz.classList.remove('fonte-grande', 'fonte-muito-grande');
+    if (tamanho === 'grande') raiz.classList.add('fonte-grande');
+    if (tamanho === 'muito-grande') raiz.classList.add('fonte-muito-grande');
+    guardarPreferencia('shkt-fonte', tamanho);
+
+    var botoes = doc.querySelectorAll('[data-fonte]');
+    for (var i = 0; i < botoes.length; i++) {
+      botoes[i].setAttribute('aria-pressed', botoes[i].getAttribute('data-fonte') === tamanho ? 'true' : 'false');
+    }
+  }
+
+  function aplicarContraste(ativo) {
+    raiz.classList.toggle('contraste-alto', ativo);
+    guardarPreferencia('shkt-contraste', ativo ? 'alto' : 'normal');
+    var controles = doc.querySelectorAll('[data-contraste]');
+    for (var i = 0; i < controles.length; i++) controles[i].checked = ativo;
+  }
+
+  doc.addEventListener('click', function (ev) {
+    var fonte = ev.target.closest('[data-fonte]');
+    if (fonte) aplicarFonte(fonte.getAttribute('data-fonte'));
+
+    if (ev.target.closest('[data-preferencias-resetar]')) {
+      aplicarFonte('normal');
+      aplicarContraste(false);
+    }
+  });
+
+  doc.addEventListener('change', function (ev) {
+    if (ev.target.matches && ev.target.matches('[data-contraste]')) aplicarContraste(ev.target.checked);
+  });
+
+  doc.addEventListener('DOMContentLoaded', function () {
+    var tamanho = 'normal';
+    var contraste = false;
+    try {
+      tamanho = localStorage.getItem('shkt-fonte') || 'normal';
+      contraste = localStorage.getItem('shkt-contraste') === 'alto';
+    } catch (e) { /* sem storage */ }
+    aplicarFonte(tamanho);
+    aplicarContraste(contraste);
+  });
+
   // ------------------------------------------------------------- avisos
   // Confirmacoes rapidas aparecem flutuando e somem sozinhas; erros ficam
   // fixos no topo da pagina, porque exigem leitura.

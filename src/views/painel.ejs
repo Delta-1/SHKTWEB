@@ -49,6 +49,39 @@
   <div class="txt-min txt-fraco nowrap"><%= f.data(de) %> a <%= f.data(ate) %></div>
 </div>
 
+<!-- -------------------------------------------------------- ações do dia -->
+<div class="secao-titulo">O que você quer fazer agora?</div>
+<div class="acoes-grandes mb-2 nao-imprimir">
+  <% if (pode('compras.criar')) { %>
+    <a href="/recebimentos/novo" class="acao-grande" style="--cor:var(--azul-500)">
+      <span class="simbolo"><%- ic('recebimento') %></span>
+      <span><strong>Receber mercadoria</strong><small>Registrar a chegada no armazém</small></span>
+      <%- ic('avancar', 'seta') %>
+    </a>
+  <% } %>
+  <% if (pode('frota.criar')) { %>
+    <a href="/frota/viagens/nova" class="acao-grande" style="--cor:var(--calmo)">
+      <span class="simbolo"><%- ic('carregamento') %></span>
+      <span><strong>Programar uma viagem</strong><small>Veículo, motorista, rota e frete</small></span>
+      <%- ic('avancar', 'seta') %>
+    </a>
+  <% } %>
+  <% if (pode('vendas.criar')) { %>
+    <a href="/vendas/novo" class="acao-grande" style="--cor:var(--ambar-500)">
+      <span class="simbolo"><%- ic('vendas') %></span>
+      <span><strong>Fazer uma venda</strong><small>Pedido, reserva e carregamento</small></span>
+      <%- ic('avancar', 'seta') %>
+    </a>
+  <% } %>
+  <% if (pode('financeiro.visualizar')) { %>
+    <a href="/financeiro/pagar" class="acao-grande" style="--cor:var(--vermelho-500)">
+      <span class="simbolo"><%- ic('pagar') %></span>
+      <span><strong>Ver contas a pagar</strong><small>Vencimentos e baixas do dia</small></span>
+      <%- ic('avancar', 'seta') %>
+    </a>
+  <% } %>
+</div>
+
 <!-- ------------------------------------------------------------- período -->
 <div class="periodo nao-imprimir">
   <div class="atalhos">

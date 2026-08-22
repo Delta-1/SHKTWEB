@@ -10,20 +10,22 @@
  *   npm run seed
  */
 import path from 'node:path';
+import { randomBytes } from 'node:crypto';
 import { pool, transacao } from './index.js';
 import { gerarHash } from '../lib/auth.js';
 import { PERFIS_PADRAO } from '../lib/permissoes.js';
 
-const SENHA_INICIAL = process.env.ADMIN_SENHA || 'shkt@2026';
+const SENHA_INICIAL = process.env.ADMIN_SENHA ||
+  (process.env.NODE_ENV === 'test' ? randomBytes(24).toString('base64url') : null);
 const EMAIL_ADMIN = process.env.ADMIN_EMAIL || 'admin@shkt.com.br';
 
-const MOEDAS = [
+export const MOEDAS = [
   ['BRL', 'Real brasileiro', 'R$', 2],
   ['USD', 'Dólar americano', 'US$', 2],
   ['PEN', 'Sol peruano', 'S/', 2],
 ];
 
-const PAISES = [
+export const PAISES = [
   ['BR', 'Brasil', 'BRL'],
   ['PE', 'Peru', 'PEN'],
   ['PY', 'Paraguai', 'USD'],
@@ -34,7 +36,7 @@ const PAISES = [
 ];
 
 // fator_kg: quantos quilos vale 1 unidade
-const UNIDADES = [
+export const UNIDADES = [
   ['KG', 'Quilograma', '1', 3],
   ['TON', 'Tonelada', '1000', 3],
   ['SC60', 'Saco 60 kg', '60', 2],
@@ -42,7 +44,7 @@ const UNIDADES = [
   ['UN', 'Unidade', '1', 0],
 ];
 
-const INCOTERMS = [
+export const INCOTERMS = [
   ['EXW', 'Ex Works - na origem'],
   ['FCA', 'Free Carrier - livre no transportador'],
   ['FOB', 'Free On Board - livre a bordo'],
@@ -53,7 +55,7 @@ const INCOTERMS = [
   ['DDP', 'Delivered Duty Paid - entregue com direitos pagos'],
 ];
 
-const FORMAS_PAGAMENTO = [
+export const FORMAS_PAGAMENTO = [
   ['PIX', 'PIX'],
   ['TED', 'Transferência bancária / TED'],
   ['BOLETO', 'Boleto'],
@@ -63,7 +65,7 @@ const FORMAS_PAGAMENTO = [
   ['CHEQUE', 'Cheque'],
 ];
 
-const CONDICOES_PAGAMENTO = [
+export const CONDICOES_PAGAMENTO = [
   ['AVISTA', 'À vista', 0, 1],
   ['10DD', '10 dias', 10, 1],
   ['15DD', '15 dias', 15, 1],
@@ -73,7 +75,7 @@ const CONDICOES_PAGAMENTO = [
 ];
 
 // codigo, nome, tipo, grupo_dre, ordem
-const CATEGORIAS = [
+export const CATEGORIAS = [
   ['VENDA_MERCADORIA', 'Venda de mercadoria', 'RECEITA', 'RECEITA_BRUTA', 10],
   ['VENDA_SERVICO', 'Prestação de serviço', 'RECEITA', 'RECEITA_BRUTA', 20],
   ['OUTRAS_RECEITAS', 'Outras receitas', 'RECEITA', 'OUTRAS', 900],
@@ -93,7 +95,7 @@ const CATEGORIAS = [
   ['OUTRAS_DESPESAS', 'Outras despesas', 'DESPESA', 'OUTRAS', 910],
 ];
 
-const CENTROS_CUSTO = [
+export const CENTROS_CUSTO = [
   ['ADM', 'Administrativo'],
   ['COMERCIAL', 'Comercial'],
   ['OPERACAO', 'Operação / Pátio'],
@@ -101,7 +103,7 @@ const CENTROS_CUSTO = [
   ['EXPORTACAO', 'Exportação'],
 ];
 
-const COMBUSTIVEIS = [
+export const COMBUSTIVEIS = [
   ['DIESEL_S10', 'Diesel S10'],
   ['DIESEL_S500', 'Diesel S500'],
   ['GASOLINA', 'Gasolina'],
@@ -153,6 +155,11 @@ export async function semear({ silencioso = false } = {}) {
     const jaTemUsuario = await cx.query('SELECT COUNT(*)::INT AS n FROM usuarios');
 
     if (jaTemUsuario.rows[0].n === 0) {
+      if (!SENHA_INICIAL) {
+        throw new Error(
+          'ADMIN_SENHA não está configurada. Defina uma senha inicial forte antes de executar o seed.'
+        );
+      }
       const hash = await gerarHash(SENHA_INICIAL);
       await inserir(
         cx,
@@ -160,7 +167,7 @@ export async function semear({ silencioso = false } = {}) {
               VALUES ($1,$2,$3,$4,TRUE)`,
         ['Administrador SHKT', EMAIL_ADMIN, hash, perfilAdmin.rows[0].id]
       );
-      log(`  ✓ usuário administrador: ${EMAIL_ADMIN} / ${SENHA_INICIAL}`);
+      log(`  ✓ usuário administrador criado: ${EMAIL_ADMIN} (troca obrigatória no primeiro acesso)`);
     }
 
     // -------------------------------------------------------- tabelas de apoio

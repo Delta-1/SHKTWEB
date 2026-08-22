@@ -61,6 +61,8 @@ export async function passos() {
           (SELECT COUNT(*)::INT FROM parceiros WHERE is_fornecedor AND ativo)   AS fornecedores,
           (SELECT COUNT(*)::INT FROM produtos WHERE ativo)                      AS produtos,
           (SELECT COUNT(*)::INT FROM locais_estoque WHERE ativo)                AS locais,
+          (SELECT COUNT(*)::INT FROM veiculos WHERE situacao = 'ATIVO')         AS veiculos,
+          (SELECT COUNT(*)::INT FROM motoristas WHERE ativo)                    AS motoristas,
           (SELECT COUNT(*)::INT FROM usuarios WHERE ativo)                      AS usuarios,
           (SELECT COUNT(*)::INT FROM estoque_movimentos)                        AS movimentos`),
   ]);
@@ -99,6 +101,14 @@ export async function passos() {
       url: '/cadastros/fornecedores',
       acao: 'Cadastrar',
       feito: contagens.fornecedores > 0 && contagens.clientes > 0,
+    },
+    {
+      chave: 'frota',
+      titulo: 'Frota da transportadora',
+      apoio: 'Cadastre ao menos um veículo e um motorista para programar viagens.',
+      url: '/cadastros/veiculos',
+      acao: 'Configurar',
+      feito: contagens.veiculos > 0 && contagens.motoristas > 0,
     },
     {
       chave: 'equipe',

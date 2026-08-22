@@ -1,0 +1,30 @@
+<%- include('../partials/topo') %>
+<form method="post" action="/frota/manutencoes/nova" class="cartao" style="max-width:980px" data-etapas>
+  <input type="hidden" name="viagem_id" value="<%= registro.viagem_id || '' %>">
+  <div class="cartao-topo"><a href="<%= viagem ? '/frota/viagens/' + viagem.id : '/frota' %>" class="btn pequeno"><%- ic('voltar') %> Voltar</a><h2>Nova ordem de manutenção</h2></div>
+  <div class="cartao-corpo">
+    <section class="etapa" data-rotulo="Veículo"><h3>Qual veículo precisa de atenção?</h3><p class="explica">Registre o problema e a oficina uma única vez.</p><div class="campos">
+      <div class="campo c4"><label for="operacao_id">Operação <span class="obrigatorio">*</span></label><select id="operacao_id" name="operacao_id" required data-foco><% for (const x of ref.operacoes) { %><option value="<%= x.id %>" <%= String(registro.operacao_id) === String(x.id) ? 'selected' : '' %>><%= x.nome %></option><% } %></select></div>
+      <div class="campo c4"><label for="veiculo_id">Veículo <span class="obrigatorio">*</span></label><select id="veiculo_id" name="veiculo_id" required data-resumo="Veículo"><option value="">Selecione...</option><% for (const x of ref.veiculos) { %><option value="<%= x.id %>" <%= String(registro.veiculo_id) === String(x.id) ? 'selected' : '' %>><%= x.placa %><%= x.marca_modelo ? ' — ' + x.marca_modelo : '' %></option><% } %></select></div>
+      <div class="campo c4"><label for="oficina_id">Oficina / prestador</label><select id="oficina_id" name="oficina_id"><option value="">—</option><% for (const x of ref.oficinas) { %><option value="<%= x.id %>"><%= x.nome %></option><% } %></select></div>
+      <div class="campo c3"><label for="data">Data <span class="obrigatorio">*</span></label><input type="date" id="data" name="data" required value="<%= f.dataInput(registro.data) %>"></div>
+      <div class="campo c3"><label for="tipo">Tipo <span class="obrigatorio">*</span></label><select id="tipo" name="tipo" required><% for (const [x,n] of [['PREVENTIVA','Preventiva'],['CORRETIVA','Corretiva'],['EMERGENCIAL','Emergencial'],['REVISAO','Revisão'],['OUTRA','Outra']]) { %><option value="<%= x %>"><%= n %></option><% } %></select></div>
+      <div class="campo c3"><label for="quilometragem">Quilometragem</label><input type="text" inputmode="decimal" class="numerico" data-casas="1" id="quilometragem" name="quilometragem"></div>
+      <div class="campo c3"><label for="previsao_conclusao">Previsão</label><input type="date" id="previsao_conclusao" name="previsao_conclusao"></div>
+      <div class="campo c12"><label for="descricao">O que precisa ser feito? <span class="obrigatorio">*</span></label><textarea id="descricao" name="descricao" required rows="3" placeholder="Descreva o defeito, revisão ou serviço solicitado" data-resumo="Serviço"></textarea></div>
+    </div></section>
+    <section class="etapa" data-rotulo="Valores"><h3>Quanto custa?</h3><p class="explica">Separe as partes para o histórico do veículo ficar útil.</p><div class="campos">
+      <div class="campo c4"><label for="valor_pecas">Peças</label><input type="text" inputmode="decimal" class="numerico" data-casas="2" id="valor_pecas" name="valor_pecas" value="0,00" data-resumo="Peças"></div>
+      <div class="campo c4"><label for="valor_servicos">Serviços</label><input type="text" inputmode="decimal" class="numerico" data-casas="2" id="valor_servicos" name="valor_servicos" value="0,00" data-resumo="Serviços"></div>
+      <div class="campo c4"><label for="valor_mao_obra">Mão de obra</label><input type="text" inputmode="decimal" class="numerico" data-casas="2" id="valor_mao_obra" name="valor_mao_obra" value="0,00" data-resumo="Mão de obra"></div>
+      <div class="campo c3"><label for="moeda_id">Moeda <span class="obrigatorio">*</span></label><select id="moeda_id" name="moeda_id" required><% for (const x of ref.moedas) { %><option value="<%= x.id %>" <%= String(registro.moeda_id) === String(x.id) ? 'selected' : '' %>><%= x.codigo %></option><% } %></select></div>
+      <div class="campo c4"><label for="categoria_id">Categoria</label><select id="categoria_id" name="categoria_id"><option value="">Manutenção</option><% for (const x of ref.categorias.filter(c => c.tipo === 'DESPESA')) { %><option value="<%= x.id %>" <%= String(registro.categoria_id) === String(x.id) ? 'selected' : '' %>><%= x.nome %></option><% } %></select></div>
+      <div class="campo c5"><label for="centro_custo_id">Centro de custo</label><select id="centro_custo_id" name="centro_custo_id"><option value="">—</option><% for (const x of ref.centrosCusto) { %><option value="<%= x.id %>" <%= String(registro.centro_custo_id) === String(x.id) ? 'selected' : '' %>><%= x.nome %></option><% } %></select></div>
+      <div class="campo c12"><label for="observacoes">Observações</label><textarea id="observacoes" name="observacoes" rows="2"></textarea></div>
+      <div class="resumo-confere c12" data-confere></div>
+      <div class="ajuda-caixa c12"><%- ic('info') %><div>A ordem nasce em rascunho. Aprovar gera um único Contas a Pagar e inclui o custo no resultado da viagem, quando vinculada.</div></div>
+    </div></section>
+  </div>
+  <div class="rodape-form"><button type="button" class="btn oculto" data-etapa-voltar><%- ic('voltar') %> Voltar</button><span class="espaco"></span><button type="button" class="btn primario grande" data-etapa-avancar>Continuar <%- ic('avancar') %></button><button type="submit" class="btn primario grande oculto" data-etapa-gravar>Salvar ordem</button></div>
+</form>
+<%- include('../partials/fim') %>

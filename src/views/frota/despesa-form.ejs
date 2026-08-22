@@ -1,0 +1,17 @@
+<%- include('../partials/topo') %>
+<form method="post" action="/frota/viagens/<%= viagem.id %>/despesas/nova" class="cartao" style="max-width:900px">
+  <div class="cartao-topo"><a href="/frota/viagens/<%= viagem.id %>" class="btn pequeno"><%- ic('voltar') %> Voltar</a><h2>Despesa · viagem <%= viagem.numero %></h2></div>
+  <div class="cartao-corpo"><div class="chamada-rota"><strong><%= viagem.placa %></strong><span><%= viagem.origem %> → <%= viagem.destino %></span></div><div class="campos mt-2">
+    <div class="campo c3"><label for="data">Data <span class="obrigatorio">*</span></label><input type="date" id="data" name="data" required value="<%= f.dataInput(registro.data) %>" data-foco></div>
+    <div class="campo c4"><label for="tipo">Tipo <span class="obrigatorio">*</span></label><select id="tipo" name="tipo" required><% for (const [x,n] of [['ADIANTAMENTO','Adiantamento'],['ALIMENTACAO','Alimentação'],['PEDAGIO','Pedágio'],['HOSPEDAGEM','Hospedagem'],['MANUTENCAO_EMERGENCIAL','Manutenção emergencial'],['DOCUMENTACAO','Documentação'],['OUTRO','Outro']]) { %><option value="<%= x %>"><%= n %></option><% } %></select></div>
+    <div class="campo c5"><label for="parceiro_id">Beneficiário / fornecedor</label><select id="parceiro_id" name="parceiro_id"><option value="">—</option><% for (const x of ref.fornecedores) { %><option value="<%= x.id %>"><%= x.nome %></option><% } %></select></div>
+    <div class="campo c8"><label for="descricao">Descrição <span class="obrigatorio">*</span></label><input id="descricao" name="descricao" required maxlength="200" placeholder="Ex.: pedágio da BR-317"></div>
+    <div class="campo c4"><label for="valor">Valor <span class="obrigatorio">*</span></label><input type="text" inputmode="decimal" class="numerico" data-casas="2" id="valor" name="valor" required></div>
+    <div class="campo c3"><label for="moeda_id">Moeda <span class="obrigatorio">*</span></label><select id="moeda_id" name="moeda_id" required><% for (const x of ref.moedas) { %><option value="<%= x.id %>" <%= String(registro.moeda_id) === String(x.id) ? 'selected' : '' %>><%= x.codigo %></option><% } %></select></div>
+    <div class="campo c4"><label for="categoria_id">Categoria financeira</label><select id="categoria_id" name="categoria_id"><option value="">Despesas de viagem</option><% for (const x of ref.categorias.filter(c => c.tipo === 'DESPESA')) { %><option value="<%= x.id %>" <%= String(registro.categoria_id) === String(x.id) ? 'selected' : '' %>><%= x.nome %></option><% } %></select></div>
+    <div class="campo c5"><label for="centro_custo_id">Centro de custo</label><select id="centro_custo_id" name="centro_custo_id"><option value="">—</option><% for (const x of ref.centrosCusto) { %><option value="<%= x.id %>" <%= String(registro.centro_custo_id) === String(x.id) ? 'selected' : '' %>><%= x.nome %></option><% } %></select></div>
+    <div class="campo c12"><label for="observacoes">Observações</label><textarea id="observacoes" name="observacoes" rows="2"></textarea></div>
+  </div><div class="ajuda-caixa mt-2"><%- ic('info') %><div>Salvar não movimenta dinheiro. A confirmação na tela da viagem cria o título no Contas a Pagar e atualiza a margem.</div></div></div>
+  <div class="rodape-form"><a href="/frota/viagens/<%= viagem.id %>" class="btn">Cancelar</a><span class="espaco"></span><button type="submit" class="btn primario grande">Salvar despesa</button></div>
+</form>
+<%- include('../partials/fim') %>

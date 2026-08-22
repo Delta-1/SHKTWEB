@@ -37,14 +37,16 @@ function urlDoBanco() {
   return 'postgres://shkt:shkt@127.0.0.1:5432/shkt_erp';
 }
 
+const databaseUrl = urlDoBanco();
+
 export const config = {
   env: ambiente,
   porta: Number(process.env.PORT || 3000),
 
-  databaseUrl: urlDoBanco(),
+  databaseUrl,
 
   // Em provedores gerenciados (Supabase, Render, Neon) e necessario SSL.
-  dbSsl: bool(process.env.DATABASE_SSL, false),
+  dbSsl: bool(process.env.DATABASE_SSL, /(?:supabase\.co|supabase\.com)(?::\d+)?\//i.test(databaseUrl)),
 
   sessao: {
     segredo: process.env.SESSION_SECRET || 'shkt-erp-desenvolvimento-trocar-em-producao',

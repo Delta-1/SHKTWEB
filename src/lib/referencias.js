@@ -44,6 +44,11 @@ const consultas = {
     ),
   parceiros: () =>
     muitos('SELECT id, razao_social AS nome FROM parceiros WHERE ativo ORDER BY razao_social'),
+  oficinas: () =>
+    muitos(
+      `SELECT id, razao_social AS nome
+         FROM parceiros WHERE ativo AND (is_oficina OR is_fornecedor) ORDER BY razao_social`
+    ),
   veiculos: () =>
     muitos(
       `SELECT id, placa, marca_modelo, capacidade_kg, motorista_padrao_id
@@ -67,6 +72,8 @@ const consultas = {
     ),
   centrosCusto: () => muitos('SELECT id, codigo, nome FROM centros_custo WHERE ativo ORDER BY nome'),
   formasPagamento: () => muitos('SELECT id, codigo, nome FROM formas_pagamento WHERE ativo ORDER BY nome'),
+  combustiveis: () =>
+    muitos('SELECT id, codigo, nome FROM tipos_combustivel WHERE ativo ORDER BY nome'),
 };
 
 /**

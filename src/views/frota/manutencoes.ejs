@@ -1,0 +1,32 @@
+<%- include('../partials/topo') %>
+
+<div class="cabecalho-pagina">
+  <div><a href="/frota" class="txt-min">← SHKT Transportes</a><h1>Manutenção da frota</h1>
+    <div class="apoio">Ordens abertas, histórico do veículo e custo financeiro.</div></div>
+  <span class="espaco"></span>
+  <% if (pode('frota.criar')) { %><a href="/frota/manutencoes/nova" class="btn primario grande">+ Nova ordem</a><% } %>
+</div>
+
+<div class="cartao">
+  <form method="get" class="filtros">
+    <div class="campo largo"><label for="busca">Buscar</label><input type="search" id="busca" name="busca" value="<%= filtros.busca || '' %>" placeholder="Número, serviço, placa ou oficina"></div>
+    <div class="campo"><label for="status">Situação</label><select id="status" name="status"><option value="">Todas</option><% for (const s of ['RASCUNHO','APROVADA','EM_EXECUCAO','CONCLUIDA','CANCELADA']) { %><option value="<%= s %>" <%= filtros.status === s ? 'selected' : '' %>><%= f.rotuloStatus(s) %></option><% } %></select></div>
+    <div class="campo"><label for="veiculo">Veículo</label><select id="veiculo" name="veiculo"><option value="">Todos</option><% for (const v of ref.veiculos) { %><option value="<%= v.id %>" <%= String(filtros.veiculoId) === String(v.id) ? 'selected' : '' %>><%= v.placa %></option><% } %></select></div>
+    <button type="submit" class="btn">Filtrar</button><a href="/frota/manutencoes" class="btn">Limpar</a>
+  </form>
+  <% if (!lista.length) { %><div class="vazio"><%- ic('editar', 'icone') %><p>Nenhuma ordem de manutenção encontrada.</p><% if (pode('frota.criar')) { %><a href="/frota/manutencoes/nova" class="btn primario">Criar a primeira ordem</a><% } %></div><% } else { %>
+    <div class="tabela-area"><table class="tabela responsiva"><thead><tr><th>Nº</th><th>Data</th><th>Veículo</th><th>Serviço</th><th>Oficina</th><th class="num">Valor</th><th>Financeiro</th><th>Situação</th><th></th></tr></thead><tbody>
+      <% for (const m of lista) { %><tr class="<%= m.status === 'CANCELADA' ? 'linha-cancelada' : '' %>">
+        <td data-rot="Nº" class="doc"><%= m.numero %></td><td data-rot="Data"><%= f.data(m.data) %></td>
+        <td data-rot="Veículo"><span class="mono"><%= m.placa %></span><div class="txt-min txt-fraco"><%= m.marca_modelo || '' %></div></td>
+        <td data-rot="Serviço"><strong><%= m.descricao %></strong><% if (m.viagem_numero) { %><div class="txt-min"><a href="/frota/viagens/<%= m.viagem_id %>">Viagem <%= m.viagem_numero %></a></div><% } %></td>
+        <td data-rot="Oficina"><%= m.oficina || 'Não informada' %></td><td data-rot="Valor" class="num txt-forte">R$ <%= f.formatar(m.valor_total,2) %></td>
+        <td data-rot="Financeiro"><% if (m.conta_pagar_numero) { %><a href="/financeiro/pagar/<%= m.conta_pagar_id %>"><%= m.conta_pagar_numero %></a><% } else { %>—<% } %></td>
+        <td data-rot="Situação"><span class="pill <%= f.classeStatus(m.status) %>"><%= f.rotuloStatus(m.status) %></span></td>
+        <td class="acoes"><% if (m.status === 'RASCUNHO' && pode('frota.aprovar')) { %><form method="post" action="/frota/manutencoes/<%= m.id %>/aprovar"><button type="submit" class="btn pequeno primario" data-confirmar="Aprovar e gerar o Contas a Pagar?">Aprovar</button></form><% } %></td>
+      </tr><% } %>
+    </tbody></table></div>
+  <% } %>
+</div>
+
+<%- include('../partials/fim') %>

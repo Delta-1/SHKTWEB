@@ -59,7 +59,7 @@ Coberto por 16 testes automatizados de aceite, além dos 27 da Fase 1.
 
 ---
 
-## FASE 3 — RH, frota e obrigações
+## FASE 3 — RH, frota e obrigações (em andamento)
 
 **RH / Folha**
 - Detalhamento mensal por funcionário: salário-base, horas extras,
@@ -68,19 +68,22 @@ Coberto por 16 testes automatizados de aceite, além dos 27 da Fase 1.
   com o **líquido a pagar** — o detalhe fica no RH
 - Provisões de 13º, férias, rescisão e encargos
 
-**Abastecimento**
+**✅ Viagens, abastecimento e manutenção — núcleo entregue**
+- Viagem numerada por operação, cliente, rota, veículo e motorista
+- Fluxo: Rascunho → Programada → Em andamento → Concluída / Cancelada
+- Programar gera um único Contas a Receber para o frete
 - Autorização de abastecimento numerada, com veículo, motorista, combustível,
   quilometragem e centro de custo
 - Relatórios de consumo por veículo, motorista, período e viagem, com km/l
-
-**Despesas de viagem**
-- Adiantamento, gastos por categoria, comprovantes e prestação de contas
-- Saldo a devolver ou reembolsar
+- Despesas por categoria ligadas à viagem e enviadas ao Contas a Pagar apenas
+  na confirmação
 - Margem da operação: receita − custos diretos da viagem
-
-**Manutenção**
 - Ordem de serviço com peças, serviços, mão de obra e oficina
 - Histórico por veículo; despesas aprovadas vão para o Contas a Pagar
+
+**Despesas de viagem — próximo incremento**
+- Prestação de contas de adiantamentos, com saldo a devolver ou reembolsar
+- Comprovantes anexos por lançamento
 
 **Impostos e obrigações**
 - Estrutura parametrizável de impostos, parcelamentos e vencimentos
