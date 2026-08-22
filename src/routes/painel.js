@@ -49,9 +49,9 @@ router.get('/', exigir('dashboard.visualizar'), async (req, res, next) => {
       onboarding.resumo(),
 
       um(`SELECT
-            COALESCE(SUM(valor - valor_liquidado) FILTER (WHERE tipo = 'CP'), 0) AS pagar,
-            COALESCE(SUM(valor - valor_liquidado) FILTER (WHERE tipo = 'CR'), 0) AS receber,
-            COALESCE(SUM(valor - valor_liquidado)
+            COALESCE(SUM(saldo_brl) FILTER (WHERE tipo = 'CP'), 0) AS pagar,
+            COALESCE(SUM(saldo_brl) FILTER (WHERE tipo = 'CR'), 0) AS receber,
+            COALESCE(SUM(saldo_brl)
                      FILTER (WHERE tipo = 'CP' AND vencimento < CURRENT_DATE), 0) AS pagar_vencido,
             COUNT(*) FILTER (WHERE vencimento < CURRENT_DATE)::INT AS qtd_vencidos
           FROM vw_titulos WHERE status IN ('ABERTO','PARCIAL')`),
@@ -59,7 +59,10 @@ router.get('/', exigir('dashboard.visualizar'), async (req, res, next) => {
       um(`SELECT
             (SELECT COUNT(*)::INT FROM pedidos_compra WHERE status = 'AGUARDANDO_APROVACAO') AS compras_aguardando,
             (SELECT COUNT(*)::INT FROM pedidos_venda  WHERE status = 'AGUARDANDO_APROVACAO') AS vendas_aguardando,
-            (SELECT COUNT(*)::INT FROM recebimentos   WHERE status = 'RASCUNHO')             AS recebimentos_pendentes`),
+            (SELECT COUNT(*)::INT FROM recebimentos   WHERE status = 'RASCUNHO') AS recebimentos_pendentes,
+            (SELECT COUNT(*)::INT FROM folhas_competencia WHERE status='RASCUNHO') AS folhas_pendentes,
+            (SELECT COUNT(*)::INT FROM obrigacoes WHERE status<>'CANCELADA' AND vencimento<CURRENT_DATE) AS obrigacoes_vencidas,
+            (SELECT COUNT(*)::INT FROM viagens WHERE status='AGUARDANDO_ACERTO') AS acertos_pendentes`),
     ]);
 
     // Pendências: só o que realmente trava alguém hoje

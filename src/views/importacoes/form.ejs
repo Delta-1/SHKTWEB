@@ -1,0 +1,7 @@
+<%- include('../partials/topo') %>
+<form method="post" action="/importacoes/nova" enctype="multipart/form-data" class="cartao" style="max-width:900px"><div class="cartao-topo"><a href="/importacoes" class="btn pequeno"><%- ic('voltar') %> Voltar</a><h2>Nova importação</h2></div><div class="cartao-corpo">
+<div class="aviso info"><%- ic('info') %><div><strong>Seguro em duas etapas</strong>Primeiro mostramos uma prévia. Nenhum cadastro é criado até você confirmar.</div></div>
+<div class="campos"><div class="campo c6"><label>O que deseja importar?</label><select name="entidade" required><option value="PRODUTOS">Produtos</option><option value="CLIENTES">Clientes</option><option value="FORNECEDORES">Fornecedores</option></select></div><div class="campo c6"><label>Planilha</label><input type="file" name="arquivo" accept=".xlsx,.csv" required><span class="ajuda">Excel XLSX ou CSV, até 1.000 linhas e 10 MB.</span></div></div>
+<div class="cartao suave mt-2"><div class="cartao-corpo"><strong>Baixe um modelo antes de começar</strong><div class="acoes mt-1"><a class="btn pequeno" href="/importacoes/modelo/produtos">Modelo de produtos</a><a class="btn pequeno" href="/importacoes/modelo/clientes">Modelo de clientes</a><a class="btn pequeno" href="/importacoes/modelo/fornecedores">Modelo de fornecedores</a></div></div></div></div>
+<div class="rodape-form"><a href="/importacoes" class="btn">Cancelar</a><span class="espaco"></span><button class="btn primario grande">Carregar e conferir</button></div></form>
+<%- include('../partials/fim') %>

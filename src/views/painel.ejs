@@ -33,6 +33,21 @@
     titulo: `${carregamentosAbertos.length} carregamento(s) em aberto`,
     apoio: 'Programados e ainda não expedidos',
   });
+  if (comercial.acertos_pendentes) pendencias.push({
+    url: '/frota?status=AGUARDANDO_ACERTO', ic: 'carregamento', cor: 'var(--ambar-500)',
+    titulo: `${comercial.acertos_pendentes} viagem(ns) aguardando acerto`,
+    apoio: 'Confira adiantamentos e comprovantes com o motorista',
+  });
+  if (comercial.folhas_pendentes && pode('rh.visualizar')) pendencias.push({
+    url: '/rh', ic: 'funcionarios', cor: 'var(--roxo-500)',
+    titulo: `${comercial.folhas_pendentes} folha(s) em preparação`,
+    apoio: 'Confira os funcionários antes do fechamento',
+  });
+  if (comercial.obrigacoes_vencidas && pode('impostos.visualizar')) pendencias.push({
+    url: '/impostos', ic: 'documento', cor: 'var(--vermelho-500)',
+    titulo: `${comercial.obrigacoes_vencidas} obrigação(ões) vencida(s)`,
+    apoio: 'Verifique a guia e a situação no Financeiro',
+  });
   if (estoqueBaixo.length) pendencias.push({
     url: '/estoque', ic: 'estoque', cor: 'var(--ambar-500)',
     titulo: `${estoqueBaixo.length} produto(s) abaixo do mínimo`,
@@ -77,6 +92,13 @@
     <a href="/financeiro/pagar" class="acao-grande" style="--cor:var(--vermelho-500)">
       <span class="simbolo"><%- ic('pagar') %></span>
       <span><strong>Ver contas a pagar</strong><small>Vencimentos e baixas do dia</small></span>
+      <%- ic('avancar', 'seta') %>
+    </a>
+  <% } %>
+  <% if (pode('rh.criar')) { %>
+    <a href="/rh/nova" class="acao-grande" style="--cor:var(--roxo-500)">
+      <span class="simbolo"><%- ic('funcionarios') %></span>
+      <span><strong>Preparar uma folha</strong><small>Competência, funcionários e fechamento</small></span>
       <%- ic('avancar', 'seta') %>
     </a>
   <% } %>

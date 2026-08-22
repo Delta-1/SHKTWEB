@@ -70,6 +70,21 @@ export const MODULOS = [
     acoes: ['visualizar', 'criar', 'editar', 'aprovar', 'cancelar', 'exportar'],
   },
   {
+    codigo: 'rh',
+    nome: 'Recursos Humanos / Folha',
+    acoes: ['visualizar', 'criar', 'editar', 'aprovar', 'cancelar', 'exportar'],
+  },
+  {
+    codigo: 'impostos',
+    nome: 'Impostos e Obrigações',
+    acoes: ['visualizar', 'criar', 'editar', 'aprovar', 'cancelar', 'exportar'],
+  },
+  {
+    codigo: 'importacoes',
+    nome: 'Importação de planilhas',
+    acoes: ['visualizar', 'criar', 'aprovar'],
+  },
+  {
     codigo: 'relatorios',
     nome: 'Relatórios',
     acoes: ['visualizar', 'exportar'],
@@ -135,6 +150,9 @@ export const PERFIS_PADRAO = [
       ...todasDoModulo('vendas'),
       ...todasDoModulo('financeiro'),
       ...todasDoModulo('frota'),
+      ...todasDoModulo('rh'),
+      ...todasDoModulo('impostos'),
+      ...todasDoModulo('importacoes'),
       'relatorios.exportar',
       'auditoria.exportar',
     ],
@@ -204,6 +222,38 @@ export const PERFIS_PADRAO = [
       'frota.criar',
       'frota.editar',
       'relatorios.visualizar',
+    ],
+  },
+  {
+    codigo: 'COMPRAS',
+    nome: 'Compras',
+    descricao: 'Pedidos, recebimentos, fornecedores e importação de cadastros.',
+    sistema: false,
+    permissoes: [
+      'dashboard.visualizar', 'cadastros.visualizar', 'cadastros.criar', 'cadastros.editar',
+      ...todasDoModulo('compras'), 'estoque.visualizar', 'financeiro.visualizar',
+      'relatorios.visualizar', ...todasDoModulo('importacoes'),
+    ],
+  },
+  {
+    codigo: 'VENDAS',
+    nome: 'Vendas',
+    descricao: 'Clientes, pedidos, carregamentos e recebimentos.',
+    sistema: false,
+    permissoes: [
+      'dashboard.visualizar', 'cadastros.visualizar', 'cadastros.criar', 'cadastros.editar',
+      ...todasDoModulo('vendas'), ...todasDoModulo('carregamento'),
+      'financeiro.visualizar', 'relatorios.visualizar', ...todasDoModulo('importacoes'),
+    ],
+  },
+  {
+    codigo: 'RH',
+    nome: 'Recursos Humanos',
+    descricao: 'Funcionários, folha, provisões e relatórios de RH.',
+    sistema: false,
+    permissoes: [
+      'dashboard.visualizar', 'cadastros.visualizar', 'cadastros.criar', 'cadastros.editar',
+      ...todasDoModulo('rh'), 'financeiro.visualizar', 'relatorios.visualizar',
     ],
   },
   {

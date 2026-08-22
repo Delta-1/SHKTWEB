@@ -1,0 +1,14 @@
+<%- include('../partials/topo') %>
+<div class="cabecalho-pagina"><div><h1>RH e folha de pagamento</h1><p>Feche uma competência e o Financeiro recebe um título por funcionário.</p></div>
+<% if(pode('rh.criar')){%><a class="btn primario grande" href="/rh/nova">+ Nova folha</a><%}%></div>
+<div class="grade grade-3 mb-2">
+ <div class="kpi"><div class="rotulo">Folhas</div><div class="numero"><%= folhas.length %></div></div>
+ <div class="kpi"><div class="rotulo">Em preparação</div><div class="numero"><%= folhas.filter(x=>x.status==='RASCUNHO').length %></div></div>
+ <div class="kpi"><div class="rotulo">Total listado</div><div class="numero">R$ <%= f.formatar(folhas.reduce((s,x)=>s+Number(x.total_liquido||0),0),2) %></div></div>
+</div>
+<div class="cartao"><div class="cartao-topo"><h2>Competências</h2></div>
+<% if(!folhas.length){%><div class="vazio"><p>Nenhuma folha criada. Comece pela competência atual.</p></div><%}else{%>
+<div class="tabela-area"><table class="tabela responsiva"><thead><tr><th>Nº</th><th>Competência</th><th>Operação</th><th>Funcionários</th><th class="num">Líquido</th><th>Situação</th></tr></thead><tbody>
+<% for(const x of folhas){%><tr data-href="/rh/<%= x.id %>"><td class="doc"><a href="/rh/<%= x.id %>"><%= x.numero %></a></td><td><%= f.data(x.competencia) %></td><td><%= x.operacao %></td><td><%= x.funcionarios %></td><td class="num">R$ <%= f.formatar(x.total_liquido,2) %></td><td><span class="pill <%= f.classeStatus(x.status) %>"><%= f.rotuloStatus(x.status) %></span></td></tr><%}%>
+</tbody></table></div><%}%></div>
+<%- include('../partials/fim') %>

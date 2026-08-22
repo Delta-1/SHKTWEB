@@ -77,6 +77,22 @@
       ],
     },
     {
+      nome: 'RH', ic: 'funcionarios', perm: 'rh.visualizar',
+      itens: [
+        { url: '/rh/nova', texto: 'Nova folha', ic: 'mais', perm: 'rh.criar' },
+        { url: '/rh', texto: 'Folhas e competências', ic: 'funcionarios', exato: true },
+        { divisor: true },
+        { url: '/cadastros/funcionarios', texto: 'Funcionários', ic: 'funcionarios', perm: 'cadastros.visualizar' },
+      ],
+    },
+    {
+      nome: 'Obrigações', ic: 'documento', perm: 'impostos.visualizar',
+      itens: [
+        { url: '/impostos/nova', texto: 'Nova obrigação', ic: 'mais', perm: 'impostos.criar' },
+        { url: '/impostos', texto: 'Agenda de vencimentos', ic: 'documento', exato: true },
+      ],
+    },
+    {
       nome: 'Cadastros', ic: 'clientes', perm: 'cadastros.visualizar',
       itens: [
         { grupo: 'Quem' },
@@ -112,6 +128,7 @@
         { url: '/inicio/empresa?avulso=1', texto: 'Dados da empresa', ic: 'fornecedores' },
         { url: '/admin', texto: 'Usuários e perfis', ic: 'clientes', perm: 'admin.visualizar', exato: true },
         { url: '/auditoria', texto: 'Auditoria', ic: 'auditoria', perm: 'auditoria.visualizar' },
+        { url: '/importacoes', texto: 'Importar planilhas', ic: 'recebimento', perm: 'importacoes.visualizar' },
         { divisor: true },
         { url: '/trocar-senha', texto: 'Trocar minha senha', ic: 'chave' },
         { url: '/sair', texto: 'Sair do sistema', ic: 'sair' },

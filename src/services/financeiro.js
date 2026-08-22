@@ -27,10 +27,10 @@ export async function criarContaPagar(cx, dados, usuario) {
     `INSERT INTO contas_pagar (
         numero, descricao, origem, origem_tipo, origem_id, origem_numero,
         parceiro_id, funcionario_id, beneficiario, categoria_id, centro_custo_id,
-        emissao, vencimento, competencia, valor, moeda_id, documento_fiscal,
+        emissao, vencimento, competencia, valor, moeda_id, taxa_cambio, documento_fiscal,
         observacoes, criado_por, operacao_id
      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,
-               COALESCE($12, CURRENT_DATE),$13,$14,$15,$16,$17,$18,$19,$20)
+               COALESCE($12, CURRENT_DATE),$13,$14,$15,$16,COALESCE($17,1),$18,$19,$20,$21)
      RETURNING *`,
     [
       numero,
@@ -49,6 +49,7 @@ export async function criarContaPagar(cx, dados, usuario) {
       dados.competencia ?? null,
       dados.valor,
       dados.moedaId,
+      dados.taxaCambio ?? '1',
       dados.documentoFiscal ?? null,
       dados.observacoes ?? null,
       usuario?.id ?? null,
@@ -68,10 +69,10 @@ export async function criarContaReceber(cx, dados, usuario) {
     `INSERT INTO contas_receber (
         numero, descricao, origem, origem_tipo, origem_id, origem_numero,
         parceiro_id, pagador, categoria_id, centro_custo_id,
-        emissao, vencimento, competencia, valor, moeda_id, documento_fiscal,
+        emissao, vencimento, competencia, valor, moeda_id, taxa_cambio, documento_fiscal,
         observacoes, criado_por, operacao_id
      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,
-               COALESCE($11, CURRENT_DATE),$12,$13,$14,$15,$16,$17,$18,$19)
+               COALESCE($11, CURRENT_DATE),$12,$13,$14,$15,COALESCE($16,1),$17,$18,$19,$20)
      RETURNING *`,
     [
       numero,
@@ -89,6 +90,7 @@ export async function criarContaReceber(cx, dados, usuario) {
       dados.competencia ?? null,
       dados.valor,
       dados.moedaId,
+      dados.taxaCambio ?? '1',
       dados.documentoFiscal ?? null,
       dados.observacoes ?? null,
       usuario?.id ?? null,
@@ -155,6 +157,14 @@ export async function baixar(tipo, tituloId, dados, usuario, contexto = {}) {
       throw new ErroNegocio('Este título está cancelado e não pode receber baixa.');
     if (titulo.status === statusFinal)
       throw new ErroNegocio(`Este título já está ${statusFinal === 'PAGO' ? 'pago' : 'recebido'}.`);
+
+    const { rows: [contaBancaria] } = await cx.query(
+      'SELECT moeda_id FROM contas_bancarias WHERE id=$1 AND ativo FOR UPDATE',
+      [dados.contaBancariaId]
+    );
+    if (!contaBancaria) throw new ErroNegocio('A conta bancária não existe ou está inativa.');
+    if (Number(contaBancaria.moeda_id) !== Number(titulo.moeda_id))
+      throw new ErroNegocio('A moeda da conta bancária deve ser a mesma moeda do título.');
 
     const valorTitulo = Decimal.de(titulo.valor, 4);
     const jaLiquidado = Decimal.de(titulo[campoLiquidado], 4) || Decimal.zero(4);
@@ -403,6 +413,13 @@ export async function cancelarTituloEmTransacao(cx, tipo, origemTipo, origemId, 
 /** Transferencia entre contas proprias. */
 export async function transferirEntreContas(dados, usuario, contexto = {}) {
   return transacao(async (cx) => {
+    const { rows: contas } = await cx.query(
+      'SELECT id,moeda_id FROM contas_bancarias WHERE id=ANY($1::BIGINT[]) AND ativo ORDER BY id FOR UPDATE',
+      [[dados.contaOrigemId,dados.contaDestinoId]]
+    );
+    if (contas.length !== 2) throw new ErroNegocio('Conta de origem ou destino inexistente/inativa.');
+    if (Number(contas[0].moeda_id) !== Number(contas[1].moeda_id))
+      throw new ErroNegocio('Transferências diretas exigem contas na mesma moeda.');
     const numero = await proximoNumero(cx, TIPOS_DOCUMENTO.TRANSFERENCIA);
     const { rows } = await cx.query(
       `INSERT INTO caixa_transferencias
@@ -495,6 +512,7 @@ export function listarTitulos(tipo, filtros = {}) {
 
   return muitos(
     `SELECT t.*, t.valor - t.${campoLiquidado} AS saldo,
+            round((t.valor-t.${campoLiquidado})*t.taxa_cambio,4) AS saldo_brl,
             p.razao_social AS parceiro, m.codigo AS moeda, m.simbolo AS moeda_simbolo,
             cat.nome AS categoria, cc.nome AS centro_custo,
             (t.vencimento < CURRENT_DATE AND t.status IN ('ABERTO','PARCIAL')) AS vencido
@@ -515,6 +533,7 @@ export async function buscarTitulo(tipo, id) {
   const campoLiquidado = tipo === 'CP' ? 'valor_pago' : 'valor_recebido';
   const titulo = await um(
     `SELECT t.*, t.valor - t.${campoLiquidado} AS saldo,
+            round((t.valor-t.${campoLiquidado})*t.taxa_cambio,4) AS saldo_brl,
             p.razao_social AS parceiro, m.codigo AS moeda, m.simbolo AS moeda_simbolo,
             cat.nome AS categoria, cc.nome AS centro_custo, f.nome AS funcionario
        FROM ${tabela} t

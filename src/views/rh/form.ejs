@@ -1,0 +1,10 @@
+<%- include('../partials/topo') %>
+<form method="post" action="/rh/nova" class="cartao" style="max-width:900px"><div class="cartao-topo"><a href="/rh" class="btn pequeno"><%- ic('voltar') %> Voltar</a><h2>Nova folha</h2></div>
+<div class="cartao-corpo"><div class="aviso info"><%- ic('info') %><div><strong>Fluxo simples em 3 passos</strong>Crie a competência, inclua os funcionários e feche. Os títulos só nascem no fechamento.</div></div>
+<div class="campos"><div class="campo c4"><label>Competência <span class="obrigatorio">*</span></label><input type="date" name="competencia" required value="<%= hoje.slice(0,7) %>-01"></div>
+<div class="campo c4"><label>Vencimento <span class="obrigatorio">*</span></label><input type="date" name="vencimento" required value="<%= hoje %>"></div>
+<div class="campo c4"><label>Operação</label><select name="operacao_id" required><% for(const o of ref.operacoes){%><option value="<%= o.id %>"><%= o.nome %></option><%}%></select></div>
+<div class="campo c4"><label>Moeda</label><select name="moeda_id" required><% for(const m of ref.moedas){%><option value="<%= m.id %>" <%= m.codigo==='BRL'?'selected':'' %>><%= m.codigo %></option><%}%></select></div>
+<div class="campo c8"><label>Observações</label><textarea name="observacoes" rows="2"></textarea></div></div></div>
+<div class="rodape-form"><a href="/rh" class="btn">Cancelar</a><span class="espaco"></span><button class="btn primario grande">Criar e incluir funcionários</button></div></form>
+<%- include('../partials/fim') %>

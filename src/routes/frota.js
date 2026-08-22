@@ -136,7 +136,7 @@ router.post('/viagens/:id/concluir', exigir('frota.aprovar'), async (req, res, n
       dataRetorno: validar.dataHora(req.body.data_retorno, 'Retorno'),
       kmFinal: validar.decimal(req.body.km_final, 'Km final', { obrigatorio: true, escala: 1, min: 0 }),
     }, req.usuario, ctx(req));
-    res.avisar('Viagem concluída. O resultado já considera os custos confirmados.');
+    res.avisar('Retorno registrado. Confira os comprovantes e feche o acerto da viagem.');
     req.session.save(() => res.redirect(`/frota/viagens/${req.params.id}`));
   } catch (e) { next(e); }
 });
@@ -221,7 +221,7 @@ router.post('/viagens/:id/despesas/nova', exigir('frota.criar'), async (req, res
       moedaId: validar.id(req.body.moeda_id, 'Moeda', { obrigatorio: true }),
       observacoes: validar.texto(req.body.observacoes, 'Observações'),
     }, req.usuario, ctx(req));
-    res.avisar(`Despesa ${d.numero} salva. Confirme para gerar o Contas a Pagar.`, 'atencao');
+    res.avisar(`Lançamento ${d.numero} salvo. Confirme para entrar na prestação de contas.`, 'atencao');
     req.session.save(() => res.redirect(`/frota/viagens/${req.params.id}`));
   } catch (e) { next(e); }
 });
@@ -229,8 +229,19 @@ router.post('/viagens/:id/despesas/nova', exigir('frota.criar'), async (req, res
 router.post('/despesas/:id/confirmar', exigir('frota.aprovar'), async (req, res, next) => {
   try {
     await frota.confirmarDespesa(req.params.id, req.usuario, ctx(req));
-    res.avisar('Despesa confirmada e enviada ao Contas a Pagar.');
+    res.avisar('Lançamento confirmado. Adiantamentos vão ao Financeiro; comprovantes entram no acerto.');
     req.session.save(() => res.redirect(req.get('referer') || '/frota'));
+  } catch (e) { next(e); }
+});
+
+router.post('/viagens/:id/acerto', exigir('frota.aprovar'), async (req, res, next) => {
+  try {
+    await frota.fecharAcerto(req.params.id, {
+      vencimento: validar.data(req.body.vencimento, 'Vencimento', { obrigatorio: true }),
+      observacoes: validar.texto(req.body.observacoes, 'Observações'),
+    }, req.usuario, ctx(req));
+    res.avisar('Acerto fechado. A viagem está concluída e eventual saldo foi integrado ao Financeiro.');
+    req.session.save(() => res.redirect(`/frota/viagens/${req.params.id}`));
   } catch (e) { next(e); }
 });
 

@@ -4,17 +4,17 @@
 
 <div class="grade grade-3 mb-2">
   <div class="indicador">
-    <div class="rotulo">Total no filtro</div>
+    <div class="rotulo">Total no filtro · em BRL</div>
     <div class="valor">R$ <%= f.formatar(totais.total, 2) %></div>
     <div class="apoio"><%= lista.length %> título(s)</div>
   </div>
   <div class="indicador destaque">
-    <div class="rotulo">Saldo em aberto</div>
+    <div class="rotulo">Saldo em aberto · em BRL</div>
     <div class="valor">R$ <%= f.formatar(totais.saldo, 2) %></div>
     <div class="apoio">ainda não <%= ehPagar ? 'pago' : 'recebido' %></div>
   </div>
   <div class="indicador <%= totais.qtdVencidos ? 'alerta' : '' %>">
-    <div class="rotulo">Vencido</div>
+    <div class="rotulo">Vencido · em BRL</div>
     <div class="valor">R$ <%= f.formatar(totais.vencido, 2) %></div>
     <div class="apoio"><%= totais.qtdVencidos %> título(s) em atraso</div>
   </div>

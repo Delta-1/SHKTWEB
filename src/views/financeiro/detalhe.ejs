@@ -51,7 +51,8 @@
       <div class="item"><div class="rot"><%= ehPagar ? 'Beneficiário' : 'Pagador' %></div>
         <div class="val"><%= t.parceiro || t.beneficiario || t.pagador || t.funcionario || '—' %></div></div>
       <div class="item"><div class="rot">Valor do título</div>
-        <div class="val grande"><%= t.moeda_simbolo %> <%= f.formatar(t.valor, 2) %></div></div>
+        <div class="val grande"><%= t.moeda_simbolo %> <%= f.formatar(t.valor, 2) %></div>
+        <% if(t.moeda!=='BRL'){%><div class="txt-min txt-fraco">R$ <%= f.formatar(t.valor_base_brl,2) %> · cotação <%= f.formatar(t.taxa_cambio,4) %></div><%}%></div>
       <div class="item"><div class="rot"><%= ehPagar ? 'Pago' : 'Recebido' %></div>
         <div class="val"><%= t.moeda_simbolo %> <%= f.formatar(liquidado, 2) %></div></div>
       <div class="item"><div class="rot">Saldo em aberto</div>

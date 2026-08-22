@@ -85,7 +85,7 @@ export async function buscar(id) {
   );
   if (!viagem) return null;
 
-  const [abastecimentos, despesas, manutencoes] = await Promise.all([
+  const [abastecimentos, despesas, manutencoes, acerto] = await Promise.all([
     muitos(
       `SELECT a.*, tc.nome AS combustivel, p.razao_social AS fornecedor,
               cp.numero AS conta_pagar_numero, cp.status AS conta_pagar_status
@@ -111,8 +111,11 @@ export async function buscar(id) {
          LEFT JOIN contas_pagar cp ON cp.id = m.conta_pagar_id
         WHERE m.viagem_id = $1 ORDER BY m.data DESC, m.id DESC`, [id]
     ),
+    um(`SELECT a.*,cp.numero AS conta_pagar_numero,cr.numero AS conta_receber_numero
+          FROM viagem_acertos a LEFT JOIN contas_pagar cp ON cp.id=a.conta_pagar_id
+          LEFT JOIN contas_receber cr ON cr.id=a.conta_receber_id WHERE a.viagem_id=$1`,[id]),
   ]);
-  return { ...viagem, abastecimentos, despesas, manutencoes };
+  return { ...viagem, abastecimentos, despesas, manutencoes, acerto };
 }
 
 export async function criarViagem(dados, usuario, contexto = {}) {
@@ -231,15 +234,15 @@ export async function concluir(id, dados, usuario, contexto = {}) {
       throw new ErroNegocio('A quilometragem final não pode ser menor que a inicial.');
 
     const { rows } = await cx.query(
-      `UPDATE viagens SET status='CONCLUIDA', data_retorno=COALESCE($1, now()),
-          km_final=$2, concluida_em=now(), concluida_por=$3, atualizado_por=$3
+      `UPDATE viagens SET status='AGUARDANDO_ACERTO', data_retorno=COALESCE($1, now()),
+          km_final=$2, atualizado_por=$3
         WHERE id=$4 RETURNING *`,
       [dados.dataRetorno ?? null, dados.kmFinal, usuario.id, id]
     );
     await registrar(cx, {
       usuario, acao: ACOES.FECHAR, modulo: 'frota', registroTipo: 'VIAGEM',
-      registroId: id, registroNumero: v.numero, descricao: `Viagem ${v.numero} concluída.`,
-      antes: { status: v.status }, depois: { status: 'CONCLUIDA', km_final: dados.kmFinal },
+      registroId: id, registroNumero: v.numero, descricao: `Viagem ${v.numero} retornou e aguarda acerto.`,
+      antes: { status: v.status }, depois: { status: 'AGUARDANDO_ACERTO', km_final: dados.kmFinal },
       ip: contexto.ip, sessao: contexto.sessao,
     });
     return rows[0];
@@ -325,6 +328,10 @@ export async function confirmarAbastecimento(id, usuario, contexto = {}) {
 
 export async function criarDespesa(dados, usuario, contexto = {}) {
   return transacao(async (cx) => {
+    const { rows: [viagem] } = await cx.query('SELECT status FROM viagens WHERE id=$1 FOR UPDATE',[dados.viagemId]);
+    if (!viagem) throw new ErroNaoEncontrado('Viagem não encontrada.');
+    if (['CONCLUIDA','CANCELADA'].includes(viagem.status))
+      throw new ErroNegocio('Viagem concluída ou cancelada não aceita novos lançamentos.');
     const numero = await proximoNumero(cx, TIPOS_DOCUMENTO.DESPESA_VIAGEM);
     const { rows } = await cx.query(
       `INSERT INTO viagem_despesas (numero, viagem_id, data, tipo, descricao,
@@ -351,25 +358,72 @@ export async function confirmarDespesa(id, usuario, contexto = {}) {
     const d = rows[0];
     if (!d) throw new ErroNaoEncontrado('Despesa não encontrada.');
     if (d.status !== 'RASCUNHO') throw new ErroNegocio('A despesa já foi confirmada ou cancelada.');
-    const categoriaId = d.categoria_id || await referencia(cx, 'categorias_financeiras', 'VIAGEM');
-    const conta = await criarContaPagar(cx, {
-      descricao: `${d.descricao} — viagem #${d.viagem_id}`,
-      origem: 'VIAGEM', origemTipo: 'DESPESA_VIAGEM', origemId: d.id,
-      origemNumero: d.numero, parceiroId: d.parceiro_id, categoriaId,
-      centroCustoId: d.centro_custo_id, vencimento: d.data, valor: d.valor,
-      moedaId: d.moeda_id, operacaoId: d.operacao_id,
-    }, usuario);
+    if (d.tipo !== 'ADIANTAMENTO') {
+      const { rows: [comprovante] } = await cx.query(`SELECT COUNT(*)::INT n FROM anexos
+        WHERE entidade_tipo='DESPESA_VIAGEM' AND entidade_id=$1 AND excluido_em IS NULL`,[id]);
+      if (!comprovante.n) throw new ErroNegocio('Anexe o comprovante antes de confirmar esta despesa.');
+    }
+    let conta = null;
+    // O adiantamento e saída de caixa para o motorista. Os comprovantes de
+    // gasto são custo da viagem e entram no acerto, sem gerar pagamento duplo.
+    if (d.tipo === 'ADIANTAMENTO') {
+      const categoriaId = d.categoria_id || await referencia(cx, 'categorias_financeiras', 'ACERTO_VIAGEM');
+      conta = await criarContaPagar(cx, {
+        descricao: `${d.descricao} — adiantamento da viagem #${d.viagem_id}`,
+        origem: 'VIAGEM', origemTipo: 'DESPESA_VIAGEM', origemId: d.id,
+        origemNumero: d.numero, parceiroId: d.parceiro_id, categoriaId,
+        centroCustoId: d.centro_custo_id, vencimento: d.data, valor: d.valor,
+        moedaId: d.moeda_id, operacaoId: d.operacao_id,
+      }, usuario);
+    }
     const atualizado = await cx.query(
       `UPDATE viagem_despesas SET status='CONFIRMADA', confirmada_em=now(),
           confirmada_por=$1, conta_pagar_id=$2, atualizado_por=$1 WHERE id=$3 RETURNING *`,
-      [usuario.id, conta.id, id]
+      [usuario.id, conta?.id ?? null, id]
     );
     await registrar(cx, { usuario, acao: ACOES.APROVAR, modulo: 'frota',
       registroTipo: 'DESPESA_VIAGEM', registroId: id, registroNumero: d.numero,
-      descricao: `Despesa ${d.numero} confirmada; Contas a Pagar ${conta.numero} gerado.`,
+      descricao: conta ? `Adiantamento ${d.numero} confirmado; Contas a Pagar ${conta.numero} gerado.`
+        : `Comprovante ${d.numero} confirmado para o acerto da viagem.`,
       antes: { status: d.status }, depois: { status: 'CONFIRMADA' },
       ip: contexto.ip, sessao: contexto.sessao });
     return atualizado.rows[0];
+  });
+}
+
+export async function fecharAcerto(viagemId, dados, usuario, contexto = {}) {
+  return transacao(async (cx) => {
+    const { rows: [v] } = await cx.query(`SELECT v.*,m.nome AS motorista,m.funcionario_id
+      FROM viagens v JOIN motoristas m ON m.id=v.motorista_id WHERE v.id=$1 FOR UPDATE OF v`,[viagemId]);
+    if (!v) throw new ErroNaoEncontrado('Viagem não encontrada.');
+    if (v.status !== 'AGUARDANDO_ACERTO') throw new ErroNegocio('A viagem precisa ter retornado antes do acerto.');
+    const { rows: [s] } = await cx.query(`SELECT
+      COALESCE(SUM(valor) FILTER(WHERE tipo='ADIANTAMENTO' AND status='CONFIRMADA'),0) adiantado,
+      COALESCE(SUM(valor) FILTER(WHERE tipo<>'ADIANTAMENTO' AND status='CONFIRMADA'),0) despesas,
+      COUNT(*) FILTER(WHERE status='RASCUNHO')::INT rascunhos FROM viagem_despesas WHERE viagem_id=$1`,[viagemId]);
+    if (s.rascunhos > 0) throw new ErroNegocio('Confirme ou cancele todas as despesas antes de fechar o acerto.');
+    const adiantado=Number(s.adiantado), despesas=Number(s.despesas);
+    const devolver=Math.max(adiantado-despesas,0), reembolsar=Math.max(despesas-adiantado,0);
+    const numero=await proximoNumero(cx,TIPOS_DOCUMENTO.ACERTO_VIAGEM);
+    const { rows:[a] }=await cx.query(`INSERT INTO viagem_acertos
+      (numero,viagem_id,total_adiantado,total_despesas,saldo_devolver,saldo_reembolsar,observacoes,criado_por)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,[numero,viagemId,adiantado,despesas,devolver,reembolsar,dados.observacoes,usuario.id]);
+    const moedaId=v.moeda_id; const categoriaId=await referencia(cx,'categorias_financeiras','ACERTO_VIAGEM');
+    let cp=null,cr=null;
+    if(reembolsar>0) cp=await criarContaPagar(cx,{descricao:`Reembolso do acerto ${numero} — ${v.motorista}`,
+      origem:'ACERTO_VIAGEM',origemTipo:'ACERTO_VIAGEM',origemId:a.id,origemNumero:numero,
+      funcionarioId:v.funcionario_id,beneficiario:v.motorista,categoriaId,centroCustoId:v.centro_custo_id,
+      vencimento:dados.vencimento,valor:String(reembolsar),moedaId,operacaoId:v.operacao_id},usuario);
+    if(devolver>0) { const categoriaReceita=await referencia(cx,'categorias_financeiras','RECUPERACAO_DESPESA');
+      cr=await criarContaReceber(cx,{descricao:`Devolução do acerto ${numero} — ${v.motorista}`,
+      origem:'ACERTO_VIAGEM',origemTipo:'ACERTO_VIAGEM',origemId:a.id,origemNumero:numero,pagador:v.motorista,
+      categoriaId:categoriaReceita,centroCustoId:v.centro_custo_id,vencimento:dados.vencimento,valor:String(devolver),
+      moedaId,operacaoId:v.operacao_id},usuario); }
+    await cx.query("UPDATE viagem_acertos SET status='FECHADO',fechado_em=now(),fechado_por=$1,conta_pagar_id=$2,conta_receber_id=$3 WHERE id=$4",[usuario.id,cp?.id??null,cr?.id??null,a.id]);
+    await cx.query("UPDATE viagens SET status='CONCLUIDA',concluida_em=now(),concluida_por=$1,atualizado_por=$1 WHERE id=$2",[usuario.id,viagemId]);
+    await registrar(cx,{usuario,acao:ACOES.FECHAR,modulo:'frota',registroTipo:'ACERTO_VIAGEM',registroId:a.id,
+      registroNumero:numero,descricao:`Acerto ${numero} fechado: adiantado ${adiantado}, despesas ${despesas}.`,
+      depois:{adiantado,despesas,devolver,reembolsar},ip:contexto.ip,sessao:contexto.sessao}); return a;
   });
 }
 
@@ -456,5 +510,5 @@ export async function aprovarManutencao(id, usuario, contexto = {}) {
 export default {
   listar, indicadores, buscar, criarViagem, atualizarViagem, programar, iniciar,
   concluir, cancelarViagem, criarAbastecimento, confirmarAbastecimento,
-  criarDespesa, confirmarDespesa, criarManutencao, listarManutencoes, aprovarManutencao,
+  criarDespesa, confirmarDespesa, fecharAcerto, criarManutencao, listarManutencoes, aprovarManutencao,
 };

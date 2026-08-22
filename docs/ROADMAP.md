@@ -59,7 +59,7 @@ Coberto por 16 testes automatizados de aceite, além dos 27 da Fase 1.
 
 ---
 
-## FASE 3 — RH, frota e obrigações (em andamento)
+## ✅ FASE 3 — RH, frota e obrigações (concluída)
 
 **RH / Folha**
 - Detalhamento mensal por funcionário: salário-base, horas extras,
@@ -68,20 +68,20 @@ Coberto por 16 testes automatizados de aceite, além dos 27 da Fase 1.
   com o **líquido a pagar** — o detalhe fica no RH
 - Provisões de 13º, férias, rescisão e encargos
 
-**✅ Viagens, abastecimento e manutenção — núcleo entregue**
+**Viagens, abastecimento e manutenção**
 - Viagem numerada por operação, cliente, rota, veículo e motorista
-- Fluxo: Rascunho → Programada → Em andamento → Concluída / Cancelada
+- Fluxo: Rascunho → Programada → Em andamento → Aguardando acerto → Concluída / Cancelada
 - Programar gera um único Contas a Receber para o frete
 - Autorização de abastecimento numerada, com veículo, motorista, combustível,
   quilometragem e centro de custo
 - Relatórios de consumo por veículo, motorista, período e viagem, com km/l
-- Despesas por categoria ligadas à viagem e enviadas ao Contas a Pagar apenas
-  na confirmação
+- Adiantamentos geram a saída prevista; comprovantes formam o custo e entram
+  no fechamento do acerto sem pagamento duplicado
 - Margem da operação: receita − custos diretos da viagem
 - Ordem de serviço com peças, serviços, mão de obra e oficina
 - Histórico por veículo; despesas aprovadas vão para o Contas a Pagar
 
-**Despesas de viagem — próximo incremento**
+**Despesas de viagem**
 - Prestação de contas de adiantamentos, com saldo a devolver ou reembolsar
 - Comprovantes anexos por lançamento
 
@@ -91,23 +91,22 @@ Coberto por 16 testes automatizados de aceite, além dos 27 da Fase 1.
 
 ---
 
-## FASE 4 — Gestão avançada
+## ✅ FASE 4 — Gestão e migração assistida (concluída no escopo do Prompt Mestre)
 
-- DRE com rateio por operação e comparativo entre períodos
-- Painéis por área (comercial, operação, frota)
-- Indicadores: custo por tonelada exportada, margem por cliente e por destino,
-  giro de estoque, prazo médio de recebimento
+- DRE em valor-base BRL, com filtro de período e centro de custo
+- Painel do grupo e indicadores operacionais/frota
+- Indicadores de receita, custo, margem, consumo e pendências
 - Importação assistida das planilhas históricas: modelo, validação,
   pré-visualização, relatório de erros e prevenção de duplicidade
 - Anexos digitalizados nos documentos (comprovantes, certificados, NF-e)
 
 ---
 
-## Melhorias avulsas mapeadas
+## Evoluções futuras opcionais
 
 Fora das fases, valem quando houver necessidade real:
 
-- Cotação de moeda por data para operações em USD/PEN
+- Integração automática com provedor externo de cotação (hoje a taxa é informada e auditada)
 - Notificação por e-mail de títulos a vencer e certificados pendentes
 - Autenticação em duas etapas para os perfis Financeiro e Administrador
 - Registro fotográfico do carregamento pelo celular

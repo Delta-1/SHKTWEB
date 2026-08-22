@@ -24,6 +24,9 @@ function lerTitulo(corpo, tipo) {
     competencia: validar.data(corpo.competencia, 'Competência'),
     valor: validar.dinheiro(corpo.valor, 'Valor', { obrigatorio: true, positivo: true }),
     moedaId: validar.id(corpo.moeda_id, 'Moeda', { obrigatorio: true }),
+    taxaCambio: validar.decimal(corpo.taxa_cambio || '1', 'Cotação para BRL', {
+      obrigatorio: true, positivo: true, escala: 8,
+    }),
     documentoFiscal: validar.texto(corpo.documento_fiscal, 'Documento fiscal'),
     observacoes: validar.texto(corpo.observacoes, 'Observações'),
   };
@@ -33,12 +36,12 @@ function lerTitulo(corpo, tipo) {
       corpo.origem,
       'Origem',
       ['MANUAL', 'COMPRA', 'FUMIGACAO', 'RH', 'MANUTENCAO', 'ABASTECIMENTO', 'VIAGEM', 'IMPOSTO',
-       'ADMINISTRATIVO', 'FRETE'],
+       'ADMINISTRATIVO', 'FRETE', 'ACERTO_VIAGEM'],
       { padrao: 'MANUAL' }
     );
     base.beneficiario = validar.texto(corpo.beneficiario, 'Beneficiário');
   } else {
-    base.origem = validar.escolha(corpo.origem, 'Origem', ['MANUAL', 'VENDA', 'OUTROS'], {
+    base.origem = validar.escolha(corpo.origem, 'Origem', ['MANUAL', 'VENDA', 'FRETE', 'ACERTO_VIAGEM', 'OUTROS'], {
       padrao: 'MANUAL',
     });
     base.pagador = validar.texto(corpo.pagador, 'Pagador');
@@ -78,9 +81,9 @@ for (const segmento of ['pagar', 'receber']) {
         ref,
         filtros,
         totais: {
-          total: lista.reduce((s, t) => s + Number(t.valor), 0),
-          saldo: lista.reduce((s, t) => s + Number(t.saldo), 0),
-          vencido: lista.filter((t) => t.vencido).reduce((s, t) => s + Number(t.saldo), 0),
+          total: lista.reduce((s, t) => s + Number(t.valor_base_brl), 0),
+          saldo: lista.reduce((s, t) => s + Number(t.saldo_brl), 0),
+          vencido: lista.filter((t) => t.vencido).reduce((s, t) => s + Number(t.saldo_brl), 0),
           qtdVencidos: lista.filter((t) => t.vencido).length,
         },
       });

@@ -63,6 +63,20 @@ router.get('/', exigir('relatorios.visualizar'), (req, res) => {
         descricao: 'Títulos por vencimento, situação e categoria.' },
       { url: '/relatorios/fluxo-caixa', nome: 'Fluxo de caixa',
         descricao: 'Entradas e saídas realizadas por conta e por dia.' },
+      { url: '/relatorios/compras', nome: 'Compras',
+        descricao: 'Pedidos por fornecedor, situação e valor.' },
+      { url: '/relatorios/vendas', nome: 'Vendas',
+        descricao: 'Pedidos por cliente, situação e valor.' },
+      { url: '/relatorios/combustivel', nome: 'Combustível e consumo',
+        descricao: 'Abastecimentos, litros, custo e veículo.' },
+      { url: '/relatorios/viagens', nome: 'Viagens e margem',
+        descricao: 'Frete, custos diretos, margem e consumo por viagem.' },
+      { url: '/relatorios/manutencao', nome: 'Manutenção da frota',
+        descricao: 'Ordens, custos, veículo e situação.' },
+      { url: '/relatorios/rh', nome: 'Folha e RH',
+        descricao: 'Líquido por funcionário e competência.' },
+      { url: '/relatorios/obrigacoes', nome: 'Obrigações',
+        descricao: 'Agenda fiscal, operacional, trabalhista e de exportação.' },
     ],
   });
 });
@@ -75,7 +89,7 @@ router.get('/dre', exigir('relatorios.visualizar'), async (req, res, next) => {
 
     const linhas = await muitos(
       `SELECT cat.grupo_dre, cat.nome AS categoria, cat.tipo,
-              COALESCE(SUM(t.valor), 0) AS total
+              COALESCE(SUM(t.valor_base_brl), 0) AS total
          FROM vw_titulos t
          JOIN categorias_financeiras cat ON cat.id = t.categoria_id
         WHERE COALESCE(t.emissao, CURRENT_DATE) BETWEEN $1 AND $2
@@ -86,7 +100,7 @@ router.get('/dre', exigir('relatorios.visualizar'), async (req, res, next) => {
     );
 
     const semCategoria = await um(
-      `SELECT COUNT(*)::INT AS n, COALESCE(SUM(valor), 0) AS total
+      `SELECT COUNT(*)::INT AS n, COALESCE(SUM(valor_base_brl), 0) AS total
          FROM vw_titulos
         WHERE categoria_id IS NULL AND COALESCE(emissao, CURRENT_DATE) BETWEEN $1 AND $2`,
       [de, ate]
@@ -292,9 +306,10 @@ router.get('/financeiro', exigir('relatorios.visualizar'), async (req, res, next
     const { de, ate } = periodo(req);
     const linhas = await muitos(
       `SELECT t.tipo, t.numero, t.descricao, p.razao_social AS parceiro,
-              cat.nome AS categoria, t.emissao, t.vencimento, t.valor,
-              t.valor_liquidado, t.saldo, t.status
+              cat.nome AS categoria, m.codigo AS moeda, t.emissao, t.vencimento, t.valor,
+              t.valor_base_brl, t.valor_liquidado_brl, t.saldo_brl, t.status
          FROM vw_titulos t
+         JOIN moedas m ON m.id=t.moeda_id
          LEFT JOIN parceiros p ON p.id = t.parceiro_id
          LEFT JOIN categorias_financeiras cat ON cat.id = t.categoria_id
         WHERE t.vencimento BETWEEN $1 AND $2
@@ -313,13 +328,15 @@ router.get('/financeiro', exigir('relatorios.visualizar'), async (req, res, next
         { chave: 'parceiro', rotulo: 'Parceiro' },
         { chave: 'categoria', rotulo: 'Categoria' },
         { chave: 'vencimento', rotulo: 'Vencimento', tipo: 'data' },
+        { chave: 'moeda', rotulo: 'Moeda' },
         { chave: 'valor', rotulo: 'Valor', tipo: 'dinheiro' },
-        { chave: 'valor_liquidado', rotulo: 'Liquidado', tipo: 'dinheiro' },
-        { chave: 'saldo', rotulo: 'Saldo', tipo: 'dinheiro' },
+        { chave: 'valor_base_brl', rotulo: 'Valor em BRL', tipo: 'dinheiro' },
+        { chave: 'valor_liquidado_brl', rotulo: 'Liquidado BRL', tipo: 'dinheiro' },
+        { chave: 'saldo_brl', rotulo: 'Saldo BRL', tipo: 'dinheiro' },
         { chave: 'status', rotulo: 'Situação', tipo: 'status' },
       ],
       linhas,
-      totalizar: ['valor', 'valor_liquidado', 'saldo'],
+      totalizar: ['valor_base_brl', 'valor_liquidado_brl', 'saldo_brl'],
       voltar: '/relatorios',
     });
   } catch (e) {
@@ -361,6 +378,89 @@ router.get('/fluxo-caixa', exigir('relatorios.visualizar'), async (req, res, nex
     next(e);
   }
 });
+
+// ------------------------------------------ relatorios dos modulos finais
+const rotasModulares = {
+  compras: {
+    titulo: 'Compras por fornecedor',
+    sql: `SELECT pc.numero,pc.data,p.razao_social AS fornecedor,pc.tipo,pc.moeda,
+                 pc.valor_total,pc.previsao_entrega,pc.status FROM pedidos_compra pc
+            JOIN parceiros p ON p.id=pc.fornecedor_id WHERE pc.data BETWEEN $1 AND $2 ORDER BY pc.data,pc.id`,
+    colunas: [['numero','Nº','mono'],['data','Data','data'],['fornecedor','Fornecedor'],['tipo','Tipo'],
+      ['moeda','Moeda'],['valor_total','Valor','dinheiro'],['previsao_entrega','Entrega','data'],['status','Situação','status']],
+    totais:['valor_total'],
+  },
+  vendas: {
+    titulo: 'Vendas por cliente',
+    sql: `SELECT pv.numero,pv.data,p.razao_social AS cliente,pv.destino,pv.moeda,pv.valor_total,
+                 pv.previsao_embarque,pv.status FROM pedidos_venda pv JOIN parceiros p ON p.id=pv.cliente_id
+            WHERE pv.data BETWEEN $1 AND $2 ORDER BY pv.data,pv.id`,
+    colunas: [['numero','Nº','mono'],['data','Data','data'],['cliente','Cliente'],['destino','Destino'],
+      ['moeda','Moeda'],['valor_total','Valor','dinheiro'],['previsao_embarque','Embarque','data'],['status','Situação','status']],
+    totais:['valor_total'],
+  },
+  combustivel: {
+    titulo: 'Combustível e consumo',
+    sql: `SELECT a.numero,a.data,v.placa,m.nome AS motorista,t.nome AS combustivel,a.quantidade_litros,
+                 a.preco_litro,a.valor_total,a.quilometragem,a.status FROM abastecimentos a
+            JOIN veiculos v ON v.id=a.veiculo_id LEFT JOIN motoristas m ON m.id=a.motorista_id
+            JOIN tipos_combustivel t ON t.id=a.combustivel_id WHERE a.data BETWEEN $1 AND $2 ORDER BY a.data,a.id`,
+    colunas: [['numero','Nº','mono'],['data','Data','data'],['placa','Placa','mono'],['motorista','Motorista'],
+      ['combustivel','Combustível'],['quantidade_litros','Litros'],['preco_litro','Preço/l','dinheiro'],
+      ['valor_total','Total','dinheiro'],['quilometragem','Km'],['status','Situação','status']],
+    totais:['valor_total'],
+  },
+  viagens: {
+    titulo: 'Viagens, margem e consumo',
+    sql: `SELECT r.numero,r.data_saida_prevista,v.placa,m.nome AS motorista,r.origem,r.destino,
+                 r.receita_prevista,r.custo_direto,r.margem_prevista,r.distancia_km,r.km_litro,r.status
+            FROM vw_viagens_resultado r JOIN veiculos v ON v.id=r.veiculo_id JOIN motoristas m ON m.id=r.motorista_id
+           WHERE r.data_saida_prevista BETWEEN $1 AND $2 ORDER BY r.data_saida_prevista,r.id`,
+    colunas: [['numero','Nº','mono'],['data_saida_prevista','Saída','data'],['placa','Placa','mono'],['motorista','Motorista'],
+      ['origem','Origem'],['destino','Destino'],['receita_prevista','Frete','dinheiro'],['custo_direto','Custos','dinheiro'],
+      ['margem_prevista','Margem','dinheiro'],['distancia_km','Km'],['km_litro','Km/l'],['status','Situação','status']],
+    totais:['receita_prevista','custo_direto','margem_prevista'],
+  },
+  manutencao: {
+    titulo: 'Manutenção da frota',
+    sql: `SELECT o.numero,o.data,v.placa,o.tipo,o.descricao,p.razao_social AS oficina,o.valor_total,
+                 o.previsao_conclusao,o.status FROM ordens_manutencao o JOIN veiculos v ON v.id=o.veiculo_id
+            LEFT JOIN parceiros p ON p.id=o.oficina_id WHERE o.data BETWEEN $1 AND $2 ORDER BY o.data,o.id`,
+    colunas: [['numero','Nº','mono'],['data','Data','data'],['placa','Placa','mono'],['tipo','Tipo'],['descricao','Descrição'],
+      ['oficina','Oficina'],['valor_total','Valor','dinheiro'],['previsao_conclusao','Previsão','data'],['status','Situação','status']],
+    totais:['valor_total'],
+  },
+  rh: {
+    titulo: 'Folha por funcionário',
+    sql: `SELECT f.numero,f.competencia,fu.matricula,fu.nome AS funcionario,i.total_proventos,i.total_descontos,
+                 i.valor_liquido,cp.numero AS conta_pagar,cp.status AS pagamento,f.status
+            FROM folhas_competencia f JOIN folha_funcionarios i ON i.folha_id=f.id
+            JOIN funcionarios fu ON fu.id=i.funcionario_id LEFT JOIN contas_pagar cp ON cp.id=i.conta_pagar_id
+           WHERE f.competencia BETWEEN $1 AND $2 ORDER BY f.competencia,fu.nome`,
+    colunas: [['numero','Folha','mono'],['competencia','Competência','data'],['matricula','Matrícula','mono'],
+      ['funcionario','Funcionário'],['total_proventos','Proventos','dinheiro'],['total_descontos','Descontos','dinheiro'],
+      ['valor_liquido','Líquido','dinheiro'],['conta_pagar','Título','mono'],['pagamento','Pagamento','status'],['status','Folha','status']],
+    totais:['total_proventos','total_descontos','valor_liquido'],
+  },
+  obrigacoes: {
+    titulo: 'Agenda de obrigações',
+    sql: `SELECT o.numero,t.natureza,t.nome AS tipo,o.descricao,o.competencia,o.vencimento,m.codigo AS moeda,
+                 o.valor,o.valor*o.taxa_cambio AS valor_brl,o.status FROM obrigacoes o
+            JOIN tipos_obrigacao t ON t.id=o.tipo_id JOIN moedas m ON m.id=o.moeda_id
+           WHERE o.vencimento BETWEEN $1 AND $2 ORDER BY o.vencimento,o.id`,
+    colunas: [['numero','Nº','mono'],['natureza','Natureza'],['tipo','Tipo'],['descricao','Descrição'],
+      ['competencia','Competência','data'],['vencimento','Vencimento','data'],['moeda','Moeda'],['valor','Valor','dinheiro'],
+      ['valor_brl','Em BRL','dinheiro'],['status','Situação','status']], totais:['valor_brl'],
+  },
+};
+
+for (const [rota,def] of Object.entries(rotasModulares)) {
+  router.get(`/${rota}`, exigir('relatorios.visualizar'), async (req,res,next)=>{try{
+    const {de,ate}=periodo(req);const linhas=await muitos(def.sql,[de,ate]);
+    res.render('relatorios/tabela',{titulo:def.titulo,subtitulo:`Período de ${de.split('-').reverse().join('/')} a ${ate.split('-').reverse().join('/')}`,
+      periodo:{de,ate},colunas:def.colunas.map(([chave,rotulo,tipo])=>({chave,rotulo,tipo})),linhas,totalizar:def.totais,voltar:'/relatorios'});
+  }catch(e){next(e);}});
+}
 
 // -------------------------------------------------- exportacao para CSV
 router.get('/:relatorio/csv', exigir('relatorios.exportar'), async (req, res, next) => {
@@ -420,7 +520,11 @@ router.get('/:relatorio/csv', exigir('relatorios.exportar'), async (req, res, ne
       },
     };
 
-    const def = mapa[req.params.relatorio];
+    let def = mapa[req.params.relatorio];
+    if (!def && rotasModulares[req.params.relatorio]) {
+      const { de, ate } = periodo(req);
+      def = { sql: rotasModulares[req.params.relatorio].sql, params: [de, ate] };
+    }
     if (!def) return next();
 
     const linhas = await muitos(def.sql, def.params);

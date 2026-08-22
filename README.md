@@ -5,9 +5,9 @@ Sistema de gestão web da **SHKT INDÚSTRIA IMPORTAÇÃO & EXPORTAÇÃO LTDA**.
 Funciona inteiramente no navegador — notebook, tablet ou celular, de qualquer
 lugar, com login e senha. Não há programa para instalar na máquina do usuário.
 
-**Estado atual: FASES 1 e 2 concluídas, com o núcleo da SHKT Transportes
-entregue e testado.** O ciclo comercial e operacional está fechado ponta a
-ponta:
+**Estado atual: escopo funcional do Prompt Mestre concluído.** O ciclo
+comercial, operacional, financeiro, transportador e administrativo está
+fechado ponta a ponta:
 
 ```
 Compra → Recebimento → Estoque → Fumigação → Certificado
@@ -35,12 +35,18 @@ armazém é o *recebimento*; quem tira é a *expedição* do carregamento.
 | **Carregamento** | Programação com reserva de estoque, expedição com baixa física, vínculo opcional ao pedido de venda, documentos (DANFE, MIC-DTA, CRT) e romaneio impresso. |
 | **Financeiro** | Contas a pagar e receber, baixas parciais, estornos, caixa e bancos com extrato. |
 | **SHKT Transportes** | Viagem numerada com rota, veículo, motorista e frete; abastecimento, despesas e manutenção; receita, custo direto, margem e km/l por viagem. |
-| **Relatórios** | Estoque, fumigação, certificados, carregamentos, financeiro, fluxo de caixa e DRE gerencial — com impressão e exportação para planilha. |
+| **Prestação de contas** | Adiantamentos e comprovantes separados; fechamento calcula saldo a devolver/reembolsar e integra somente a diferença ao Financeiro. |
+| **RH / Folha** | Competência por funcionário, proventos, descontos, líquido, provisões e fechamento com um Contas a Pagar por funcionário. |
+| **Impostos e obrigações** | Agenda parametrizável fiscal, operacional, trabalhista e de exportação; parcelamento e aprovação integrada ao Contas a Pagar. |
+| **Moedas** | Cotação para BRL gravada no título, valor-base imutável e DRE sem somar moedas diferentes. |
+| **Importação assistida** | Modelos Excel, prévia, validação linha a linha, relatório de erros, hash do arquivo e prevenção de duplicidade. |
+| **Anexos** | PDFs, imagens e planilhas privados, ligados ao documento e retirados logicamente sem apagar o histórico. |
+| **Relatórios** | Estoque, compras, vendas, fumigação, certificados, carregamentos, financeiro, caixa, viagens, combustível, manutenção, RH, obrigações e DRE — com impressão/PDF e CSV. |
 | **Auditoria** | Registro imutável de quem fez o quê, quando, com valor anterior e posterior. |
 | **Administração** | Usuários, perfis de permissão por módulo/ação e parâmetros da empresa. |
 
-As próximas fases (RH, acerto completo de viagens e Impostos) estão
-descritas em [`docs/ROADMAP.md`](docs/ROADMAP.md).
+A matriz de aderência requisito por requisito está em
+[`docs/ADERENCIA_PROMPT_MESTRE.md`](docs/ADERENCIA_PROMPT_MESTRE.md).
 
 ### Como o sistema se apresenta
 
@@ -177,7 +183,7 @@ O histórico das rotinas fica em `backups/backups.log`.
 npm test
 ```
 
-São 50 testes automatizados que rodam contra um banco de teste separado
+São 53 testes automatizados que rodam contra um banco de teste separado
 (`shkt_erp_test`) e provam as regras que não podem falhar:
 
 - o roteiro de aceite completo da Fase 1 (600 t → fumigação 500 t → certificado
@@ -192,6 +198,7 @@ São 50 testes automatizados que rodam contra um banco de teste separado
 - auditoria e movimentos de estoque são imutáveis.
 - viagem, frete e abastecimento geram receita/custo uma única vez e calculam
   margem e consumo corretamente.
+- modelos Excel, catálogo de permissões e módulos finais do Prompt Mestre.
 
 ---
 
