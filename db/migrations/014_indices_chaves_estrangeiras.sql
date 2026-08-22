@@ -37,4 +37,3 @@ BEGIN
                    nome_indice, fk.nspname, fk.relname, colunas);
   END LOOP;
 END $$;
-

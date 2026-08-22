@@ -52,4 +52,3 @@ ERP. Nunca coloque essa URL em JavaScript do navegador.
 - acompanhe os Security e Performance Advisors após cada mudança estrutural;
 - anexos continuam no diretório configurado por `UPLOAD_DIR`; para múltiplas
   instâncias, migre-os para armazenamento persistente antes de escalar.
-
