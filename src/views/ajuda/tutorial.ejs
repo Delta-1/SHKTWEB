@@ -1,0 +1,133 @@
+<%- include('../partials/topo') %>
+
+<div class="cabecalho-pagina tutorial-cabecalho">
+  <div>
+    <span class="pill info">Treinamento sem alterar dados</span>
+    <h1>Veja um dia completo no ERP SHKT</h1>
+    <p class="apoio">Uma história fictícia, com números simples, mostrando onde clicar e o que o sistema faz sozinho.</p>
+  </div>
+  <div class="espaco"></div>
+  <button class="btn nao-imprimir" type="button" onclick="window.print()"><%- ic('imprimir') %> Imprimir tutorial</button>
+</div>
+
+<div class="tutorial-aviso">
+  <div class="tutorial-numero">1</div>
+  <div><strong>Leia primeiro; depois pratique.</strong><span>Os nomes e valores abaixo são imaginários. Esta página não grava nada no sistema.</span></div>
+</div>
+
+<nav class="tutorial-indice nao-imprimir" aria-label="Etapas deste tutorial">
+  <a href="#primeiro-acesso">Primeiro acesso</a>
+  <a href="#graos">SHKT Grãos</a>
+  <a href="#transportes">Transportadora</a>
+  <a href="#fechamento">Fechamento</a>
+  <a href="#conferencia">Conferência final</a>
+</nav>
+
+<section id="primeiro-acesso" class="cartao tutorial-secao">
+  <div class="cartao-topo"><h2>Primeiro acesso: Marta prepara o sistema</h2><span class="sub">Feito uma única vez</span></div>
+  <div class="cartao-corpo">
+    <div class="tutorial-personagem">
+      <div class="tutorial-avatar">MS</div>
+      <div><strong>Marta — Administradora</strong><span>Ela organiza os cadastros e cria um usuário para cada pessoa.</span></div>
+    </div>
+    <ol class="tutorial-passos">
+      <li><span class="tutorial-bola">1</span><div><strong>Entrar e trocar a senha</strong><p>Ao acessar pela primeira vez, Marta informa a senha provisória e cria uma senha só dela.</p><span class="tutorial-resultado">Resultado: acesso pessoal e auditável</span></div></li>
+      <li><span class="tutorial-bola">2</span><div><strong>Concluir as quatro telas do assistente</strong><p>Ela confirma razão social, CNPJ, endereço, armazém principal e produto principal.</p><span class="tutorial-resultado">Resultado: documentos já saem com o cabeçalho correto</span></div></li>
+      <li><span class="tutorial-bola">3</span><div><strong>Criar a equipe</strong><p>Em <b>Sistema → Usuários e perfis</b>, cria Ana (Compras), Carlos (Pátio), João (Transportes), Paula (Financeiro) e Suécio (Diretoria).</p><span class="tutorial-resultado">Resultado: cada pessoa vê somente o necessário</span></div></li>
+    </ol>
+  </div>
+</section>
+
+<section id="graos" class="cartao tutorial-secao">
+  <div class="cartao-topo"><h2>História 1 — SHKT compra, recebe, prepara e vende milho</h2><span class="sub">Fluxo da mercadoria</span></div>
+  <div class="cartao-corpo">
+    <div class="tutorial-cenario">
+      <div><span>Fornecedor</span><strong>Fazenda Boa Safra</strong></div>
+      <div><span>Produto</span><strong>Milho amarelo</strong></div>
+      <div><span>Compra</span><strong>100 t · R$ 120.000</strong></div>
+      <div><span>Venda</span><strong>40 t · R$ 60.000</strong></div>
+    </div>
+
+    <ol class="tutorial-passos tutorial-fluxo">
+      <li>
+        <span class="tutorial-bola">1</span>
+        <div><strong>Ana cria a compra</strong><p><b>Compras → Novo pedido.</b> Escolhe a operação SHKT, o fornecedor, 100 toneladas de milho e o total de R$ 120.000. Salva, envia e a Diretoria aprova.</p><div class="tutorial-caixas"><span>Pedido: APROVADO</span><span>Estoque: 0 t</span><span>A pagar: R$ 120.000</span></div><% if (pode('compras.criar')) { %><a class="btn pequeno nao-imprimir" href="/compras/novo">Abrir nova compra <%- ic('avancar') %></a><% } %></div>
+      </li>
+      <li>
+        <span class="tutorial-bola">2</span>
+        <div><strong>Carlos recebe dois caminhões</strong><p><b>Recebimentos → Novo recebimento.</b> O primeiro traz 60 t e o segundo 40 t. Carlos informa placa, motorista, nota, peso bruto e tara; confere e confirma cada entrada.</p><div class="tutorial-caixas"><span>Pedido: RECEBIDO</span><span>Estoque físico: 100 t</span><span>Saldo do pedido: 0 t</span></div><% if (pode('compras.criar')) { %><a class="btn pequeno nao-imprimir" href="/recebimentos/novo">Abrir recebimento <%- ic('avancar') %></a><% } %></div>
+      </li>
+      <li>
+        <span class="tutorial-bola">3</span>
+        <div><strong>Ana fumiga 80 toneladas</strong><p><b>Armazém → Nova fumigação.</b> Ela informa 80 t. Quando chega o Comunicado <b>COM-2026-0457</b>, preenche o número e valida.</p><div class="tutorial-caixas"><span>Estoque físico: 100 t</span><span>Saldo fumigado: 80 t</span><span>Sem comunicado: bloqueado</span></div><% if (pode('fumigacao.criar')) { %><a class="btn pequeno nao-imprimir" href="/fumigacao/novo">Abrir fumigação <%- ic('avancar') %></a><% } %></div>
+      </li>
+      <li>
+        <span class="tutorial-bola">4</span>
+        <div><strong>Ana emite certificado de 50 toneladas</strong><p><b>Armazém → Emitir certificado.</b> Seleciona a fumigação, informa 50 t, anexa o documento e valida.</p><div class="tutorial-caixas"><span>Certificado: VALIDADO</span><span>Saldo fumigado restante: 30 t</span><span>Custo: gerado a pagar</span></div><% if (pode('certificados.criar')) { %><a class="btn pequeno nao-imprimir" href="/certificados/novo">Abrir certificado <%- ic('avancar') %></a><% } %></div>
+      </li>
+      <li>
+        <span class="tutorial-bola">5</span>
+        <div><strong>Ana vende 40 toneladas</strong><p><b>Vendas → Novo pedido.</b> Escolhe o cliente Exportadora Horizonte e vende 40 t por R$ 60.000. A Diretoria aprova.</p><div class="tutorial-caixas"><span>Estoque físico: 100 t</span><span>Reservado: 40 t</span><span>Disponível: 60 t</span><span>A receber: R$ 60.000</span></div><% if (pode('vendas.criar')) { %><a class="btn pequeno nao-imprimir" href="/vendas/novo">Abrir nova venda <%- ic('avancar') %></a><% } %></div>
+      </li>
+      <li>
+        <span class="tutorial-bola">6</span>
+        <div><strong>Carlos carrega e expede</strong><p><b>Vendas → Pedido → Criar carregamento.</b> Vincula o certificado, veículo e motorista. Programa, imprime o romaneio e só então confirma a expedição.</p><div class="tutorial-caixas"><span>Estoque físico: 60 t</span><span>Reservado: 0 t</span><span>Pedido: ATENDIDO</span><span>Carregamento: EXPEDIDO</span></div><% if (pode('carregamento.criar')) { %><a class="btn pequeno nao-imprimir" href="/carregamentos/novo">Abrir carregamento <%- ic('avancar') %></a><% } %></div>
+      </li>
+      <li>
+        <span class="tutorial-bola">7</span>
+        <div><strong>Paula registra o dinheiro</strong><p><b>Financeiro.</b> Ao pagar o fornecedor, Paula baixa o título de R$ 120.000. Ao receber do cliente, baixa os R$ 60.000. Se for parcial, informa somente o valor que realmente entrou ou saiu.</p><div class="tutorial-caixas"><span>Compra: PAGA</span><span>Venda: RECEBIDA</span><span>Caixa atualizado</span><span>Auditoria registrada</span></div><% if (pode('financeiro.visualizar')) { %><a class="btn pequeno nao-imprimir" href="/financeiro/contas">Ver caixa e bancos <%- ic('avancar') %></a><% } %></div>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<section id="transportes" class="cartao tutorial-secao">
+  <div class="cartao-topo"><h2>História 2 — SHKT Transportes realiza uma viagem</h2><span class="sub">Fluxo do frete e acerto</span></div>
+  <div class="cartao-corpo">
+    <div class="tutorial-cenario">
+      <div><span>Motorista</span><strong>João Pereira</strong></div>
+      <div><span>Rota</span><strong>Cascavel → Foz</strong></div>
+      <div><span>Frete</span><strong>R$ 8.500</strong></div>
+      <div><span>Adiantamento</span><strong>R$ 2.000</strong></div>
+    </div>
+    <ol class="tutorial-passos tutorial-fluxo">
+      <li><span class="tutorial-bola">1</span><div><strong>João programa a viagem</strong><p><b>Transportadora → Programar nova viagem.</b> Escolhe cliente, caminhão, motorista, rota, data, frete de R$ 8.500 e km inicial 125.000.</p><div class="tutorial-caixas"><span>Viagem: PROGRAMADA</span><span>A receber: R$ 8.500</span></div><% if (pode('frota.criar')) { %><a class="btn pequeno nao-imprimir" href="/frota/viagens/nova">Programar viagem <%- ic('avancar') %></a><% } %></div></li>
+      <li><span class="tutorial-bola">2</span><div><strong>Paula entrega o adiantamento</strong><p>Dentro da viagem, lança <b>Adiantamento de R$ 2.000</b>. Ele é dinheiro entregue ao motorista, mas ainda não é custo da viagem.</p><div class="tutorial-caixas"><span>Adiantado: R$ 2.000</span><span>Custo direto: R$ 0</span></div></div></li>
+      <li><span class="tutorial-bola">3</span><div><strong>João lança combustível e despesas</strong><p>Registra 300 litros a R$ 5,50 (R$ 1.650), pedágio de R$ 280 e alimentação de R$ 170. Cada despesa real leva comprovante.</p><div class="tutorial-caixas"><span>Despesa comprovada: R$ 2.100</span><span>Anexos: obrigatórios</span></div></div></li>
+      <li><span class="tutorial-bola">4</span><div><strong>João retorna e presta contas</strong><p>Informa km final 126.200. O sistema calcula 1.200 km e 4,00 km/l. Como gastou R$ 2.100 e recebeu R$ 2.000, há <b>R$ 100 a reembolsar</b>.</p><div class="tutorial-caixas"><span>Reembolso: R$ 100</span><span>Km/l: 4,00</span><span>Viagem: CONCLUÍDA</span></div></div></li>
+      <li><span class="tutorial-bola">5</span><div><strong>Suécio confere a margem</strong><p>Em <b>Viagens e resultados</b>, vê receita de R$ 8.500 menos custo direto de R$ 2.100: <b>margem prevista de R$ 6.400</b>. O adiantamento não é contado duas vezes.</p><div class="tutorial-caixas"><span>Receita: R$ 8.500</span><span>Custo: R$ 2.100</span><span>Margem: R$ 6.400</span></div><% if (pode('frota.visualizar')) { %><a class="btn pequeno nao-imprimir" href="/frota">Ver viagens e resultados <%- ic('avancar') %></a><% } %></div></li>
+    </ol>
+  </div>
+</section>
+
+<section id="fechamento" class="cartao tutorial-secao">
+  <div class="cartao-topo"><h2>Fechamento do mês</h2><span class="sub">RH, obrigações e diretoria</span></div>
+  <div class="cartao-corpo">
+    <div class="grade grade-3 tutorial-resumos">
+      <article><span class="tutorial-bola">1</span><h3>Folha</h3><p>RH cria a competência, lança proventos e descontos por funcionário, confere o líquido e fecha.</p><strong>O sistema gera um título a pagar por funcionário.</strong><% if (pode('rh.visualizar')) { %><a class="btn pequeno nao-imprimir" href="/rh">Abrir RH</a><% } %></article>
+      <article><span class="tutorial-bola">2</span><h3>Obrigações</h3><p>Fiscal lança impostos, licenças e guias com competência, vencimento e parcelas.</p><strong>Ao aprovar, cada parcela entra no Contas a Pagar.</strong><% if (pode('impostos.visualizar')) { %><a class="btn pequeno nao-imprimir" href="/impostos">Abrir obrigações</a><% } %></article>
+      <article><span class="tutorial-bola">3</span><h3>Diretoria</h3><p>Suécio abre o Panorama e a DRE, filtra o mês e confere SHKT e Transportes.</p><strong>Os valores em moeda estrangeira já aparecem convertidos para BRL.</strong><% if (pode('relatorios.visualizar')) { %><a class="btn pequeno nao-imprimir" href="/relatorios/dre">Abrir DRE</a><% } %></article>
+    </div>
+  </div>
+</section>
+
+<section id="conferencia" class="cartao tutorial-secao">
+  <div class="cartao-topo"><h2>Como saber se tudo ficou certo?</h2><span class="sub">Checklist de cinco minutos</span></div>
+  <div class="cartao-corpo">
+    <ul class="tutorial-checklist">
+      <li><%- ic('ok') %><span><strong>Estoque</strong> — físico, reservado e disponível batem com o pátio.</span></li>
+      <li><%- ic('ok') %><span><strong>Financeiro</strong> — somente pagamentos e recebimentos baixados alteraram o caixa.</span></li>
+      <li><%- ic('ok') %><span><strong>Transportes</strong> — combustível e comprovantes aparecem na viagem, sem contar adiantamento como custo.</span></li>
+      <li><%- ic('ok') %><span><strong>Pendências</strong> — o Panorama não mostra documentos parados ou vencidos sem responsável.</span></li>
+      <li><%- ic('ok') %><span><strong>Auditoria</strong> — qualquer número pode ser rastreado até a pessoa e o documento de origem.</span></li>
+    </ul>
+    <div class="tutorial-regra"><strong>A regra para decorar:</strong><span>Rascunho pode corrigir. Confirmado não se apaga: cancela ou estorna, sempre com motivo.</span></div>
+  </div>
+</section>
+
+<div class="barra-acoes tutorial-final nao-imprimir">
+  <a href="/" class="btn"><%- ic('voltar') %> Voltar ao Panorama</a>
+  <% if (pode('compras.criar')) { %><a href="/compras/novo" class="btn primario">Começar uma compra <%- ic('avancar') %></a><% } %>
+</div>
+
+<%- include('../partials/fim') %>

@@ -32,6 +32,7 @@ import rotasFinanceiro from './routes/financeiro.js';
 import rotasRelatorios from './routes/relatorios.js';
 import rotasAuditoria from './routes/auditoria.js';
 import rotasAdmin from './routes/admin.js';
+import rotasAjuda from './routes/ajuda.js';
 
 /**
  * Enquanto o assistente de primeiro acesso não tiver sido encerrado, quem
@@ -171,6 +172,7 @@ export function criarApp() {
   app.use('/relatorios', exigirLogin, rotasRelatorios);
   app.use('/auditoria', exigirLogin, rotasAuditoria);
   app.use('/admin', exigirLogin, rotasAdmin);
+  app.use('/ajuda', exigirLogin, rotasAjuda);
 
   // 404
   app.use((req, res) => {

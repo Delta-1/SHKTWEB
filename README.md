@@ -47,6 +47,9 @@ armazém é o *recebimento*; quem tira é a *expedição* do carregamento.
 
 A matriz de aderência requisito por requisito está em
 [`docs/ADERENCIA_PROMPT_MESTRE.md`](docs/ADERENCIA_PROMPT_MESTRE.md).
+O treinamento com um exemplo completo, passo a passo, está em
+[`docs/TUTORIAL_FLUXO_COMPLETO.md`](docs/TUTORIAL_FLUXO_COMPLETO.md) e também
+dentro do ERP em **Sistema → Tutorial do fluxo completo**.
 
 ### Como o sistema se apresenta
 

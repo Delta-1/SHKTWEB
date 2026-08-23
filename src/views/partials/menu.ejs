@@ -130,6 +130,7 @@
         { url: '/auditoria', texto: 'Auditoria', ic: 'auditoria', perm: 'auditoria.visualizar' },
         { url: '/importacoes', texto: 'Importar planilhas', ic: 'recebimento', perm: 'importacoes.visualizar' },
         { divisor: true },
+        { url: '/ajuda/tutorial', texto: 'Tutorial do fluxo completo', ic: 'info' },
         { url: '/trocar-senha', texto: 'Trocar minha senha', ic: 'chave' },
         { url: '/sair', texto: 'Sair do sistema', ic: 'sair' },
       ],
@@ -153,6 +154,7 @@
       marcador: typeof alertaVencidos !== 'undefined' ? alertaVencidos : 0 },
     { url: '/financeiro/receber', ic: 'receber', texto: 'A receber', cor: 'var(--marca-500)', perm: 'financeiro.visualizar' },
     { url: '/relatorios', ic: 'relatorios', texto: 'Relatórios', cor: 'var(--tinta-3)', perm: 'relatorios.visualizar' },
+    { url: '/ajuda/tutorial', ic: 'info', texto: 'Como usar', cor: 'var(--calmo)', perm: 'dashboard.visualizar' },
   ];
 
   const ativo = (i) => (i.exato ? caminho === i.url.split('?')[0] : caminho.startsWith(i.url.split('?')[0]));
