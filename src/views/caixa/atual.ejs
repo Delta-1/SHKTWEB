@@ -1,0 +1,136 @@
+<%- include('../partials/topo') %>
+
+<div class="cabecalho-pagina">
+  <div><h1>Caixa</h1><p class="apoio">Tudo que entrou e saiu no turno, atualizado automaticamente pelas baixas financeiras.</p></div>
+</div>
+<%- include('_abas') %>
+
+<% if (abertos.length > 1) { %>
+  <div class="caixa-seletor nao-imprimir">
+    <strong>Caixas abertos:</strong>
+    <% for (const aberto of abertos) { %>
+      <a class="btn pequeno <%= caixa && Number(caixa.id) === Number(aberto.id) ? 'primario' : '' %>"
+         href="/caixa?caixa=<%= aberto.id %>"><%= aberto.numero %> · <%= aberto.conta_nome %></a>
+    <% } %>
+  </div>
+<% } %>
+
+<% if (!caixa) { %>
+  <div class="caixa-fechado">
+    <div class="caixa-fechado-icone"><%- ic('caixa') %></div>
+    <h2>O caixa está fechado</h2>
+    <p>Abra agora ou simplesmente registre o primeiro pagamento/recebimento na conta Caixa: o sistema abre o turno automaticamente com saldo zero.</p>
+  </div>
+
+  <% if (pode('caixa.criar')) { %>
+    <form method="post" action="/caixa/abrir" class="cartao caixa-abrir">
+      <div class="cartao-topo"><h2>Abrir caixa manualmente</h2><span class="sub">Use quando há dinheiro contado no início do turno.</span></div>
+      <div class="cartao-corpo">
+        <% if (!referencias.contas.length) { %>
+          <div class="aviso atencao"><%- ic('atencao') %><div>Não existe conta do tipo Caixa ativa. Cadastre em <a href="/cadastros/contas-bancarias">Cadastros → Contas bancárias e caixa</a>.</div></div>
+        <% } else { %>
+          <div class="campos">
+            <div class="campo c4"><label for="conta_bancaria_id">Conta de caixa <span class="obrigatorio">*</span></label>
+              <select name="conta_bancaria_id" id="conta_bancaria_id" required>
+                <% for (const conta of referencias.contas) { %><option value="<%= conta.id %>"><%= conta.nome %> · <%= conta.moeda %></option><% } %>
+              </select></div>
+            <div class="campo c3"><label for="operacao_id">Operação</label>
+              <select name="operacao_id" id="operacao_id"><option value="">Grupo / todas</option>
+                <% for (const op of referencias.operacoes) { %><option value="<%= op.id %>"><%= op.nome %></option><% } %>
+              </select></div>
+            <div class="campo c2"><label for="saldo_inicial">Dinheiro inicial</label>
+              <input name="saldo_inicial" id="saldo_inicial" class="numerico" inputmode="decimal" data-casas="2" value="0,00" required></div>
+            <div class="campo c12"><label for="observacoes">Observações</label><input name="observacoes" id="observacoes" maxlength="500"></div>
+          </div>
+        <% } %>
+      </div>
+      <% if (referencias.contas.length) { %><div class="rodape-form"><span class="espaco"></span><button class="btn primario grande" type="submit"><%- ic('caixa') %> Abrir caixa</button></div><% } %>
+    </form>
+  <% } %>
+<% } else { %>
+  <div class="caixa-meta">
+    <span class="pill ok">Aberto</span>
+    <strong>Caixa <span class="mono"><%= caixa.numero %></span></strong>
+    <span><%= caixa.conta_nome %></span>
+    <span>Aberto <%= f.dataHora(caixa.abertura_em) %> por <%= caixa.aberto_por %></span>
+    <% if (caixa.abertura_automatica) { %><span class="pill info">abertura automática</span><% } %>
+  </div>
+
+  <div class="caixa-painel">
+    <section class="cartao caixa-resumo">
+      <div class="cartao-topo"><h2>Resumo do caixa <span class="mono">#<%= caixa.numero %></span></h2></div>
+      <div class="cartao-corpo">
+        <dl class="caixa-numeros">
+          <div><dt>Total recebido</dt><dd class="txt-ok"><%= caixa.moeda_simbolo %> <%= f.formatar(caixa.resumo.recebido,2) %></dd></div>
+          <div><dt>Total pago</dt><dd class="txt-erro">− <%= caixa.moeda_simbolo %> <%= f.formatar(caixa.resumo.pago,2) %></dd></div>
+          <div class="separar"><dt>Saldo inicial</dt><dd><%= caixa.moeda_simbolo %> <%= f.formatar(caixa.resumo.saldoInicial,2) %></dd></div>
+          <div><dt>Suprimentos</dt><dd><%= caixa.moeda_simbolo %> <%= f.formatar(caixa.resumo.suprimentos,2) %></dd></div>
+          <div><dt>Sangrias</dt><dd>− <%= caixa.moeda_simbolo %> <%= f.formatar(caixa.resumo.sangrias,2) %></dd></div>
+          <div class="total"><dt>Saldo atual</dt><dd><%= caixa.moeda_simbolo %> <%= f.formatar(caixa.resumo.saldoFinal,2) %></dd></div>
+        </dl>
+
+        <% if (pode('caixa.liquidar')) { %>
+          <div class="caixa-acoes nao-imprimir">
+            <button type="button" class="btn" data-modal="#modal-suprimento"><%- ic('mais') %> Adicionar dinheiro</button>
+            <button type="button" class="btn" data-modal="#modal-sangria"><%- ic('pagar') %> Remover valores</button>
+          </div>
+        <% } %>
+      </div>
+      <% if (caixa.canais.length) { %>
+        <div class="caixa-canais"><strong>Por operação</strong>
+          <% for (const canal of caixa.canais) { %><div><span><%= canal.nome %></span><b><%= caixa.moeda_simbolo %> <%= f.formatar(canal.total,2) %></b></div><% } %>
+        </div>
+      <% } %>
+    </section>
+
+    <section class="cartao caixa-meios">
+      <div class="cartao-topo"><h2>Meios de pagamento</h2><a href="/caixa/conferencia?caixa=<%= caixa.id %>" class="btn pequeno nao-imprimir">Conferir</a></div>
+      <div class="caixa-meios-lista">
+        <% for (const forma of caixa.formas) { %>
+          <div class="caixa-meio">
+            <span class="caixa-meio-icone"><%- ic(forma.grupo_caixa === 'DINHEIRO' ? 'dinheiro' : forma.grupo_caixa.includes('CARTAO') ? 'documento' : forma.grupo_caixa === 'PIX_QR' ? 'transferir' : 'caixa') %></span>
+            <div><strong><%= forma.nome %></strong><span><%= f.formatar(forma.entradas || 0,2) %> entrou · <%= f.formatar(forma.saidas || 0,2) %> saiu</span></div>
+            <b><%= caixa.moeda_simbolo %> <%= f.formatar(forma.valor_sistema,2) %></b>
+          </div>
+        <% } %>
+      </div>
+      <div class="caixa-meios-total"><span>Total esperado</span><strong><%= caixa.moeda_simbolo %> <%= f.formatar(caixa.resumo.saldoFinal,2) %></strong></div>
+    </section>
+
+    <section class="cartao caixa-movimentacao">
+      <div class="cartao-topo"><h2>Movimentação</h2><a href="/caixa/conferencia?caixa=<%= caixa.id %>" class="btn pequeno nao-imprimir">Mais detalhes</a></div>
+      <div class="caixa-linha-tempo">
+        <% for (const mov of caixa.movimentos) { %>
+          <div class="caixa-evento <%= mov.estornado ? 'estornado' : '' %>">
+            <span class="ponto"></span>
+            <div class="caixa-evento-corpo">
+              <div><strong class="<%= mov.tipo === 'ENTRADA' ? 'txt-ok' : 'txt-erro' %>"><%= mov.tipo === 'SAIDA' ? '− ' : '' %><%= caixa.moeda_simbolo %> <%= f.formatar(mov.valor,2) %></strong><time><%= f.dataHora(mov.criado_em).slice(11) %></time></div>
+              <% if (mov.origem_url) { %><a href="<%= mov.origem_url %>"><%= mov.historico %></a><% } else { %><span><%= mov.historico %></span><% } %>
+              <small><%= mov.forma_pagamento || 'Não informado' %><% if (mov.usuario) { %> · <%= mov.usuario %><% } %><% if (mov.estornado) { %> · estornado<% } %></small>
+            </div>
+          </div>
+        <% } %>
+        <div class="caixa-evento abertura"><span class="ponto"></span><div class="caixa-evento-corpo"><div><strong><%= caixa.moeda_simbolo %> <%= f.formatar(caixa.saldo_inicial,2) %></strong><time><%= f.dataHora(caixa.abertura_em).slice(11) %></time></div><span>Abertura de caixa</span><small>Dinheiro · <%= caixa.aberto_por %></small></div></div>
+      </div>
+      <div class="caixa-fechar-faixa">
+        <span>Saldo atual</span><strong><%= caixa.moeda_simbolo %> <%= f.formatar(caixa.resumo.saldoFinal,2) %></strong>
+        <% if (pode('caixa.liquidar')) { %><a href="/caixa/<%= caixa.id %>/fechar" class="btn primario grande nao-imprimir">Fechar caixa</a><% } %>
+      </div>
+    </section>
+  </div>
+
+  <% if (pode('caixa.liquidar')) { %>
+    <% for (const acao of [{id:'suprimento',titulo:'Adicionar dinheiro',rotulo:'Motivo do suprimento'}, {id:'sangria',titulo:'Remover valores',rotulo:'Motivo da sangria'}]) { %>
+      <dialog class="modal" id="modal-<%= acao.id %>"><form method="post" action="/caixa/<%= caixa.id %>/<%= acao.id %>">
+        <div class="modal-topo"><h2><%= acao.titulo %></h2><button type="button" class="btn-icone" data-fechar-modal aria-label="Fechar">×</button></div>
+        <div class="modal-corpo"><div class="campos">
+          <div class="campo c4"><label>Valor <span class="obrigatorio">*</span></label><input name="valor" class="numerico" inputmode="decimal" data-casas="2" required data-foco></div>
+          <div class="campo c8"><label><%= acao.rotulo %> <span class="obrigatorio">*</span></label><input name="motivo" minlength="5" maxlength="300" required></div>
+        </div></div>
+        <div class="modal-rodape"><button type="button" class="btn" data-fechar-modal>Voltar</button><button class="btn primario" type="submit">Confirmar</button></div>
+      </form></dialog>
+    <% } %>
+  <% } %>
+<% } %>
+
+<%- include('../partials/fim') %>

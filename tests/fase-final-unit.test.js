@@ -6,6 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { lerArquivo, modelo } from '../src/services/importacoes.js';
 import { TODAS_PERMISSOES, PERFIS_PADRAO } from '../src/lib/permissoes.js';
+import { resumirMovimentos, totalizarConferencias } from '../src/services/caixa.js';
 
 const raiz=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 
@@ -31,10 +32,32 @@ test('modelos oficiais existem para produtos, clientes e fornecedores', () => {
 });
 
 test('catálogo RBAC inclui módulos finais e perfis operacionais do prompt', () => {
-  for(const permissao of ['rh.aprovar','impostos.aprovar','importacoes.aprovar'])
+  for(const permissao of ['rh.aprovar','impostos.aprovar','importacoes.aprovar','caixa.liquidar'])
     assert.ok(TODAS_PERMISSOES.includes(permissao));
   for(const perfil of ['COMPRAS','VENDAS','RH'])
     assert.ok(PERFIS_PADRAO.some(x=>x.codigo===perfil));
+});
+
+test('resumo do caixa usa aritmética decimal exata e ignora movimentos estornados', () => {
+  const resumo=resumirMovimentos('100',[
+    {tipo:'ENTRADA',valor:'50',origem_tipo:'CONTA_RECEBER',estornado:false},
+    {tipo:'SAIDA',valor:'20',origem_tipo:'CONTA_PAGAR',estornado:false},
+    {tipo:'ENTRADA',valor:'10',origem_tipo:'SUPRIMENTO',estornado:false},
+    {tipo:'SAIDA',valor:'5',origem_tipo:'SANGRIA',estornado:false},
+    {tipo:'ENTRADA',valor:'999',origem_tipo:'CONTA_RECEBER',estornado:true},
+  ]);
+  assert.deepEqual(resumo,{
+    saldoInicial:'100.0000',entradas:'60.0000',saidas:'25.0000',
+    recebido:'50.0000',pago:'20.0000',suprimentos:'10.0000',
+    sangrias:'5.0000',saldoFinal:'135.0000',
+  });
+});
+
+test('conferência do fechamento calcula sobra ou falta sem ponto flutuante', () => {
+  assert.deepEqual(totalizarConferencias([
+    {valorSistema:'100.10',valorInformado:'100.00'},
+    {valorSistema:'20.20',valorInformado:'20.50'},
+  ]),{sistema:'120.3000',informado:'120.5000',diferenca:'0.2000'});
 });
 
 test('tutorial completo está disponível no sistema e na documentação', () => {

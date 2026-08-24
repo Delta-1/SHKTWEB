@@ -34,6 +34,7 @@ armazém é o *recebimento*; quem tira é a *expedição* do carregamento.
 | **Certificados** | Emissão a partir do saldo fumigado; ao validar, gera o Contas a Pagar automaticamente. |
 | **Carregamento** | Programação com reserva de estoque, expedição com baixa física, vínculo opcional ao pedido de venda, documentos (DANFE, MIC-DTA, CRT) e romaneio impresso. |
 | **Financeiro** | Contas a pagar e receber, baixas parciais, estornos, caixa e bancos com extrato. |
+| **Caixa operacional** | Abertura manual ou automática na primeira baixa em dinheiro, resumo do turno, meios de pagamento, linha do tempo, suprimento, sangria, contador de cédulas, conferência, fechamento e histórico exportável. |
 | **SHKT Transportes** | Viagem numerada com rota, veículo, motorista e frete; abastecimento, despesas e manutenção; receita, custo direto, margem e km/l por viagem. |
 | **Prestação de contas** | Adiantamentos e comprovantes separados; fechamento calcula saldo a devolver/reembolsar e integra somente a diferença ao Financeiro. |
 | **RH / Folha** | Competência por funcionário, proventos, descontos, líquido, provisões e fechamento com um Contas a Pagar por funcionário. |
@@ -186,7 +187,7 @@ O histórico das rotinas fica em `backups/backups.log`.
 npm test
 ```
 
-São 53 testes automatizados que rodam contra um banco de teste separado
+São 58 testes automatizados que rodam contra um banco de teste separado
 (`shkt_erp_test`) e provam as regras que não podem falhar:
 
 - o roteiro de aceite completo da Fase 1 (600 t → fumigação 500 t → certificado
@@ -202,6 +203,8 @@ São 53 testes automatizados que rodam contra um banco de teste separado
 - viagem, frete e abastecimento geram receita/custo uma única vez e calculam
   margem e consumo corretamente.
 - modelos Excel, catálogo de permissões e módulos finais do Prompt Mestre.
+- caixa automático sem lançamento duplicado, suprimento, sangria e fechamento
+  com diferença por meio de pagamento.
 
 ---
 

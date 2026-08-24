@@ -11,6 +11,10 @@ import { registrar, ACOES } from '../lib/auditoria.js';
 import { ErroNegocio, ErroNaoEncontrado } from '../lib/erros.js';
 import { proximoNumero, TIPOS_DOCUMENTO } from '../lib/numeracao.js';
 import { Decimal } from '../lib/decimal.js';
+import {
+  garantirCaixaAbertoEmTransacao,
+  formaCaixaEmTransacao,
+} from './caixa.js';
 
 // ---------------------------------------------------------------------------
 // Criacao de titulos (chamadas de dentro de outras transacoes)
@@ -159,7 +163,7 @@ export async function baixar(tipo, tituloId, dados, usuario, contexto = {}) {
       throw new ErroNegocio(`Este título já está ${statusFinal === 'PAGO' ? 'pago' : 'recebido'}.`);
 
     const { rows: [contaBancaria] } = await cx.query(
-      'SELECT moeda_id FROM contas_bancarias WHERE id=$1 AND ativo FOR UPDATE',
+      'SELECT id,moeda_id,tipo FROM contas_bancarias WHERE id=$1 AND ativo FOR UPDATE',
       [dados.contaBancariaId]
     );
     if (!contaBancaria) throw new ErroNegocio('A conta bancária não existe ou está inativa.');
@@ -180,6 +184,19 @@ export async function baixar(tipo, tituloId, dados, usuario, contexto = {}) {
 
     const desconto = Decimal.de(dados.desconto || '0', 4);
     const juros = Decimal.de(dados.juros || '0', 4);
+    let caixaId = null;
+    let formaPagamentoId = dados.formaPagamentoId ?? null;
+    if (contaBancaria.tipo === 'CAIXA') {
+      const caixaAtual = await garantirCaixaAbertoEmTransacao(cx, contaBancaria.id, {
+        operacaoId: titulo.operacao_id,
+        usuario,
+        contexto,
+      });
+      caixaId = caixaAtual.id;
+      // Mantem compatibilidade com os fluxos antigos: sem forma informada,
+      // uma movimentacao na conta fisica e classificada como Dinheiro.
+      formaPagamentoId = await formaCaixaEmTransacao(cx, formaPagamentoId);
+    }
 
     const baixa = await cx.query(
       `INSERT INTO financeiro_baixas (
@@ -196,7 +213,7 @@ export async function baixar(tipo, tituloId, dados, usuario, contexto = {}) {
         juros.paraSql(4),
         desconto.paraSql(4),
         dados.contaBancariaId,
-        dados.formaPagamentoId ?? null,
+        formaPagamentoId,
         dados.observacoes ?? null,
         usuario.id,
       ]
@@ -226,8 +243,9 @@ export async function baixar(tipo, tituloId, dados, usuario, contexto = {}) {
     await cx.query(
       `INSERT INTO caixa_movimentos (
           conta_bancaria_id, data, tipo, valor, historico,
-          origem_tipo, origem_id, baixa_id, criado_por
-       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+          origem_tipo, origem_id, baixa_id, caixa_id,forma_pagamento_id,
+          operacao_id,criado_por
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
       [
         dados.contaBancariaId,
         baixa.rows[0].data,
@@ -237,6 +255,9 @@ export async function baixar(tipo, tituloId, dados, usuario, contexto = {}) {
         tipo === 'CP' ? 'CONTA_PAGAR' : 'CONTA_RECEBER',
         tituloId,
         baixa.rows[0].id,
+        caixaId,
+        formaPagamentoId,
+        titulo.operacao_id,
         usuario.id,
       ]
     );
@@ -298,7 +319,46 @@ export async function estornarBaixa(baixaId, motivo, usuario, contexto = {}) {
       [usuario.id, motivo, baixaId]
     );
 
-    await cx.query('UPDATE caixa_movimentos SET estornado = TRUE WHERE baixa_id = $1', [baixaId]);
+    const mov = await cx.query(
+      `SELECT cm.*,c.status AS caixa_status,cb.tipo AS conta_tipo
+         FROM caixa_movimentos cm
+         JOIN contas_bancarias cb ON cb.id=cm.conta_bancaria_id
+         LEFT JOIN caixas c ON c.id=cm.caixa_id
+        WHERE cm.baixa_id=$1 AND cm.estorno_de_id IS NULL
+        ORDER BY cm.id LIMIT 1 FOR UPDATE OF cm`,
+      [baixaId]
+    );
+    const movimento = mov.rows[0];
+    if (movimento?.caixa_id && movimento.caixa_status === 'FECHADO') {
+      // Um fechamento e fotografia historica e nunca e reescrito. O estorno
+      // entra como movimento inverso no caixa atual da mesma conta.
+      const caixaAtual = await garantirCaixaAbertoEmTransacao(cx, movimento.conta_bancaria_id, {
+        operacaoId: movimento.operacao_id,
+        usuario,
+        contexto,
+      });
+      const formaId = movimento.forma_pagamento_id || await formaCaixaEmTransacao(cx, null);
+      await cx.query(
+        `INSERT INTO caixa_movimentos (
+            conta_bancaria_id,data,tipo,valor,historico,origem_tipo,origem_id,
+            caixa_id,forma_pagamento_id,operacao_id,estorno_de_id,criado_por
+         ) VALUES ($1,CURRENT_DATE,$2,$3,$4,'ESTORNO_BAIXA',$5,$6,$7,$8,$9,$10)`,
+        [
+          movimento.conta_bancaria_id,
+          movimento.tipo === 'ENTRADA' ? 'SAIDA' : 'ENTRADA',
+          movimento.valor,
+          `Estorno da baixa #${baixaId} — ${motivo}`,
+          baixaId,
+          caixaAtual.id,
+          formaId,
+          movimento.operacao_id,
+          movimento.id,
+          usuario.id,
+        ]
+      );
+    } else if (movimento) {
+      await cx.query('UPDATE caixa_movimentos SET estornado=TRUE WHERE id=$1', [movimento.id]);
+    }
 
     await registrar(cx, {
       usuario,
@@ -414,7 +474,7 @@ export async function cancelarTituloEmTransacao(cx, tipo, origemTipo, origemId, 
 export async function transferirEntreContas(dados, usuario, contexto = {}) {
   return transacao(async (cx) => {
     const { rows: contas } = await cx.query(
-      'SELECT id,moeda_id FROM contas_bancarias WHERE id=ANY($1::BIGINT[]) AND ativo ORDER BY id FOR UPDATE',
+      'SELECT id,moeda_id,tipo FROM contas_bancarias WHERE id=ANY($1::BIGINT[]) AND ativo ORDER BY id FOR UPDATE',
       [[dados.contaOrigemId,dados.contaDestinoId]]
     );
     if (contas.length !== 2) throw new ErroNegocio('Conta de origem ou destino inexistente/inativa.');
@@ -438,20 +498,45 @@ export async function transferirEntreContas(dados, usuario, contexto = {}) {
     );
     const transf = rows[0];
 
+    const porId = new Map(contas.map((c) => [Number(c.id), c]));
+    const vinculos = {};
+    for (const contaId of [dados.contaOrigemId, dados.contaDestinoId].map(Number).sort((a,b)=>a-b)) {
+      const conta = porId.get(contaId);
+      if (conta?.tipo !== 'CAIXA') {
+        vinculos[contaId] = { caixaId: null, formaId: null, operacaoId: null };
+        continue;
+      }
+      const caixaAtual = await garantirCaixaAbertoEmTransacao(cx, contaId, { usuario, contexto });
+      vinculos[contaId] = {
+        caixaId: caixaAtual.id,
+        formaId: await formaCaixaEmTransacao(cx, null),
+        operacaoId: caixaAtual.operacao_id,
+      };
+    }
+    const origem = vinculos[Number(dados.contaOrigemId)];
+    const destino = vinculos[Number(dados.contaDestinoId)];
+
     await cx.query(
       `INSERT INTO caixa_movimentos
-          (conta_bancaria_id, data, tipo, valor, historico, origem_tipo, origem_id, transferencia_id, criado_por)
-       VALUES ($1,$2,'SAIDA',$3,$4,'TRANSFERENCIA',$5,$5,$6),
-              ($7,$2,'ENTRADA',$3,$8,'TRANSFERENCIA',$5,$5,$6)`,
+          (conta_bancaria_id,data,tipo,valor,historico,origem_tipo,origem_id,
+           transferencia_id,caixa_id,forma_pagamento_id,operacao_id,criado_por)
+       VALUES ($1,$2,'SAIDA',$3,$4,'TRANSFERENCIA',$5,$5,$6,$7,$8,$9),
+              ($10,$2,'ENTRADA',$3,$11,'TRANSFERENCIA',$5,$5,$12,$13,$14,$9)`,
       [
         dados.contaOrigemId,
         transf.data,
         dados.valor,
         `Transferência ${numero} (saída)`,
         transf.id,
+        origem.caixaId,
+        origem.formaId,
+        origem.operacaoId,
         usuario.id,
         dados.contaDestinoId,
         `Transferência ${numero} (entrada)`,
+        destino.caixaId,
+        destino.formaId,
+        destino.operacaoId,
       ]
     );
 

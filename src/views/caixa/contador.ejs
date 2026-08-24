@@ -1,0 +1,20 @@
+<%- include('../partials/topo') %>
+<div class="cabecalho-pagina"><div><h1>Caixa</h1><p class="apoio">Conte cédulas e moedas sem calculadora. Nada é gravado até você usar o total no fechamento.</p></div></div>
+<%- include('_abas') %>
+
+<div class="contador-caixa" data-contador-dinheiro>
+  <section class="cartao">
+    <div class="cartao-topo"><h2>Cédulas</h2><button type="button" class="btn pequeno nao-imprimir" data-limpar-contador>Limpar</button></div>
+    <div class="contador-lista">
+      <% for (const valor of [200,100,50,20,10,5,2]) { %><label class="contador-linha"><span class="contador-nota">R$ <%= f.formatar(valor,2) %></span><span>×</span><input type="number" inputmode="numeric" min="0" step="1" value="0" data-cedula="<%= valor %>" aria-label="Quantidade de notas de <%= valor %> reais"><strong data-subtotal>R$ 0,00</strong></label><% } %>
+    </div>
+  </section>
+  <section class="cartao">
+    <div class="cartao-topo"><h2>Moedas</h2></div>
+    <div class="contador-lista">
+      <% for (const valor of [1,0.5,0.25,0.1,0.05]) { %><label class="contador-linha"><span class="contador-moeda">R$ <%= f.formatar(valor,2) %></span><span>×</span><input type="number" inputmode="numeric" min="0" step="1" value="0" data-cedula="<%= valor %>" aria-label="Quantidade de moedas de <%= valor %> reais"><strong data-subtotal>R$ 0,00</strong></label><% } %>
+    </div>
+  </section>
+  <aside class="contador-total"><span>Total contado</span><strong data-total-contador>R$ 0,00</strong><p>Anote este valor no campo <b>Dinheiro</b> ao fechar o caixa.</p></aside>
+</div>
+<%- include('../partials/fim') %>

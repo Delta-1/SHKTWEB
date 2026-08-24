@@ -22,6 +22,73 @@
     if (cor) cor.setAttribute('content', escuro ? '#09090b' : '#ffffff');
   });
 
+  // ------------------------------------------------ contador de dinheiro
+  function atualizarContador(container) {
+    if (!container) return;
+    var total = 0;
+    var campos = container.querySelectorAll('[data-cedula]');
+    for (var i = 0; i < campos.length; i++) {
+      var quantidade = Math.max(0, parseInt(campos[i].value || '0', 10) || 0);
+      var subtotal = quantidade * parseFloat(campos[i].getAttribute('data-cedula') || '0');
+      total += subtotal;
+      var linha = campos[i].closest('.contador-linha');
+      var alvo = linha && linha.querySelector('[data-subtotal]');
+      if (alvo) alvo.textContent = 'R$ ' + subtotal.toLocaleString('pt-BR', {minimumFractionDigits:2,maximumFractionDigits:2});
+    }
+    var totalAlvo = container.querySelector('[data-total-contador]');
+    if (totalAlvo) totalAlvo.textContent = 'R$ ' + total.toLocaleString('pt-BR', {minimumFractionDigits:2,maximumFractionDigits:2});
+  }
+
+  doc.addEventListener('input', function (ev) {
+    var contador = ev.target.closest && ev.target.closest('[data-contador-dinheiro]');
+    if (contador && ev.target.matches('[data-cedula]')) atualizarContador(contador);
+
+    var fechamento = ev.target.closest && ev.target.closest('[data-fechamento-caixa]');
+    if (fechamento && ev.target.matches('[data-conferir]')) atualizarFechamento(fechamento);
+  });
+
+  doc.addEventListener('click', function (ev) {
+    var limpar = ev.target.closest('[data-limpar-contador]');
+    if (!limpar) return;
+    var contador = limpar.closest('[data-contador-dinheiro]');
+    var campos = contador.querySelectorAll('[data-cedula]');
+    for (var i = 0; i < campos.length; i++) campos[i].value = '0';
+    atualizarContador(contador);
+  });
+
+  // ----------------------------------------------- conferencia fechamento
+  function atualizarFechamento(form) {
+    if (!form) return;
+    var campos = form.querySelectorAll('[data-conferir]');
+    var esperado = 0;
+    var informado = 0;
+    var todosPreenchidos = true;
+    for (var i = 0; i < campos.length; i++) {
+      var e = parseFloat(campos[i].getAttribute('data-esperado') || '0');
+      var vazio = !String(campos[i].value || '').trim();
+      var v = vazio ? 0 : numeroDe(campos[i]);
+      esperado += e;
+      informado += v;
+      todosPreenchidos = todosPreenchidos && !vazio;
+      var alvo = campos[i].closest('.fechamento-forma').querySelector('[data-diferenca-forma]');
+      if (vazio) {
+        alvo.textContent = '—'; alvo.className = '';
+      } else {
+        var dif = v - e;
+        alvo.textContent = (dif > 0 ? '+' : '') + dif.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+        alvo.className = Math.abs(dif) < 0.005 ? 'ok' : 'erro';
+      }
+    }
+    var a = form.querySelector('[data-total-esperado]');
+    var b = form.querySelector('[data-total-informado]');
+    var c = form.querySelector('[data-diferenca-total]');
+    if (a) a.textContent = esperado.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+    if (b) b.textContent = informado.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+    if (c) c.textContent = todosPreenchidos
+      ? ((informado-esperado)>0?'+':'')+(informado-esperado).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})
+      : '—';
+  }
+
   // ---------------------------------------------- preferencias de leitura
   // Letras e contraste podem ser ajustados sem depender do cadastro do
   // usuario: a preferencia fica neste aparelho, inclusive na tela inicial.
@@ -641,6 +708,9 @@
         });
       })(barras[b]);
     }
+
+    atualizarContador(doc.querySelector('[data-contador-dinheiro]'));
+    atualizarFechamento(doc.querySelector('[data-fechamento-caixa]'));
   });
 
   // ------------------------------------------------- instalar como aplicativo

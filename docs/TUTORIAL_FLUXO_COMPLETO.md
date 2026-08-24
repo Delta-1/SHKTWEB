@@ -94,6 +94,20 @@ parciais, informa somente o que realmente entrou ou saiu.
 
 Resultado: títulos quitados, caixa atualizado e trilha completa na auditoria.
 
+### Passo 8 — caixa do dia
+
+Paula abre **Financeiro → Caixa do dia**. Se ela já tinha aberto o turno,
+encontra as duas baixas na linha do tempo; se não tinha, a primeira baixa na
+conta física abriu o caixa automaticamente com saldo inicial zero.
+
+Durante o dia, Paula faz uma sangria de R$ 10.000 para o cofre, sempre com
+motivo. No fim do expediente, usa o **Contador de dinheiro**, confere cada meio
+de pagamento e clica em **Fechar caixa**.
+
+Resultado: o total do sistema fica comparado ao valor contado, qualquer sobra
+ou falta fica explícita e o turno passa para **Caixas anteriores** sem poder ser
+reescrito.
+
 ## 3. SHKT Transportes realiza uma viagem
 
 ### Cenário
@@ -146,11 +160,14 @@ Suécio abre **Transportadora → Viagens e resultados**.
    e parcelas. Ao aprovar, as parcelas entram em Contas a Pagar.
 3. **Diretoria:** Suécio abre o Panorama e a DRE, filtra o mês e confere SHKT e
    Transportes. Moedas estrangeiras aparecem na base BRL gravada no lançamento.
+4. **Caixa:** Paula abre **Conferir meios de pagamento**, filtra o mês e exporta
+   a movimentação para a conferência da diretoria ou do contador.
 
 ## 5. Checklist final
 
 - Estoque físico, reservado e disponível batem com o pátio.
 - Somente baixas de pagamento ou recebimento alteraram o caixa.
+- Cada turno foi fechado e a diferença entre sistema e contagem foi explicada.
 - Combustível e comprovantes aparecem na viagem.
 - Adiantamento não entrou como custo direto.
 - O Panorama não mostra documentos sem responsável ou títulos vencidos.

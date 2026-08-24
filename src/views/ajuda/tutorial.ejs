@@ -18,6 +18,7 @@
 <nav class="tutorial-indice nao-imprimir" aria-label="Etapas deste tutorial">
   <a href="#primeiro-acesso">Primeiro acesso</a>
   <a href="#graos">SHKT Grãos</a>
+  <a href="#caixa-dia">Caixa do dia</a>
   <a href="#transportes">Transportadora</a>
   <a href="#fechamento">Fechamento</a>
   <a href="#conferencia">Conferência final</a>
@@ -81,8 +82,27 @@
   </div>
 </section>
 
+<section id="caixa-dia" class="cartao tutorial-secao">
+  <div class="cartao-topo"><h2>História 2 — Paula opera e fecha o caixa</h2><span class="sub">Fluxo automático do dinheiro</span></div>
+  <div class="cartao-corpo">
+    <div class="tutorial-cenario">
+      <div><span>Troco inicial</span><strong>R$ 300</strong></div>
+      <div><span>PIX recebido</span><strong>R$ 1.200</strong></div>
+      <div><span>Dinheiro recebido</span><strong>R$ 450</strong></div>
+      <div><span>Sangria</span><strong>R$ 500</strong></div>
+    </div>
+    <ol class="tutorial-passos tutorial-fluxo">
+      <li><span class="tutorial-bola">1</span><div><strong>Paula abre o turno</strong><p><b>Financeiro → Caixa do dia.</b> Escolhe a conta física e informa R$ 300 de troco. Se ela esquecer, a primeira baixa nessa conta abre o caixa automaticamente com saldo zero.</p><div class="tutorial-caixas"><span>Caixa: ABERTO</span><span>Troco: R$ 300</span><span>Responsável registrado</span></div><% if (pode('caixa.criar')) { %><a class="btn pequeno nao-imprimir" href="/caixa">Abrir caixa <%- ic('avancar') %></a><% } %></div></li>
+      <li><span class="tutorial-bola">2</span><div><strong>As baixas entram sozinhas</strong><p>Paula baixa um recebimento de R$ 1.200 via PIX e outro de R$ 450 em dinheiro. Ela não lança os valores novamente no Caixa.</p><div class="tutorial-caixas"><span>PIX: R$ 1.200</span><span>Dinheiro: R$ 750</span><span>Sem duplicidade</span></div></div></li>
+      <li><span class="tutorial-bola">3</span><div><strong>Paula faz uma sangria</strong><p>Retira R$ 500 para o cofre, clica em <b>Sangria</b> e informa o motivo. O movimento fica na linha do tempo e na auditoria.</p><div class="tutorial-caixas"><span>Sangria: R$ 500</span><span>Motivo: obrigatório</span><span>Dinheiro esperado: R$ 250</span></div></div></li>
+      <li><span class="tutorial-bola">4</span><div><strong>Conta as cédulas e confere</strong><p>Em <b>Contador de dinheiro</b>, informa as quantidades de notas e moedas. Depois abre o fechamento e digita o total contado em Dinheiro, PIX e demais meios.</p><div class="tutorial-caixas"><span>Sistema: calculado</span><span>Contado: informado</span><span>Diferença: ao vivo</span></div><% if (pode('caixa.visualizar')) { %><a class="btn pequeno nao-imprimir" href="/caixa/contador">Abrir contador <%- ic('avancar') %></a><% } %></div></li>
+      <li><span class="tutorial-bola">5</span><div><strong>Fecha e arquiva o turno</strong><p>Paula revisa a diferença e confirma. O caixa vira uma fotografia em <b>Caixas anteriores</b>; movimentos antigos não são apagados ou reescritos.</p><div class="tutorial-caixas"><span>Caixa: FECHADO</span><span>Diferença: registrada</span><span>Histórico: preservado</span></div></div></li>
+    </ol>
+  </div>
+</section>
+
 <section id="transportes" class="cartao tutorial-secao">
-  <div class="cartao-topo"><h2>História 2 — SHKT Transportes realiza uma viagem</h2><span class="sub">Fluxo do frete e acerto</span></div>
+  <div class="cartao-topo"><h2>História 3 — SHKT Transportes realiza uma viagem</h2><span class="sub">Fluxo do frete e acerto</span></div>
   <div class="cartao-corpo">
     <div class="tutorial-cenario">
       <div><span>Motorista</span><strong>João Pereira</strong></div>

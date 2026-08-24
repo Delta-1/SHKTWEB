@@ -33,6 +33,9 @@ const TRACOS = {
   caixa:
     '<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/>' +
     '<path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>',
+  dinheiro:
+    '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/>' +
+    '<path d="M6 9h.01"/><path d="M18 15h.01"/>',
   compras:
     '<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>' +
     '<path d="M2 2h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>',
