@@ -1,0 +1,21 @@
+<%- include('../partials/topo') %>
+<div class="cabecalho-pagina"><div><span class="pill neutro">Fechado</span><h1>Caixa <span class="mono"><%= caixa.numero %></span></h1><p class="apoio"><%= caixa.conta_nome %> · <%= f.dataHora(caixa.abertura_em) %> até <%= f.dataHora(caixa.fechamento_em) %></p></div><div class="espaco"></div><button class="btn nao-imprimir" type="button" data-imprimir><%- ic('imprimir') %> Imprimir</button></div>
+<%- include('_abas') %>
+
+<div class="grade grade-3 mb-2">
+  <div class="indicador"><div class="rotulo">Total do sistema</div><div class="valor"><%= caixa.moeda_simbolo %> <%= f.formatar(caixa.total_sistema,2) %></div></div>
+  <div class="indicador"><div class="rotulo">Total informado</div><div class="valor"><%= caixa.moeda_simbolo %> <%= f.formatar(caixa.total_informado,2) %></div></div>
+  <div class="indicador <%= Number(caixa.diferenca)===0?'destaque':'' %>"><div class="rotulo">Diferença</div><div class="valor <%= Number(caixa.diferenca)===0?'txt-ok':'txt-erro' %>"><%= caixa.moeda_simbolo %> <%= f.formatar(caixa.diferenca,2) %></div><div class="apoio"><%= Number(caixa.diferenca)===0?'Caixa conferido':'Verifique a justificativa' %></div></div>
+</div>
+
+<div class="grade grade-2">
+  <section class="cartao"><div class="cartao-topo"><h2>Conferência por meio</h2></div><div class="tabela-area"><table class="tabela"><thead><tr><th>Meio</th><th class="num">Sistema</th><th class="num">Informado</th><th class="num">Diferença</th></tr></thead><tbody>
+    <% for (const forma of caixa.formas) { %><tr><td><%= forma.nome %></td><td class="num"><%= f.formatar(forma.valor_sistema,2) %></td><td class="num"><%= f.formatar(forma.valor_informado,2) %></td><td class="num <%= Number(forma.diferenca)===0?'txt-ok':'txt-erro' %>"><%= f.formatar(forma.diferenca,2) %></td></tr><% } %>
+  </tbody></table></div></section>
+  <section class="cartao"><div class="cartao-topo"><h2>Responsáveis</h2></div><div class="cartao-corpo"><dl class="ficha"><div><dt>Aberto por</dt><dd><%= caixa.aberto_por %></dd></div><div><dt>Fechado por</dt><dd><%= caixa.fechado_por %></dd></div><div><dt>Abertura</dt><dd><%= f.dataHora(caixa.abertura_em) %></dd></div><div><dt>Fechamento</dt><dd><%= f.dataHora(caixa.fechamento_em) %></dd></div></dl><% if (caixa.observacoes_fechamento) { %><div class="ajuda-caixa mt-2"><%- ic('info') %><div><strong>Observações:</strong> <%= caixa.observacoes_fechamento %></div></div><% } %></div></section>
+</div>
+
+<section class="cartao mt-2"><div class="cartao-topo"><h2>Movimentação preservada</h2><span class="sub"><%= caixa.movimentos.length %> registro(s)</span></div><div class="tabela-area"><table class="tabela responsiva"><thead><tr><th>Hora</th><th>Histórico</th><th>Meio</th><th class="num">Entrada</th><th class="num">Saída</th><th>Usuário</th></tr></thead><tbody>
+  <% for (const m of caixa.movimentos) { %><tr class="<%= m.estornado?'linha-cancelada':'' %>"><td data-rot="Hora"><%= f.dataHora(m.criado_em) %></td><td data-rot="Histórico"><% if(m.origem_url){ %><a href="<%= m.origem_url %>"><%= m.historico %></a><% }else{ %><%= m.historico %><% } %></td><td data-rot="Meio"><%= m.forma_pagamento || '—' %></td><td data-rot="Entrada" class="num txt-ok"><%= m.tipo==='ENTRADA'?f.formatar(m.valor,2):'' %></td><td data-rot="Saída" class="num txt-erro"><%= m.tipo==='SAIDA'?f.formatar(m.valor,2):'' %></td><td data-rot="Usuário"><%= m.usuario || '' %></td></tr><% } %>
+</tbody></table></div></section>
+<%- include('../partials/fim') %>

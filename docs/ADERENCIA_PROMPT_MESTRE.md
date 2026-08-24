@@ -18,6 +18,7 @@ ações críticas são auditadas e cancelamentos preservam o histórico.
 | Vendas | Pedido, reserva, aprovação, atendimento parcial e Contas a Receber. |
 | Carregamento/exportação | Programação, expedição, baixa de estoque, documentos e impressão/PDF. |
 | Financeiro | CP/CR, baixas parciais, estornos, contas, transferências, conciliação e vínculo navegável à origem. |
+| Caixa operacional | Turno por conta física, abertura manual ou automática, captura transacional das baixas, resumo, meios de pagamento, movimentação, suprimento, sangria, contador, conferência, fechamento e histórico. |
 | Moedas e DRE | Taxa para BRL gravada no título, valor-base calculado e DRE sem mistura de BRL/USD/PEN. |
 | RH e folha | Competência, detalhe por funcionário, proventos/descontos/líquido, provisões e um CP por funcionário no fechamento. |
 | Combustível | Abastecimento por viagem/veículo/motorista, litros, preço, quilometragem, CP e consumo km/l. |

@@ -338,6 +338,66 @@ Outras telas do Financeiro: **Caixa e bancos** (saldo por conta) e
 
 ---
 
+### 5.8 Abrir, conferir e fechar o caixa do dia
+
+**Onde:** **Financeiro → Caixa do dia**.
+
+O Caixa do dia é o turno do operador. Ele não substitui Contas a Pagar e
+Receber: ele organiza, em uma tela, tudo que realmente entrou e saiu da conta
+física.
+
+Há duas maneiras seguras de começar:
+
+- **Abertura manual:** antes do primeiro atendimento, escolha a conta física e
+  informe o troco inicial.
+- **Abertura automática:** se ninguém abriu, a primeira baixa feita na conta
+  física abre o caixa com saldo inicial zero e registra quem fez a movimentação.
+
+Depois disso, não digite a venda ou o pagamento outra vez. Ao baixar um título
+e escolher uma conta do tipo **Caixa**, o sistema coloca o movimento no turno
+aberto na mesma operação.
+
+#### Exemplo de um dia de Paula
+
+1. Às 08:00, Paula abre o caixa com **R$ 300 de troco**.
+2. Às 09:10, recebe **R$ 1.200 via PIX** e baixa o Contas a Receber. O valor
+   aparece automaticamente no Caixa do dia e na linha do tempo.
+3. Às 11:00, recebe **R$ 450 em dinheiro**. A baixa aparece em Dinheiro.
+4. Às 14:00, retira **R$ 500** para guardar no cofre. Usa **Sangria**, informa
+   o motivo e o sistema reduz somente o dinheiro esperado.
+5. Às 17:30, abre **Contador de dinheiro**, informa quantas notas e moedas há
+   de cada valor e vê o total contado.
+6. Clica em **Fechar caixa**, informa o valor contado em cada meio e confere a
+   diferença antes de confirmar.
+
+Na tela principal, a informação fica dividida em três áreas grandes:
+
+| Área | Para que serve |
+|---|---|
+| Resumo | Saldo inicial, recebido, pago, suprimentos, sangrias e saldo final |
+| Meios de pagamento | Quanto o sistema espera em Dinheiro, PIX, cartões e outros |
+| Movimentação | Horário, valor, origem e pessoa responsável por cada lançamento |
+
+Use **Suprimento** somente para colocar dinheiro físico que não veio de uma
+baixa. Use **Sangria** somente para retirar dinheiro físico do turno. Os dois
+pedem motivo e ficam na auditoria.
+
+No fechamento:
+
+- diferença **zero**: o contado bate com o sistema;
+- diferença **positiva**: há sobra;
+- diferença **negativa**: há falta.
+
+Depois de fechado, o turno vira uma fotografia imutável em **Caixas
+anteriores**. Se uma baixa antiga for estornada, o histórico fechado não é
+reescrito: o estorno aparece como movimento inverso no caixa atual.
+
+Em **Conferir meios de pagamento**, filtre por período, forma ou caixa, abra o
+documento de origem e exporte o resultado em CSV. O botão **Imprimir** gera a
+folha limpa para arquivo ou PDF.
+
+---
+
 ## 6. As sete regras que o sistema não deixa quebrar
 
 Vale conhecer, porque quando uma mensagem de erro aparecer, é uma delas.

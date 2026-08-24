@@ -61,6 +61,9 @@ export const FORMAS_PAGAMENTO = [
   ['BOLETO', 'Boleto'],
   ['DINHEIRO', 'Dinheiro'],
   ['CARTAO', 'Cartão'],
+  ['CARTAO_CREDITO', 'Cartão de crédito'],
+  ['CARTAO_DEBITO', 'Cartão de débito'],
+  ['QR_CODE', 'QR Code'],
   ['CAMBIO', 'Câmbio / remessa internacional'],
   ['CHEQUE', 'Cheque'],
 ];

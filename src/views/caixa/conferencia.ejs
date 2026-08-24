@@ -1,0 +1,28 @@
+<%- include('../partials/topo') %>
+<div class="cabecalho-pagina"><div><h1>Caixa</h1><p class="apoio">Cada pagamento e recebimento separado por data, hora e meio utilizado.</p></div></div>
+<%- include('_abas') %>
+
+<div class="cartao">
+  <form method="get" class="filtros nao-imprimir">
+    <div class="campo"><label for="de">De</label><input type="date" id="de" name="de" value="<%= filtros.de %>"></div>
+    <div class="campo"><label for="ate">Até</label><input type="date" id="ate" name="ate" value="<%= filtros.ate %>"></div>
+    <div class="campo largo"><label for="forma">Meio de pagamento</label><select name="forma" id="forma"><option value="">Todos</option><% for (const fp of formas) { %><option value="<%= fp.id %>" <%= Number(filtros.formaId)===Number(fp.id)?'selected':'' %>><%= fp.nome %></option><% } %></select></div>
+    <% if (filtros.caixaId) { %><input type="hidden" name="caixa" value="<%= filtros.caixaId %>"><% } %>
+    <span class="espaco"></span><button class="btn" type="submit">Filtrar</button><button class="btn" type="button" data-imprimir>Imprimir</button>
+    <% if (pode('caixa.exportar')) { %><a class="btn" href="/caixa/conferencia.csv?<%= new URLSearchParams({de:filtros.de,ate:filtros.ate,...(filtros.formaId?{forma:filtros.formaId}:{}),...(filtros.caixaId?{caixa:filtros.caixaId}:{})}).toString() %>">Exportar</a><% } %>
+  </form>
+  <% if (!movimentos.length) { %><div class="vazio"><p>Nenhuma movimentação encontrada.</p></div><% } else { %>
+    <div class="tabela-area"><table class="tabela responsiva"><thead><tr><th>Ação</th><th>Data</th><th>Hora</th><th>Meio de pagamento</th><th class="num">Valor</th><th>Tipo da transação</th><th>Nº trans.</th><th>Caixa</th></tr></thead><tbody>
+      <% for (const m of movimentos) { %><tr class="<%= m.estornado?'linha-cancelada':'' %>">
+        <td data-rot="Ação"><a href="<%= m.abrir_url %>">Abrir</a></td>
+        <td data-rot="Data"><%= f.data(m.data) %></td><td data-rot="Hora"><%= f.dataHora(m.criado_em).slice(11) %></td>
+        <td data-rot="Meio"><span class="caixa-forma-mini"><%- ic(m.grupo_caixa === 'DINHEIRO' ? 'dinheiro' : m.grupo_caixa === 'PIX_QR' ? 'transferir' : 'documento') %><%= m.forma_pagamento || '—' %></span></td>
+        <td data-rot="Valor" class="num txt-forte <%= m.tipo==='ENTRADA'?'txt-ok':'txt-erro' %>"><%= m.tipo==='SAIDA'?'− ':'' %><%= f.formatar(m.valor,2) %></td>
+        <td data-rot="Tipo"><%= m.historico %><% if (m.estornado) { %><span class="pill erro">estornado</span><% } %></td>
+        <td data-rot="Nº trans." class="mono txt-min"><%= m.transacao_numero || m.id %></td>
+        <td data-rot="Caixa"><a href="/caixa/<%= m.caixa_id %>" class="mono"><%= m.caixa_numero %></a></td>
+      </tr><% } %>
+    </tbody><tfoot><tr><td colspan="4">Saldo das movimentações filtradas</td><td class="num"><%= f.formatar(saldoFiltrado,2) %></td><td colspan="3"></td></tr></tfoot></table></div>
+  <% } %>
+</div>
+<%- include('../partials/fim') %>

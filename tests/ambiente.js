@@ -36,7 +36,7 @@ export async function limparOperacional() {
   await query(`
     TRUNCATE TABLE
       abastecimentos, viagem_despesas, ordens_manutencao, viagens,
-      caixa_movimentos, caixa_transferencias, financeiro_baixas,
+      caixa_conferencias, caixa_movimentos, caixas, caixa_transferencias, financeiro_baixas,
       contas_pagar, contas_receber,
       recebimento_itens, recebimentos,
       pedido_compra_itens, pedidos_compra,

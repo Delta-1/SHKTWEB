@@ -57,6 +57,11 @@
     {
       nome: 'Financeiro', ic: 'caixa', perm: 'financeiro.visualizar',
       itens: [
+        { url: '/caixa', texto: 'Caixa do dia', ic: 'caixa', perm: 'caixa.visualizar', exato: true },
+        { url: '/caixa/anteriores', texto: 'Caixas anteriores', ic: 'documento', perm: 'caixa.visualizar' },
+        { url: '/caixa/conferencia', texto: 'Conferir meios de pagamento', ic: 'balanca', perm: 'caixa.visualizar' },
+        { url: '/caixa/contador', texto: 'Contador de dinheiro', ic: 'dinheiro', perm: 'caixa.visualizar' },
+        { divisor: true },
         { url: '/financeiro/pagar', texto: 'Contas a pagar', ic: 'pagar' },
         { url: '/financeiro/receber', texto: 'Contas a receber', ic: 'receber' },
         { divisor: true },
@@ -150,6 +155,7 @@
     { url: '/carregamentos/novo', ic: 'carregamento', texto: 'Carregar', cor: 'var(--marca-600)', perm: 'carregamento.criar' },
     { url: '/frota', ic: 'carregamento', texto: 'Viagens', cor: 'var(--calmo)', perm: 'frota.visualizar', exato: true },
     { separador: true },
+    { url: '/caixa', ic: 'caixa', texto: 'Caixa', cor: 'var(--calmo)', perm: 'caixa.visualizar', exato: true },
     { url: '/financeiro/pagar', ic: 'pagar', texto: 'A pagar', cor: 'var(--vermelho-500)', perm: 'financeiro.visualizar',
       marcador: typeof alertaVencidos !== 'undefined' ? alertaVencidos : 0 },
     { url: '/financeiro/receber', ic: 'receber', texto: 'A receber', cor: 'var(--marca-500)', perm: 'financeiro.visualizar' },

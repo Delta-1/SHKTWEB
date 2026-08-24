@@ -1,0 +1,28 @@
+<%- include('../partials/topo') %>
+<div class="cabecalho-pagina"><div><span class="pill atencao">Conferência obrigatória</span><h1>Fechar caixa <span class="mono"><%= caixa.numero %></span></h1><p class="apoio">Conte o dinheiro e confira os comprovantes. O sistema calcula a diferença antes de confirmar.</p></div></div>
+
+<form method="post" action="/caixa/<%= caixa.id %>/fechar" class="fechamento-caixa" data-fechamento-caixa>
+  <section class="cartao">
+    <div class="cartao-topo"><h2>Informe o que você realmente encontrou</h2><a href="/caixa/contador" target="_blank" class="btn pequeno nao-imprimir"><%- ic('dinheiro') %> Abrir contador</a></div>
+    <div class="fechamento-formas">
+      <% for (const forma of caixa.formas) { %>
+        <label class="fechamento-forma">
+          <span class="caixa-meio-icone"><%- ic(forma.grupo_caixa === 'DINHEIRO' ? 'dinheiro' : forma.grupo_caixa.includes('CARTAO') ? 'documento' : forma.grupo_caixa === 'PIX_QR' ? 'transferir' : 'caixa') %></span>
+          <span><strong><%= forma.nome %></strong><small>Esperado: <%= caixa.moeda_simbolo %> <%= f.formatar(forma.valor_sistema,2) %></small></span>
+          <input name="forma_<%= forma.id %>" inputmode="decimal" class="numerico" data-casas="2" data-conferir data-esperado="<%= forma.valor_sistema %>" placeholder="Conte e informe" required>
+          <b data-diferenca-forma>—</b>
+        </label>
+      <% } %>
+    </div>
+    <div class="cartao-corpo"><div class="campo"><label for="observacoes">Observações do fechamento</label><textarea id="observacoes" name="observacoes" rows="3" maxlength="500" placeholder="Explique qualquer diferença encontrada"></textarea></div></div>
+  </section>
+  <aside class="fechamento-resumo">
+    <div><span>Total esperado</span><strong><%= caixa.moeda_simbolo %> <span data-total-esperado><%= f.formatar(caixa.resumo.saldoFinal,2) %></span></strong></div>
+    <div><span>Total informado</span><strong><%= caixa.moeda_simbolo %> <span data-total-informado>0,00</span></strong></div>
+    <div class="diferenca"><span>Diferença</span><strong><%= caixa.moeda_simbolo %> <span data-diferenca-total>—</span></strong></div>
+    <p>Depois de fechar, este turno não muda. Um estorno futuro aparecerá no caixa seguinte.</p>
+    <a href="/caixa?caixa=<%= caixa.id %>" class="btn">Voltar e conferir</a>
+    <button class="btn primario grande" type="submit">Confirmar fechamento</button>
+  </aside>
+</form>
+<%- include('../partials/fim') %>

@@ -65,6 +65,11 @@ export const MODULOS = [
     acoes: ['visualizar', 'criar', 'editar', 'aprovar', 'cancelar', 'liquidar', 'exportar'],
   },
   {
+    codigo: 'caixa',
+    nome: 'Caixa operacional',
+    acoes: ['visualizar', 'criar', 'liquidar', 'cancelar', 'exportar'],
+  },
+  {
     codigo: 'frota',
     nome: 'SHKT Transportes / Frota',
     acoes: ['visualizar', 'criar', 'editar', 'aprovar', 'cancelar', 'exportar'],
@@ -149,6 +154,7 @@ export const PERFIS_PADRAO = [
       ...todasDoModulo('compras'),
       ...todasDoModulo('vendas'),
       ...todasDoModulo('financeiro'),
+      ...todasDoModulo('caixa'),
       ...todasDoModulo('frota'),
       ...todasDoModulo('rh'),
       ...todasDoModulo('impostos'),
@@ -176,6 +182,7 @@ export const PERFIS_PADRAO = [
       'vendas.visualizar',
       'vendas.aprovar',
       ...todasDoModulo('financeiro'),
+      ...todasDoModulo('caixa'),
       'frota.visualizar',
       'relatorios.visualizar',
       'relatorios.exportar',
@@ -243,7 +250,8 @@ export const PERFIS_PADRAO = [
     permissoes: [
       'dashboard.visualizar', 'cadastros.visualizar', 'cadastros.criar', 'cadastros.editar',
       ...todasDoModulo('vendas'), ...todasDoModulo('carregamento'),
-      'financeiro.visualizar', 'relatorios.visualizar', ...todasDoModulo('importacoes'),
+      'financeiro.visualizar', 'caixa.visualizar', 'caixa.criar', 'caixa.liquidar',
+      'relatorios.visualizar', ...todasDoModulo('importacoes'),
     ],
   },
   {
