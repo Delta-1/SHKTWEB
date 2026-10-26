@@ -5,6 +5,7 @@ import * as compras from '../services/compras.js';
 import * as validar from '../lib/validar.js';
 import { ErroNaoEncontrado } from '../lib/erros.js';
 import { hojeISO } from '../lib/formato.js';
+import { query } from '../db/index.js';
 
 const router = Router();
 const ctx = (req) => ({ ip: req.ip, sessao: req.sessionID });
@@ -116,6 +117,13 @@ router.get('/novo', exigir('compras.criar'), async (req, res, next) => {
 router.post('/novo', exigir('compras.criar'), async (req, res, next) => {
   try {
     const p = await compras.criar(lerFormulario(req.body), req.usuario, ctx(req));
+    // Pedido persistido com sucesso: o rascunho anterior nao deve reaparecer.
+    try {
+      await query('DELETE FROM rascunhos_formulario WHERE usuario_id=$1 AND chave=$2',
+        [req.usuario.id, 'compras:novo']);
+    } catch (erroRascunho) {
+      console.warn('[rascunho] limpeza pendente:', erroRascunho.message);
+    }
     res.avisar(`Pedido de compra ${p.numero} criado. Aprove para gerar a previsão financeira.`);
     req.session.save(() => res.redirect(`/compras/${p.id}`));
   } catch (e) {
