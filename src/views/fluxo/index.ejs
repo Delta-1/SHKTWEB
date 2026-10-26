@@ -13,12 +13,12 @@
 <div class="fluxo-grade">
   <% const itens = [
     { titulo:'Preparar a operação', desc:'Cadastre apenas o que ainda não existe: clientes, fornecedores, produtos e locais.', perm:'cadastros.visualizar', links:[['Abrir cadastros','/cadastros/produtos'],['Fornecedores','/cadastros/fornecedores']] },
-    { titulo:'Receber mercadoria', desc:'Registre entrada e pesagem. É o recebimento confirmado que movimenta o estoque.', perm:'recebimentos.visualizar', links:[['Recebimentos','/recebimentos'],['Novo recebimento','/recebimentos/novo']] },
+    { titulo:'Receber mercadoria', desc:'Registre entrada e pesagem. É o recebimento confirmado que movimenta o estoque.', perm:'compras.visualizar', links:[['Recebimentos','/recebimentos'],['Novo recebimento','/recebimentos/novo']] },
     { titulo:'Verificar estoque', desc:'Confira lotes, reservas e disponibilidade antes de continuar.', perm:'estoque.visualizar', links:[['Ver estoque','/estoque']] },
     { titulo:'Registrar fumigação', desc:'Informe empresa fumigadora, lote e comunicado obrigatório para a validação.', perm:'fumigacao.visualizar', links:[['Fumigações','/fumigacao']] },
     { titulo:'Emitir certificado', desc:'Use somente o saldo fumigado validado; a obrigação financeira nasce do certificado.', perm:'certificados.visualizar', links:[['Certificados','/certificados']] },
-    { titulo:'Carregar e expedir', desc:'Relacione a venda, motorista, veículo, pesos e documentação. A expedição baixa o estoque.', perm:'carregamentos.visualizar', links:[['Carregamentos','/carregamentos'],['Vendas','/vendas']] },
-    { titulo:'Conferir financeiro', desc:'Verifique títulos integrados, vencimentos e pagamentos.', perm:'financeiro.visualizar', links:[['Financeiro','/financeiro']] }
+    { titulo:'Carregar e expedir', desc:'Relacione a venda, motorista, veículo, pesos e documentação. A expedição baixa o estoque.', perm:'carregamento.visualizar', links:[['Carregamentos','/carregamentos'],['Vendas','/vendas']] },
+    { titulo:'Conferir financeiro', desc:'Verifique títulos integrados, vencimentos e pagamentos.', perm:'financeiro.visualizar', links:[['Contas a pagar','/financeiro/pagar']] }
   ]; %>
   <% let n=0; for (const item of itens) { if (!pode(item.perm)) continue; n++; %>
     <section class="fluxo-bloco">
