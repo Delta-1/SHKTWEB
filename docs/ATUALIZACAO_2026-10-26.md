@@ -59,8 +59,9 @@ Conexões Supabase usam TLS. A conexão direta requer saída IPv6 quando o proje
 não possui IPv4; o Session pooler é alternativa para redes somente IPv4.
 
 O predeploy confere a origem anterior antes de alternar uma instalação vazia.
-Se encontrar operações ou cadastros adicionais, aborta para exigir migração e
-conferência dos dados; não apaga nem sobrescreve a origem. Após conferência,
+Cadastros compatíveis são transferidos em uma transação, com salvaguarda
+privada da origem e do destino, preservando o acesso já utilizado. Se houver
+operações, aborta para exigir uma migração específica. A origem não é apagada. Após conferência,
 `SHKT_ORIGEM_CONFERIDA=true` evita depender da origem antiga em novos deploys.
 
 Migrações: 020 (fila/conteúdo de anexos), 021 (papel do servidor) e 999
