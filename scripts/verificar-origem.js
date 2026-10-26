@@ -20,46 +20,65 @@ export async function migrarCadastros(origem,destino){
    dadosOrigem[tabela]=(await origem.query(`SELECT * FROM public.${quote(tabela)}`)).rows;
    dadosDestino[tabela]=(await destino.query(`SELECT * FROM public.${quote(tabela)}`)).rows;
   }
-  // Toda referência usada pelo cadastro deve representar a mesma entidade nos dois bancos.
+  // Bancos semeados em momentos diferentes podem ter IDs distintos para o mesmo código.
+  const mapas=new Map();
   for(const tabela of REFERENCIAS){
+   const mapa=new Map();
    for(const linha of dadosOrigem[tabela]){
-    const existente=dadosDestino[tabela].find(x=>String(x.id)===String(linha.id));
-    if(!existente || (linha.codigo && existente.codigo!==linha.codigo))throw new Error(`Referência incompatível em ${tabela}. A transferência foi cancelada sem alterar dados.`);
+    const equivalente=dadosDestino[tabela].find(x=>linha.codigo?x.codigo===linha.codigo:String(x.id)===String(linha.id));
+    if(!equivalente)throw new Error(`Referência incompatível em ${tabela}. A transferência foi cancelada sem alterar dados.`);
+    mapa.set(String(linha.id),equivalente.id);
    }
+   mapas.set(tabela,mapa);
   }
   await destino.query(`INSERT INTO shkt_transferencia.salvaguardas(chave,dados_origem,dados_destino)
    VALUES('railway_20261026',$1::jsonb,$2::jsonb) ON CONFLICT DO NOTHING`,[JSON.stringify(dadosOrigem),JSON.stringify(dadosDestino)]);
-  const mapaUsuario=new Map();
+  const mapaUsuario=new Map();mapas.set('usuarios',mapaUsuario);
   for(const u of dadosOrigem.usuarios){
    const existente=dadosDestino.usuarios.find(x=>x.email.toLowerCase()===u.email.toLowerCase());
    if(existente){
     mapaUsuario.set(String(u.id),existente.id);
     // Preserva o acesso que já era utilizado no sistema de origem. O acesso anterior fica na salvaguarda.
-    await destino.query('UPDATE usuarios SET senha_hash=$1,trocar_senha=$2 WHERE id=$3',[u.senha_hash,u.trocar_senha,existente.id]);
+    await destino.query('UPDATE usuarios SET nome=$1,senha_hash=$2,perfil_id=$3,ativo=$4,trocar_senha=$5 WHERE id=$6',[u.nome,u.senha_hash,mapas.get('perfis').get(String(u.perfil_id)),u.ativo,u.trocar_senha,existente.id]);
    }else{
     const {rows:[novo]}=await destino.query(`INSERT INTO usuarios(nome,email,senha_hash,perfil_id,ativo,trocar_senha)
-     VALUES($1,$2,$3,$4,$5,$6) RETURNING id`,[u.nome,u.email,u.senha_hash,u.perfil_id,u.ativo,u.trocar_senha]);
+     VALUES($1,$2,$3,$4,$5,$6) RETURNING id`,[u.nome,u.email,u.senha_hash,mapas.get('perfis').get(String(u.perfil_id)),u.ativo,u.trocar_senha]);
     mapaUsuario.set(String(u.id),novo.id);
    }
   }
   for(const tabela of CADASTROS.filter(t=>t!=='usuarios')){
    const {rows:metadados}=await destino.query(`SELECT column_name,is_generated FROM information_schema.columns WHERE table_schema='public' AND table_name=$1`,[tabela]);
+   const {rows:fks}=await destino.query(`SELECT a.attname AS coluna,rt.relname AS referencia
+    FROM pg_constraint c JOIN pg_class t ON t.oid=c.conrelid JOIN pg_class rt ON rt.oid=c.confrelid
+    JOIN pg_attribute a ON a.attrelid=t.oid AND a.attnum=c.conkey[1]
+    WHERE c.contype='f' AND t.relnamespace='public'::regnamespace AND t.relname=$1 AND array_length(c.conkey,1)=1`,[tabela]);
    const permitidas=new Set(metadados.filter(x=>x.is_generated==='NEVER').map(x=>x.column_name));
+   const mapa=new Map();mapas.set(tabela,mapa);
    for(const row of dadosOrigem[tabela]){
     const linha={...row};
-    for(const k of ['criado_por','atualizado_por','usuario_id'])if(linha[k]!=null&&mapaUsuario.has(String(linha[k])))linha[k]=mapaUsuario.get(String(linha[k]));
-    if(tabela==='auditoria')delete linha.id;
-    const colunas=Object.keys(linha).filter(k=>permitidas.has(k));
+    for(const fk of fks){
+     if(linha[fk.coluna]==null)continue;
+     const m=mapas.get(fk.referencia);
+     if(!m?.has(String(linha[fk.coluna])))throw new Error(`Vínculo não mapeado em ${tabela}.${fk.coluna}; nenhuma alteração foi aplicada.`);
+     linha[fk.coluna]=m.get(String(linha[fk.coluna]));
+    }
     const pk=tabela==='parametros'?'chave':'id';
-    const existentes=dadosDestino[tabela];
-    const mesmoId=existentes.find(x=>String(x[pk])===String(linha[pk]));
-    if(mesmoId&&linha.codigo&&mesmoId.codigo!==linha.codigo)throw new Error(`Código divergente em ${tabela}. A transferência foi cancelada sem alterar dados.`);
+    const existente=tabela==='auditoria'?null:dadosDestino[tabela].find(x=>pk==='chave'?x.chave===linha.chave:(linha.codigo?x.codigo===linha.codigo:false));
+    if(pk==='id'){if(existente)linha.id=existente.id;else delete linha.id;}
+    if(tabela==='auditoria'&&linha.registro_id!=null){
+     const entidades={PARCEIRO:'parceiros',PARCEIROS:'parceiros',PRODUTO:'produtos',PRODUTOS:'produtos',LOCAL_ESTOQUE:'locais_estoque',LOCAIS_ESTOQUE:'locais_estoque',CONTA_BANCARIA:'contas_bancarias',CONTAS_BANCARIAS:'contas_bancarias',USUARIO:'usuarios',USUARIOS:'usuarios'};
+     const m=mapas.get(entidades[linha.registro_tipo]);
+     if(m?.has(String(linha.registro_id)))linha.registro_id=m.get(String(linha.registro_id));
+    }
+    const colunas=Object.keys(linha).filter(k=>permitidas.has(k));
     const atualizar=colunas.filter(k=>k!==pk).map(k=>`${quote(k)}=EXCLUDED.${quote(k)}`).join(',');
-    await destino.query(`INSERT INTO public.${quote(tabela)}(${colunas.map(quote).join(',')}) OVERRIDING SYSTEM VALUE
-      VALUES(${colunas.map((_,i)=>'$'+(i+1)).join(',')}) ON CONFLICT(${quote(pk)}) ${tabela==='auditoria'?'DO NOTHING':'DO UPDATE SET '+atualizar}`,colunas.map(k=>linha[k]));
+    const {rows:[gravado]}=await destino.query(`INSERT INTO public.${quote(tabela)}(${colunas.map(quote).join(',')}) OVERRIDING SYSTEM VALUE
+      VALUES(${colunas.map((_,i)=>'$'+(i+1)).join(',')}) ON CONFLICT(${quote(pk)}) ${tabela==='auditoria'?'DO NOTHING':'DO UPDATE SET '+atualizar} RETURNING ${quote(pk)}`,colunas.map(k=>linha[k]));
+    if(pk==='id')mapa.set(String(row.id),gravado.id);
    }
-   if(tabela!=='parametros')await destino.query(`SELECT setval(pg_get_serial_sequence($1,'id'), GREATEST(COALESCE((SELECT max(id) FROM public.${quote(tabela)}),0),1),true)`,['public.'+tabela]);
   }
+  const registroMapas=Object.fromEntries([...mapas].map(([t,m])=>[t,Object.fromEntries(m)]));
+  await destino.query("UPDATE shkt_transferencia.salvaguardas SET dados_origem=dados_origem || jsonb_build_object('_mapas',$1::jsonb) WHERE chave='railway_20261026'",[JSON.stringify(registroMapas)]);
   await destino.query("UPDATE shkt_transferencia.salvaguardas SET concluido=true WHERE chave='railway_20261026'");
   await origem.query('COMMIT');await destino.query('COMMIT');
   console.log('Transferência concluída: cadastros e acesso preservados, com salvaguarda da origem e do destino. Nenhum registro da origem foi removido.');
