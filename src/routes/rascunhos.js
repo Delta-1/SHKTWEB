@@ -3,7 +3,7 @@ import { query, um } from '../db/index.js';
 import { temPermissao } from '../lib/auth.js';
 
 const router = Router();
-const modulos = { compras: 'compras.criar', vendas: 'vendas.criar', recebimentos: 'recebimentos.criar' };
+const modulos = { compras: 'compras.criar', vendas: 'vendas.criar', recebimentos: 'compras.criar' };
 function validar(req, res, next) {
   const modulo = req.params.modulo;
   const chave = req.params.chave;
