@@ -40,7 +40,7 @@ router.get('/', exigir('dashboard.visualizar'), (req, res) => {
   renderizar(res, 'boas-vindas');
 });
 
-router.get('/empresa', exigir('dashboard.visualizar'), async (req, res, next) => {
+router.get('/empresa', exigir('admin.administrar'), async (req, res, next) => {
   try {
     renderizar(res, 'empresa', {
       empresa: await onboarding.empresaAtual(),
@@ -52,7 +52,7 @@ router.get('/empresa', exigir('dashboard.visualizar'), async (req, res, next) =>
   }
 });
 
-router.post('/empresa', exigir('dashboard.visualizar'), async (req, res, next) => {
+router.post('/empresa', exigir('admin.administrar'), async (req, res, next) => {
   try {
     await onboarding.salvarEmpresa(
       {
@@ -156,7 +156,7 @@ router.post('/concluir', exigir('dashboard.visualizar'), async (req, res, next) 
   try {
     await onboarding.concluirAssistente(req.usuario);
     res.avisar('Tudo pronto. Bom trabalho!');
-    req.session.save(() => res.redirect('/'));
+    req.session.save(() => res.redirect('/fluxo'));
   } catch (e) {
     next(e);
   }
@@ -167,7 +167,7 @@ router.post('/pular', exigir('dashboard.visualizar'), async (req, res, next) => 
   try {
     await onboarding.concluirAssistente(req.usuario);
     res.avisar('Sem problema. O que faltar aparece em "Primeiros passos", na tela inicial.');
-    req.session.save(() => res.redirect('/'));
+    req.session.save(() => res.redirect('/fluxo'));
   } catch (e) {
     next(e);
   }

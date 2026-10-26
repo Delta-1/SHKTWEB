@@ -12,7 +12,7 @@
   const somenteLeitura = !pode(def.permissao + (novo ? '.criar' : '.editar'));
 %>
 
-<form method="post" action="<%= novo ? base + '/novo' : base + '/' + registro.id %>" class="cartao">
+<form data-rascunho="cadastros" method="post" action="<%= novo ? base + '/novo' : base + '/' + registro.id %>" class="cartao">
   <div class="cartao-topo">
     <a href="<%= base %>" class="btn pequeno"><%- ic('voltar') %> Voltar</a>
     <h2><%= novo ? 'Novo ' + def.singular.toLowerCase() : def.singular %></h2>

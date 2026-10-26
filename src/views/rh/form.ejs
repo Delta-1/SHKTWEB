@@ -1,5 +1,5 @@
 <%- include('../partials/topo') %>
-<form method="post" action="/rh/nova" class="cartao" style="max-width:900px"><div class="cartao-topo"><a href="/rh" class="btn pequeno"><%- ic('voltar') %> Voltar</a><h2>Nova folha</h2></div>
+<form data-rascunho="rh" method="post" action="/rh/nova" class="cartao" style="max-width:900px"><div class="cartao-topo"><a href="/rh" class="btn pequeno"><%- ic('voltar') %> Voltar</a><h2>Nova folha</h2></div>
 <div class="cartao-corpo"><div class="aviso info"><%- ic('info') %><div><strong>Fluxo simples em 3 passos</strong>Crie a competência, inclua os funcionários e feche. Os títulos só nascem no fechamento.</div></div>
 <div class="campos"><div class="campo c4"><label>Competência <span class="obrigatorio">*</span></label><input type="date" name="competencia" required value="<%= hoje.slice(0,7) %>-01"></div>
 <div class="campo c4"><label>Vencimento <span class="obrigatorio">*</span></label><input type="date" name="vencimento" required value="<%= hoje %>"></div>

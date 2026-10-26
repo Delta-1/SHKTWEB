@@ -1566,3 +1566,17 @@ dialog.preferencias-dialogo { width:min(520px,calc(100vw - 28px)); }
   a { color: #000; text-decoration: none; }
   .pill { border: none; background: none !important; color: #000 !important; }
 }
+
+/* Fluxo guiado e autosave */
+.rascunho-barra {display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 20px;background:var(--papel-2);border-bottom:1px solid var(--linha);font-size:.82rem;color:var(--tinta-2)}
+.fluxo-resumo{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin:20px 0}
+.fluxo-passos{display:grid;gap:14px}.fluxo-passo{display:grid;grid-template-columns:44px 1fr auto;gap:16px;align-items:center;padding:20px;border:1px solid var(--linha);border-radius:14px;background:var(--papel)}
+.fluxo-numero{width:40px;height:40px;border-radius:50%;background:var(--papel-3);display:grid;place-items:center;font-weight:700}
+.fluxo-passo h2{font-size:1.05rem;margin:0 0 5px}.fluxo-passo p{margin:0;color:var(--tinta-3);font-size:.88rem}.fluxo-passo .barra{margin-top:10px}
+.fluxo-colunas{display:grid;grid-template-columns:2fr 1fr;gap:20px}.fluxo-colunas aside .cartao{margin-bottom:15px}
+.fluxo-pendencia{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--linha)}
+@media(max-width:780px){.fluxo-colunas{grid-template-columns:1fr}.fluxo-passo{grid-template-columns:36px 1fr}.fluxo-passo>.fluxo-botoes{grid-column:2}.barra-icones{overflow-x:auto}}
+
+.pagina-cabecalho{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin:8px 0 24px}.pagina-cabecalho h1{font-size:clamp(1.7rem,3vw,2.4rem);margin:6px 0 10px}.sobrelinha{font-size:.72rem;letter-spacing:.12em;font-weight:700;color:var(--marca-700)}.tabela-rolagem{overflow-x:auto}@media(max-width:600px){.pagina-cabecalho{flex-direction:column}.fluxo-passo{padding:16px}.fluxo-passo .pill{white-space:normal}}
+
+.fluxo-botoes{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}.fluxo-pendencia small{display:block;margin-top:4px;font-size:.8rem;line-height:1.5}.fluxo-passo{grid-template-columns:40px minmax(0,1fr) auto}.fluxo-botoes .btn{white-space:nowrap}@media(max-width:1100px){.fluxo-passo{grid-template-columns:40px minmax(0,1fr)}.fluxo-botoes{grid-column:2;justify-content:flex-start}}

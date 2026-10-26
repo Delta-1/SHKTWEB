@@ -2,7 +2,7 @@
 
 <% const ehPagar = tipo === 'CP'; const t = titulo_registro; %>
 
-<form method="post" action="/financeiro/<%= segmento %>/novo" class="cartao" style="max-width:960px">
+<form data-rascunho="financeiro" method="post" action="/financeiro/<%= segmento %>/novo" class="cartao" style="max-width:960px">
   <div class="cartao-topo">
     <a href="/financeiro/<%= segmento %>" class="btn pequeno"><%- ic('voltar') %> Voltar</a>
     <h2>Novo título — <%= ehPagar ? 'contas a pagar' : 'contas a receber' %></h2>

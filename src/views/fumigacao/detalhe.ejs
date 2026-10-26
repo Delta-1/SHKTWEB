@@ -15,6 +15,8 @@
     <span class="pill <%= f.classeStatus(x.status) %>"><%= f.rotuloStatus(x.status) %></span>
     <span style="flex:1"></span>
     <a href="/fumigacao/<%= x.id %>/documento" class="btn pequeno" target="_blank">Imprimir</a>
+    <button type="button" class="btn pequeno" data-gerar-pdf="/documentos/fumigacao/<%= x.id %>">Gerar PDF</button>
+    <a class="btn pequeno" href="/anexos/FUMIGACAO/<%= x.id %>">Anexos</a>
     <% if (editavel && pode('fumigacao.editar')) { %>
       <a href="/fumigacao/<%= x.id %>/editar" class="btn pequeno">Editar</a>
     <% } %>

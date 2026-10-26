@@ -1,38 +1,17 @@
 <%- include('../partials/topo') %>
-<style>
-.fluxo-cabeca{max-width:900px;margin:0 auto 25px}.fluxo-grade{display:grid;gap:14px;max-width:900px;margin:0 auto}
-.fluxo-bloco{background:var(--fundo-cartao,#fff);border:1px solid var(--linha,#ddd);border-radius:16px;padding:20px;display:flex;justify-content:space-between;align-items:center;gap:20px}
-.fluxo-etapa{font-size:.8rem;opacity:.68;margin:0 0 5px}.fluxo-bloco h2{font-size:1.1rem;margin:0 0 7px}.fluxo-bloco p{margin:0;opacity:.78}
-.fluxo-botoes{display:flex;flex-wrap:wrap;gap:7px}.fluxo-botoes a{white-space:nowrap}
-@media(max-width:650px){.fluxo-bloco{display:block}.fluxo-botoes{margin-top:14px}}
-</style>
-<header class="fluxo-cabeca">
-  <h1>O que você precisa fazer?</h1>
-  <p class="explica">Siga a operação na ordem. Os registros já confirmados alimentam as próximas etapas, sem copiar dados de um documento para outro.</p>
-</header>
-<div class="fluxo-grade">
-  <% const itens = [
-    { titulo:'Preparar a operação', desc:'Cadastre apenas o que ainda não existe: clientes, fornecedores, produtos e locais.', perm:'cadastros.visualizar', links:[['Abrir cadastros','/cadastros/produtos'],['Fornecedores','/cadastros/fornecedores']] },
-    { titulo:'Receber mercadoria', desc:'Registre entrada e pesagem. É o recebimento confirmado que movimenta o estoque.', perm:'compras.visualizar', links:[['Recebimentos','/recebimentos'],['Novo recebimento','/recebimentos/novo']] },
-    { titulo:'Verificar estoque', desc:'Confira lotes, reservas e disponibilidade antes de continuar.', perm:'estoque.visualizar', links:[['Ver estoque','/estoque']] },
-    { titulo:'Registrar fumigação', desc:'Informe empresa fumigadora, lote e comunicado obrigatório para a validação.', perm:'fumigacao.visualizar', links:[['Fumigações','/fumigacao']] },
-    { titulo:'Emitir certificado', desc:'Use somente o saldo fumigado validado; a obrigação financeira nasce do certificado.', perm:'certificados.visualizar', links:[['Certificados','/certificados']] },
-    { titulo:'Carregar e expedir', desc:'Relacione a venda, motorista, veículo, pesos e documentação. A expedição baixa o estoque.', perm:'carregamento.visualizar', links:[['Carregamentos','/carregamentos'],['Vendas','/vendas']] },
-    { titulo:'Conferir financeiro', desc:'Verifique títulos integrados, vencimentos e pagamentos.', perm:'financeiro.visualizar', links:[['Contas a pagar','/financeiro/pagar']] }
-  ]; %>
-  <% let n=0; for (const item of itens) { if (!pode(item.perm)) continue; n++; %>
-    <section class="fluxo-bloco">
-      <div>
-        <p class="fluxo-etapa">ETAPA <%= n %></p>
-        <h2><%= item.titulo %></h2>
-        <p><%= item.desc %></p>
-      </div>
-      <div class="fluxo-botoes">
-        <% for (const [rotulo,url] of item.links) { %>
-          <a class="btn <%= url === item.links[0][1] ? 'primario' : '' %>" href="<%= url %>"><%= rotulo %></a>
-        <% } %>
-      </div>
-    </section>
-  <% } %>
-</div>
+<header class="pagina-cabecalho"><div><p class="sobrelinha">SHKT · CENTRAL DE OPERAÇÕES</p><h1>Uma etapa de cada vez.</h1><p class="explica">Escolha onde continuar. Os dados confirmados alimentam as próximas etapas da operação.</p></div><a href="/documentos" class="btn">Meus arquivos</a></header>
+<div class="fluxo-colunas"><div class="fluxo-passos">
+<% etapas.forEach((e,i)=>{ %>
+<section class="fluxo-passo"><div class="fluxo-numero"><%= i+1 %></div><div><h2><%= e.titulo %></h2><p><%= e.descricao %></p><div class="mt-1"><span class="pill"><%= e.status %></span></div></div>
+<div class="fluxo-botoes"><a class="btn primario pequeno" href="<%= e.url %>"><%= e.acao %></a><% if(e.novo&&e.criar){ %><a class="btn pequeno" href="<%= e.novo %>">Novo</a><% } %><% if(e.extra){ %><a class="btn pequeno" href="<%= e.extra[1] %>"><%= e.extra[0] %></a><% } %></div></section>
+<% }); %>
+</div><aside>
+<section class="cartao"><div class="cartao-topo"><h2>Continuar depois</h2></div><div class="cartao-corpo"><p class="txt-fraco">Os formulários são salvos automaticamente enquanto você preenche.</p>
+<% if(!rascunhos.length){ %><p>Nenhum rascunho pendente.</p><% } %>
+<% for(const r of rascunhos){ const segura=typeof r.url==='string'&&/^\/(compras|vendas|recebimentos|fumigacao|certificados|carregamentos|frota|financeiro|rh|impostos|cadastros)\/[a-zA-Z0-9/_-]+(?:\?[a-zA-Z0-9_=&%-]*)?$/.test(r.url); %>
+<% if(segura){ %><a class="fluxo-pendencia" href="<%= r.url %>"><span><strong><%= (r.titulo||r.chave).replace(' · SHKT','') %></strong><small class="bloco txt-fraco"><%= f.dataHora(r.atualizado_em) %></small></span><span>Continuar →</span></a><% } %>
+<% } %></div></section>
+<section class="cartao"><div class="cartao-topo"><h2>Gestão e apoio</h2></div><div class="cartao-corpo"><% for(const a of adicionais){ %><a class="fluxo-pendencia" href="<%= a.url %>"><span><strong><%= a.titulo %></strong><small class="bloco txt-fraco"><%= a.descricao %></small></span><span>→</span></a><% } %></div></section>
+<a class="btn" href="/">Abrir painel gerencial</a>
+</aside></div>
 <%- include('../partials/fim') %>

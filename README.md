@@ -1,3 +1,10 @@
+## Atualização — fluxo guiado e continuidade
+
+A entrada após o login abre **Operações**, com as etapas do ERP e suas
+pendências. Os formulários possuem rascunhos automáticos recuperáveis e os
+PDFs são preparados em segundo plano em **Arquivos**. Novos anexos ficam no
+banco. [Detalhes e validação](docs/ATUALIZACAO_2026-10-26.md).
+
 # ERP SHKT
 
 Sistema de gestão web da **SHKT INDÚSTRIA IMPORTAÇÃO & EXPORTAÇÃO LTDA**.

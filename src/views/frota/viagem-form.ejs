@@ -1,7 +1,7 @@
 <%- include('../partials/topo') %>
 <% const v = viagem; const acao = novo ? '/frota/viagens/nova' : `/frota/viagens/${v.id}/editar`; %>
 
-<form method="post" action="<%= acao %>" class="cartao" style="max-width:1050px" data-etapas>
+<form data-rascunho="frota" method="post" action="<%= acao %>" class="cartao" style="max-width:1050px" data-etapas>
   <div class="cartao-topo"><a href="<%= novo ? '/frota' : '/frota/viagens/' + v.id %>" class="btn pequeno"><%- ic('voltar') %> Voltar</a>
     <h2><%= novo ? 'Nova viagem' : 'Editar viagem ' + v.numero %></h2></div>
   <div class="cartao-corpo">

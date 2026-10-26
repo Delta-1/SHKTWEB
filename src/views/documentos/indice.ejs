@@ -1,0 +1,10 @@
+<%- include('../partials/topo') %>
+<div class="pagina-cabecalho"><div><h1>Meus arquivos</h1><p class="explica">Solicite um PDF na tela do documento e continue trabalhando. O arquivo aparece aqui quando estiver pronto.</p></div><a href="/fluxo" class="btn">Voltar às operações</a></div>
+<div class="cartao"><div class="tabela-rolagem"><table class="tabela"><thead><tr><th>Documento</th><th>Solicitado</th><th>Progresso</th><th>Arquivo</th></tr></thead><tbody data-fila-documentos>
+<% for(const t of tarefas){ %>
+<tr data-tarefa="<%= t.id %>" data-status="<%= t.status %>"><td><strong><%= t.titulo %></strong><small class="bloco txt-fraco"><%= t.erro || '' %></small></td><td><%= f.dataHora(t.criado_em) %></td><td data-tarefa-status><%= {PENDENTE:'Na fila',PROCESSANDO:'Gerando PDF…',CONCLUIDO:'Pronto',FALHOU:'Falhou'}[t.status] %></td><td data-tarefa-acao>
+<% if(t.status==='CONCLUIDO'){ %><a class="btn pequeno primario" href="/documentos/<%= t.id %>/baixar">Baixar PDF</a><% } else if(t.status==='FALHOU'){ %><form method="post" action="/documentos/<%= t.id %>/tentar-novamente"><button class="btn pequeno">Tentar novamente</button></form><% } %>
+</td></tr><% } %>
+<% if(!tarefas.length){ %><tr><td colspan="4" class="txt-centro">Nenhum arquivo solicitado ainda.</td></tr><% } %>
+</tbody></table></div></div>
+<%- include('../partials/fim') %>

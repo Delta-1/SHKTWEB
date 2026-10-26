@@ -68,7 +68,7 @@ router.post('/login', async (req, res, next) => {
       req.session.usuarioId = usuario.id;
       req.session.save(() => {
         if (usuario.trocar_senha) return res.redirect('/trocar-senha');
-        const alvo = destino && destino.startsWith('/') ? destino : '/';
+        const alvo = destino && /^\/(?![\/\\])/.test(destino) ? destino : '/fluxo';
         res.redirect(alvo);
       });
     });

@@ -2,7 +2,7 @@
 
 <% const acao = novo ? '/fumigacao/novo' : `/fumigacao/${fumigacao.id}/editar`; %>
 
-<form method="post" action="<%= acao %>" class="cartao" style="max-width:1000px">
+<form data-rascunho="fumigacao" method="post" action="<%= acao %>" class="cartao" style="max-width:1000px">
   <div class="cartao-topo">
     <a href="<%= novo ? '/fumigacao' : '/fumigacao/' + fumigacao.id %>" class="btn pequeno"><%- ic('voltar') %> Voltar</a>
     <h2><%= novo ? 'Novo pedido de fumigação' : 'Editar fumigação ' + fumigacao.numero %></h2>

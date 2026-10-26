@@ -14,6 +14,8 @@ export const pool = new Pool({
   ssl: config.dbSsl ? { rejectUnauthorized: false } : false,
   max: Number(process.env.DB_POOL_MAX || 10),
   idleTimeoutMillis: 30_000,
+  connectionTimeoutMillis: 15_000,
+  application_name: 'shkt-erp',
 });
 
 pool.on('error', (err) => {

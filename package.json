@@ -14,7 +14,8 @@
     "seed": "node src/db/seed.js",
     "setup": "node scripts/preparar-banco.js",
     "test": "node --test --test-concurrency=1 \"tests/**/*.test.js\"",
-    "backup": "node scripts/backup.js"
+    "backup": "node scripts/backup.js",
+    "test:browser": "node tests/browser-flow.cjs"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -24,8 +25,13 @@
     "express": "^4.21.2",
     "express-session": "^1.18.1",
     "multer": "^2.2.0",
+    "pdfkit": "0.17.2",
     "pg": "^8.13.1",
     "read-excel-file": "^6.0.1",
+    "svg-to-pdfkit": "0.1.8",
     "write-excel-file": "^2.3.10"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
   }
 }

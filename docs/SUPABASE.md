@@ -52,3 +52,12 @@ ERP. Nunca coloque essa URL em JavaScript do navegador.
 - acompanhe os Security e Performance Advisors após cada mudança estrutural;
 - anexos continuam no diretório configurado por `UPLOAD_DIR`; para múltiplas
   instâncias, migre-os para armazenamento persistente antes de escalar.
+
+## Servidor com credencial dedicada
+
+A atualização de 26/10/2026 acrescenta `shkt_backend`, sem privilégios de
+administração e sem bypass de RLS. As políticas desse papel são exclusivas
+do servidor Express; os papéis da Data API continuam sem acesso.
+`SHKT_SUPABASE_URL` permite apontar a aplicação para essa credencial mantendo
+a configuração de origem para recuperação. Consulte
+[fluxo assíncrono](ATUALIZACAO_2026-10-26.md) antes de novas migrações.

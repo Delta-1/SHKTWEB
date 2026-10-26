@@ -12,6 +12,8 @@
     <span class="pill <%= f.classeStatus(p.status) %>"><%= f.rotuloStatus(p.status) %></span>
     <span style="flex:1"></span>
     <a href="/compras/<%= p.id %>/documento" class="btn pequeno" target="_blank"><%- ic('imprimir') %> Imprimir</a>
+    <button type="button" class="btn pequeno" data-gerar-pdf="/documentos/compras/<%= p.id %>">Gerar PDF</button>
+    <a class="btn pequeno" href="/anexos/COMPRA/<%= p.id %>">Anexos</a>
     <% if (editavel && pode('compras.editar')) { %>
       <a href="/compras/<%= p.id %>/editar" class="btn pequeno"><%- ic('editar') %> Editar</a>
     <% } %>

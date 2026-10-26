@@ -250,6 +250,8 @@
 
 <!-- -------------------------------------------------------- barra de ícones -->
 <div class="barra-icones nao-imprimir">
+  <a href="/fluxo" class="ferramenta"><span class="quadro"><%- ic('menu') %></span><span>Operações</span></a>
+  <a href="/documentos" class="ferramenta"><span class="quadro"><%- ic('relatorios') %></span><span>Arquivos</span></a>
   <% for (const t of FERRAMENTAS) { %>
     <% if (t.separador) { %>
       <span class="separador"></span>

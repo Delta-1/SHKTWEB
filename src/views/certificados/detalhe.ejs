@@ -9,6 +9,7 @@
     <span class="pill <%= f.classeStatus(c.status) %>"><%= f.rotuloStatus(c.status) %></span>
     <span style="flex:1"></span>
     <a href="/certificados/<%= c.id %>/documento" class="btn pequeno" target="_blank">Imprimir</a>
+    <button type="button" class="btn pequeno" data-gerar-pdf="/documentos/certificados/<%= c.id %>">Gerar PDF</button>
     <% if (c.status === 'RASCUNHO' && pode('certificados.editar')) { %>
       <a href="/certificados/<%= c.id %>/editar" class="btn pequeno">Editar</a>
     <% } %>

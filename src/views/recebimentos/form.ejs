@@ -13,7 +13,7 @@
           }))
         : [null]); %>
 
-<form method="post" action="<%= acao %>" class="cartao" style="max-width:1000px" data-etapas>
+<form data-rascunho="recebimentos" method="post" action="<%= acao %>" class="cartao" style="max-width:1000px" data-etapas>
   <div class="cartao-topo">
     <a href="<%= novo ? '/recebimentos' : '/recebimentos/' + r.id %>" class="btn pequeno"><%- ic('voltar') %> Voltar</a>
     <h2><%= novo ? 'Receber mercadoria' : 'Editar recebimento ' + r.numero %></h2>

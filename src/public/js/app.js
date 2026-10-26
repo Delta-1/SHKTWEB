@@ -383,6 +383,8 @@
 
     function mostrar(indice) {
       atual = indice;
+      form.dataset.etapaAtual = String(indice);
+      form.dispatchEvent(new Event("etapa-alterada"));
       for (var i = 0; i < etapas.length; i++) {
         etapas[i].classList.toggle('ativa', i === indice);
         marcos[i].classList.toggle('atual', i === indice);
@@ -447,6 +449,16 @@
       if (etapaValida()) mostrar(atual + 1);
     });
 
+    form.addEventListener("rascunho-restaurado", function(ev) {
+      var tabelas = form.querySelectorAll("table[data-linhas]");
+      for (var i=0;i<tabelas.length;i++) somarLinhas(tabelas[i]);
+      recalcular(form);
+      mostrar(Math.max(0, Math.min(Number(ev.detail.etapa)||0, etapas.length-1)));
+    });
+    form.addEventListener("invalid", function(ev) {
+      var indice = Array.prototype.indexOf.call(etapas, ev.target.closest(".etapa"));
+      if(indice >= 0) mostrar(indice);
+    },true);
     mostrar(0);
   }
 
@@ -695,6 +707,22 @@
     var tabelas = doc.querySelectorAll('table[data-linhas]');
     for (var t = 0; t < tabelas.length; t++) somarLinhas(tabelas[t]);
 
+    // Fieldsets existentes já expressam etapas de negócio (mercadoria, serviço, valores).
+    var operacionais=doc.querySelectorAll('form[data-rascunho]:not([data-etapas])');
+    for(var o=0;o<operacionais.length;o++){
+      var form=operacionais[o];var grupos=form.querySelectorAll('.cartao-corpo > fieldset');
+      var rodape=form.querySelector('.rodape-form');var submit=rodape&&rodape.querySelector('button[type=submit],button:not([type])');
+      if(grupos.length<2||!submit)continue;
+      form.setAttribute('data-etapas','');
+      for(var g=0;g<grupos.length;g++){
+        grupos[g].classList.add('etapa');
+        grupos[g].setAttribute('data-rotulo',grupos[g].querySelector('legend')?.textContent.trim()||'Passo '+(g+1));
+      }
+      submit.setAttribute('data-etapa-gravar','');
+      var voltar=doc.createElement('button');voltar.type='button';voltar.className='btn oculto';voltar.setAttribute('data-etapa-voltar','');voltar.textContent='Voltar';
+      var avancar=doc.createElement('button');avancar.type='button';avancar.className='btn primario';avancar.setAttribute('data-etapa-avancar','');avancar.textContent='Continuar';
+      rodape.insertBefore(voltar,submit);rodape.insertBefore(avancar,submit);
+    }
     var comEtapas = doc.querySelectorAll('form[data-etapas]');
     for (var e = 0; e < comEtapas.length; e++) montarEtapas(comEtapas[e]);
 
@@ -711,6 +739,10 @@
 
     atualizarContador(doc.querySelector('[data-contador-dinheiro]'));
     atualizarFechamento(doc.querySelector('[data-fechamento-caixa]'));
+  });
+
+  doc.addEventListener("rascunho-restaurado", function(ev) {
+    if (!ev.target.matches("[data-etapas]")) recalcular(ev.target);
   });
 
   // ------------------------------------------------- instalar como aplicativo

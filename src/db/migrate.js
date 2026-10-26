@@ -13,6 +13,8 @@ import { ROOT } from '../config.js';
 const DIR = path.join(ROOT, 'db', 'migrations');
 
 async function garantirTabelaControle() {
+  const {rows:[controle]}=await pool.query("SELECT to_regclass('public._migracoes') AS tabela");
+  if(controle.tabela)return;
   await pool.query(`
     CREATE TABLE IF NOT EXISTS _migracoes (
       arquivo     TEXT PRIMARY KEY,

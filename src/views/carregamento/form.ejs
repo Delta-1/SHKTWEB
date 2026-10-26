@@ -2,7 +2,7 @@
 
 <% const c = carregamento; const acao = novo ? '/carregamentos/novo' : `/carregamentos/${c.id}/editar`; %>
 
-<form method="post" action="<%= acao %>" class="cartao">
+<form data-rascunho="carregamentos" method="post" action="<%= acao %>" class="cartao">
   <div class="cartao-topo">
     <a href="<%= novo ? '/carregamentos' : '/carregamentos/' + c.id %>" class="btn pequeno"><%- ic('voltar') %> Voltar</a>
     <h2><%= novo ? 'Nova ordem de carregamento' : 'Editar carregamento ' + c.numero %></h2>

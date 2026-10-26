@@ -10,6 +10,7 @@
  *
  * As duas etapas são idempotentes: rodar a cada deploy é seguro.
  */
+import { verificarOrigem } from './verificar-origem.js';
 import { migrar } from '../src/db/migrate.js';
 import { semear } from '../src/db/seed.js';
 import { pool } from '../src/db/index.js';
@@ -17,6 +18,7 @@ import { pool } from '../src/db/index.js';
 try {
   console.log('Preparando o banco do ERP SHKT...\n');
 
+  await verificarOrigem();
   console.log('1/2 Migrações');
   await migrar();
 

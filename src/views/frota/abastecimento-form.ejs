@@ -1,5 +1,5 @@
 <%- include('../partials/topo') %>
-<form method="post" action="/frota/viagens/<%= viagem.id %>/abastecimentos/novo" class="cartao" style="max-width:900px">
+<form data-rascunho="frota" method="post" action="/frota/viagens/<%= viagem.id %>/abastecimentos/novo" class="cartao" style="max-width:900px">
   <input type="hidden" name="operacao_id" value="<%= registro.operacao_id %>"><input type="hidden" name="veiculo_id" value="<%= registro.veiculo_id %>"><input type="hidden" name="motorista_id" value="<%= registro.motorista_id || '' %>">
   <div class="cartao-topo"><a href="/frota/viagens/<%= viagem.id %>" class="btn pequeno"><%- ic('voltar') %> Voltar</a><h2>Abastecimento · viagem <%= viagem.numero %></h2></div>
   <div class="cartao-corpo"><div class="chamada-rota"><strong><%= viagem.placa %></strong><span><%= viagem.origem %> → <%= viagem.destino %></span></div><div class="campos mt-2">

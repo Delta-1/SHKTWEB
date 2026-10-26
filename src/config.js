@@ -20,7 +20,7 @@ const ambiente = process.env.NODE_ENV || 'development';
  * dizendo exatamente o que falta.
  */
 function urlDoBanco() {
-  const url = process.env.DATABASE_URL;
+  const url = process.env.SHKT_SUPABASE_URL || process.env.DATABASE_URL;
   if (url) return url;
 
   if (ambiente === 'production') {
@@ -49,7 +49,7 @@ export const config = {
   dbSsl: bool(process.env.DATABASE_SSL, /(?:supabase\.co|supabase\.com)(?::\d+)?\//i.test(databaseUrl)),
 
   sessao: {
-    segredo: process.env.SESSION_SECRET || 'shkt-erp-desenvolvimento-trocar-em-producao',
+    segredo: process.env.SESSION_SECRET || (ambiente === 'production' ? (()=>{throw new Error('Configure SESSION_SECRET em produção.');})() : 'shkt-erp-desenvolvimento-trocar-em-producao'),
     // horas de inatividade ate o logout automatico
     duracaoHoras: Number(process.env.SESSION_HOURS || 12),
     // exige HTTPS no cookie (ligar em producao atras de HTTPS)
