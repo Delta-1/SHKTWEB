@@ -3,7 +3,7 @@
 <% const acao = novo ? '/compras/novo' : `/compras/${pedido.id}/editar`;
    const itens = pedido.lista_itens && pedido.lista_itens.length ? pedido.lista_itens : [null]; %>
 
-<form method="post" action="<%= acao %>" class="cartao" style="max-width:1000px" data-etapas>
+<form method="post" action="<%= acao %>" class="cartao" style="max-width:1000px" data-etapas <%= novo ? 'data-rascunho="compras"' : '' %>>
   <div class="cartao-topo">
     <a href="<%= novo ? '/compras' : '/compras/' + pedido.id %>" class="btn pequeno"><%- ic('voltar') %> Voltar</a>
     <h2><%= novo ? 'Novo pedido de compra' : 'Editar pedido ' + pedido.numero %></h2>
@@ -268,4 +268,5 @@
   </div>
 </form>
 
+<% if (novo) { %><script defer src="/estatico/js/rascunhos.js"></script><% } %>
 <%- include('../partials/fim') %>
